@@ -72,5 +72,76 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run tests
+      - name: Run unit tests
         run: pnpm test
+
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: build
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Start Supabase
+        run: |
+          docker run -d --name supabase-test \
+            -e POSTGRES_PASSWORD=postgres \
+            -e POSTGRES_USER=postgres \
+            -e POSTGRES_DB=test_db \
+            -p 54321:5432 \
+            supabase/postgres:15
+          sleep 10
+
+      - name: Run database migrations
+        run: pnpm db:push
+        env:
+          SUPABASE_DB_URL: postgresql://postgres:postgres@localhost:54321/postgres
+
+      - name: Seed database
+        run: pnpm db:seed
+        env:
+          SUPABASE_DB_URL: postgresql://postgres:postgres@localhost:54321/postgres
+
+      - name: Start Next.js server
+        run: |
+          pnpm dev &
+          sleep 10
+
+      - name: Run Cypress tests
+        uses: cypress-io/github-action@v6
+        with:
+          start: false
+          wait-on: 'http://localhost:3000'
+          wait-on-timeout: 120
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://localhost:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6"anons"In0.D6tqE0Q8Jq6X1xQ5xTjJ4d2Gx7u8Z6xNq8JQ5x7x" 
+          SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSJ9.vAn8zx9QY3XmNqgL7H4d1Q8v5J8Qv5J8Qv5J8Qv5J8
+          SUPABASE_DB_URL: postgresql://postgres:postgres@localhost:54321/postgres

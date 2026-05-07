@@ -1,0 +1,34 @@
+{
+  "users": [
+    {
+      "email": "demo-user@example.com",
+      "password": "password123",
+      "role": "client",
+      "tenant": "demo-clinic"
+    },
+    {
+      "email": "admin-user@example.com",
+      "password": "admin123",
+      "role": "admin",
+      "tenant": "demo-clinic"
+    },
+    {
+      "email": "wellness-user@example.com",
+      "password": "password123",
+      "role": "client",
+      "tenant": "wellness-center"
+    }
+  ],
+  "tenants": [
+    {
+      "id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+      "name": "Demo Clinic",
+      "slug": "demo-clinic"
+    },
+    {
+      "id": "b1ffc99-9c0b-4ef8-bb6d-6bb9bd380a12",
+      "name": "Wellness Center",
+      "slug": "wellness-center"
+    }
+  ]
+}
