@@ -11,12 +11,15 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test",
+    "test:e2e": "cypress run",
+    "test:e2e:open": "cypress open",
     "db:push": "supabase db push --db-url $SUPABASE_DB_URL",
     "db:seed": "supabase db seed --db-url $SUPABASE_DB_URL"
   },
   "devDependencies": {
     "turbo": "^2.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "cypress": "^13.0.0"
   },
   "engines": {
     "node": ">=18.0.0"
