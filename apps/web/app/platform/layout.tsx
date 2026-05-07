@@ -1,23 +1,24 @@
-import type { Metadata } from 'next';
+import { createServerClient } from '@repo/supabase';
+import { redirect } from 'next/navigation';
+import React from 'react';
 
-export const metadata: Metadata = {
-  title: 'NEXIFY TECH CENTER - Platform Admin',
-  description: 'Global platform administration.',
-};
-
-export default function PlatformLayout({
+export default async function PlatformLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const supabase = createServerClient();
+  const { data: { session } } = await supabase.auth.getSession();
+
+  // In production, check if user has platform admin role
+  // For demo, we'll just check if user is logged in
+  if (!session) {
+    redirect('/login');
+  }
+
   return (
     <html lang="sk">
-      <body>
-        <header className="bg-gray-800 text-white p-4">
-          <h1 className="text-xl font-bold">Platform Admin</h1>
-        </header>
-        <main className="container mx-auto p-4">{children}</main>
-      </body>
+      <body className="min-h-screen bg-gray-50">{children}</body>
     </html>
   );
 }
