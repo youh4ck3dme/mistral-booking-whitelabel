@@ -1,5 +1,5 @@
 import { createServerClient } from '@repo/supabase';
-import { getTenantContext } from '@repo/web/src/lib/tenant/tenant.service';
+import { getTenantContext } from '../../src/lib/tenant/tenant.service';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
