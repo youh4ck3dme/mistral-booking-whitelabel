@@ -3,7 +3,7 @@
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Tenant, TenantBranding } from '@repo/core/types';
+import { Tenant, TenantBranding } from '@repo/core';
 import { Button } from '@repo/ui';
 
 export default function EditTenantPage({
