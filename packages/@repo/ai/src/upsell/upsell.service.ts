@@ -1,4 +1,4 @@
-import { Service } from '@repo/core/types';
+import { Service } from '@repo/core';
 import { UpsellBundle } from '../types';
 
 // Rule-based upsell bundles (fallback when AI is unavailable)

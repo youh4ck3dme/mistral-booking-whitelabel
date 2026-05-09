@@ -4,12 +4,12 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useTenant } from '@repo/web/src/lib/tenant/TenantProvider';
-import { Booking } from '@repo/core/types';
+import { Booking } from '@repo/core';
 import { cancelBooking, getBookingsByUser } from '@repo/web/src/lib/booking/booking.service';
 import { Button } from '@repo/ui';
 
 export default function ClientPortalPage() {
-  const supabase = createClientComponentClient();
+  const [supabase] = useState(() => createClientComponentClient());
   const router = useRouter();
   const tenant = useTenant();
   
@@ -19,6 +19,7 @@ export default function ClientPortalPage() {
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   const primaryColor = tenant.branding?.primary_color || '#3B82F6';
+  const tenantSlug = tenant?.tenant?.slug;
 
   // Fetch user's bookings
   useEffect(() => {
@@ -31,7 +32,7 @@ export default function ClientPortalPage() {
         } = await supabase.auth.getUser();
 
         if (!user) {
-          router.push(`/${tenant.tenant.slug}/login`);
+          router.push(`/${tenantSlug}/login`);
           return;
         }
 
@@ -45,7 +46,7 @@ export default function ClientPortalPage() {
     };
 
     fetchBookings();
-  }, [tenant?.tenant?.id, router, supabase.auth]);
+  }, [router, supabase, tenant?.tenant?.id, tenantSlug]);
 
   // Format date for display
   const formatDateTime = (dateString: string): string => {

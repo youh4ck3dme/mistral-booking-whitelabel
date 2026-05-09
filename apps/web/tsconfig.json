@@ -18,6 +18,7 @@
       }
     ],
     "paths": {
+      "@repo/web/*": ["./*"],
       "@repo/ui": ["../../packages/@repo/ui/src"],
       "@repo/core": ["../../packages/@repo/core/src"],
       "@repo/supabase": ["../../packages/@repo/supabase/src"],

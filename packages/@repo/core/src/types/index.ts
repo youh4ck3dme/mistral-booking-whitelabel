@@ -16,9 +16,10 @@ export interface Service {
   id: string;
   tenant_id: string;
   name: string;
-  description: string;
+  description: string | null;
   duration: number; // in minutes
   price: number;
+  is_active: boolean;
 }
 
 export interface Booking {
@@ -42,8 +43,8 @@ export interface TimeSlotConfig {
 export interface TenantBranding {
   id: string;
   tenant_id: string;
-  logo_url?: string;
-  favicon_url?: string;
+  logo_url?: string | null;
+  favicon_url?: string | null;
   primary_color: string;
 }
 
@@ -51,7 +52,7 @@ export interface AIExperiment {
   id: string;
   tenant_id: string;
   name: string;
-  description?: string;
+  description?: string | null;
   created_at: string;
 }
 

@@ -1,6 +1,9 @@
-import { supabase } from '@repo/supabase';
-import { Service, TenantUser } from '@repo/core/types';
+import { supabase, type Database } from '@repo/supabase';
+import { Service } from '@repo/core';
 import { RecommendationResult } from '../types';
+
+type BookingSelection = Pick<Database['public']['Tables']['bookings']['Row'], 'service_id'>;
+type AIImpressionInsert = Database['public']['Tables']['ai_impressions']['Insert'];
 
 export async function getRecommendedServices(
   tenantId: string,
@@ -8,13 +11,14 @@ export async function getRecommendedServices(
 ): Promise<RecommendationResult[]> {
   try {
     // Get user's past bookings to avoid recommending the same services
-    const { data: pastBookings } = await supabase
+    const { data } = await supabase
       .from('bookings')
       .select('service_id')
       .eq('tenant_id', tenantId)
       .eq('user_id', userId);
 
-    const pastServiceIds = pastBookings?.map((b) => b.service_id) || [];
+    const pastBookings: BookingSelection[] = data ?? [];
+    const pastServiceIds = pastBookings.map((booking) => booking.service_id);
 
     // Get all services for the tenant
     const { data: allServices } = await supabase
@@ -51,11 +55,13 @@ export async function logRecommendationImpression(
   variant: string
 ): Promise<void> {
   try {
-    await supabase.from('ai_impressions').insert({
+    const impression: AIImpressionInsert = {
       experiment_id: experimentId,
       user_id: userId,
       variant,
-    });
+    };
+
+    await supabase.from('ai_impressions').insert(impression);
   } catch (error) {
     console.error('Error logging impression:', error);
   }

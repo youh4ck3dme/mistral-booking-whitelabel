@@ -4,7 +4,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useTenant } from '@repo/web/src/lib/tenant/TenantProvider';
-import { Service } from '@repo/core/types';
+import { Service } from '@repo/core';
 import { Button } from '@repo/ui';
 
 export default function EditServicePage({

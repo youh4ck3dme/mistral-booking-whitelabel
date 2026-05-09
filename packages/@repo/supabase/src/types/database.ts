@@ -22,26 +22,28 @@ export interface Database {
           slug?: string;
           created_at?: string;
         };
+        Relationships: [];
       };
       tenant_users: {
         Row: {
           id: string;
           tenant_id: string;
           user_id: string;
-          role: string;
+          role: 'admin' | 'staff' | 'client';
         };
         Insert: {
           id?: string;
           tenant_id: string;
           user_id: string;
-          role: string;
+          role: 'admin' | 'staff' | 'client';
         };
         Update: {
           id?: string;
           tenant_id?: string;
           user_id?: string;
-          role?: string;
+          role?: 'admin' | 'staff' | 'client';
         };
+        Relationships: [];
       };
       services: {
         Row: {
@@ -51,6 +53,7 @@ export interface Database {
           description: string | null;
           duration: number;
           price: number;
+          is_active: boolean;
         };
         Insert: {
           id?: string;
@@ -59,6 +62,7 @@ export interface Database {
           description?: string | null;
           duration: number;
           price: number;
+          is_active?: boolean;
         };
         Update: {
           id?: string;
@@ -67,7 +71,9 @@ export interface Database {
           description?: string | null;
           duration?: number;
           price?: number;
+          is_active?: boolean;
         };
+        Relationships: [];
       };
       bookings: {
         Row: {
@@ -77,7 +83,7 @@ export interface Database {
           service_id: string;
           start_time: string;
           end_time: string;
-          status: string;
+          status: 'confirmed' | 'cancelled' | 'pending';
         };
         Insert: {
           id?: string;
@@ -86,7 +92,7 @@ export interface Database {
           service_id: string;
           start_time: string;
           end_time: string;
-          status?: string;
+          status?: 'confirmed' | 'cancelled' | 'pending';
         };
         Update: {
           id?: string;
@@ -95,8 +101,9 @@ export interface Database {
           service_id?: string;
           start_time?: string;
           end_time?: string;
-          status?: string;
+          status?: 'confirmed' | 'cancelled' | 'pending';
         };
+        Relationships: [];
       };
       tenant_branding: {
         Row: {
@@ -120,6 +127,7 @@ export interface Database {
           favicon_url?: string | null;
           primary_color?: string;
         };
+        Relationships: [];
       };
       time_slots_config: {
         Row: {
@@ -143,6 +151,7 @@ export interface Database {
           end_time?: string;
           is_active?: boolean;
         };
+        Relationships: [];
       };
       ai_experiments: {
         Row: {
@@ -166,6 +175,7 @@ export interface Database {
           description?: string | null;
           created_at?: string;
         };
+        Relationships: [];
       };
       ai_impressions: {
         Row: {
@@ -189,6 +199,7 @@ export interface Database {
           variant?: string;
           created_at?: string;
         };
+        Relationships: [];
       };
     };
     Views: {

@@ -1,5 +1,5 @@
 import { supabase } from '@repo/supabase';
-import { Booking, Service, TimeSlotConfig } from '@repo/core/types';
+import { Booking, Service, TimeSlotConfig } from '@repo/core';
 
 export interface BookingSlot {
   startTime: string;
@@ -76,7 +76,8 @@ export async function isSlotAvailable(
     .eq('tenant_id', tenantId)
     .eq('service_id', serviceId)
     .neq('status', 'cancelled')
-    .and(`start_time.lt.${endTime},end_time.gt.${startTime}`);
+    .lt('start_time', endTime)
+    .gt('end_time', startTime);
 
   if (error) {
     console.error('Error checking slot availability:', error);

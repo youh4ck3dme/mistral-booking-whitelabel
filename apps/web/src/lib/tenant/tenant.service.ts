@@ -1,5 +1,5 @@
 import { supabase } from '@repo/supabase';
-import { Tenant, TenantBranding } from '@repo/core/types';
+import { Tenant, TenantBranding } from '@repo/core';
 
 export interface TenantContext {
   tenant: Tenant;

@@ -3,7 +3,7 @@
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Tenant } from '@repo/core/types';
+import { Tenant } from '@repo/core';
 import { Button, Card } from '@repo/ui';
 
 export default function PlatformAdminPage() {
@@ -119,7 +119,7 @@ export default function PlatformAdminPage() {
 
         {tenants.length === 0 ? (
           <p className="text-gray-500 text-center py-8">
-            Žiadni tenanti. Kliknite na "Pridať nového Tenanta" pre vytvorenie prvého.
+            Žiadni tenanti. Kliknite na &quot;Pridať nového Tenanta&quot; pre vytvorenie prvého.
           </p>
         ) : (
           <div className="bg-white shadow-md rounded-lg overflow-hidden">

@@ -1,4 +1,4 @@
-import { Service, Tenant, Booking } from '@repo/core/types';
+import { Service, Tenant, Booking } from '@repo/core';
 
 export interface RecommendationResult {
   service: Service;

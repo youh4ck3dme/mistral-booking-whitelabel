@@ -4,11 +4,11 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useTenant } from '@repo/web/src/lib/tenant/TenantProvider';
-import { Service, Booking } from '@repo/core/types';
+import { Service, Booking } from '@repo/core';
 import { Button } from '@repo/ui';
 
 export default function BookingPage() {
-  const supabase = createClientComponentClient();
+  const [supabase] = useState(() => createClientComponentClient());
   const router = useRouter();
   const searchParams = useSearchParams();
   const tenant = useTenant();
@@ -54,7 +54,7 @@ export default function BookingPage() {
     };
 
     fetchServices();
-  }, [tenant?.tenant?.id, searchParams]);
+  }, [searchParams, supabase, tenant?.tenant?.id]);
 
   // Fetch available time slots when service and date are selected
   useEffect(() => {

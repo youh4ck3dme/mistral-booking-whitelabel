@@ -4,10 +4,9 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useTenant } from '@repo/web/src/lib/tenant/TenantProvider';
-import { Service, Booking, TenantBranding } from '@repo/core/types';
+import { Service, Booking, TenantBranding } from '@repo/core';
 import { getServicesByTenant, getBookingsByUser } from '@repo/web/src/lib/booking/booking.service';
-import { getRecommendedServices } from '@repo/ai/src/recommendation/recommendation.service';
-import { getUpsellBundles } from '@repo/ai/src/upsell/upsell.service';
+import { getRecommendedServices, getUpsellBundles } from '@repo/ai';
 import { Button, Card } from '@repo/ui';
 
 export default function TenantAdminPage() {
@@ -217,7 +216,7 @@ export default function TenantAdminPage() {
             {services.length === 0 ? (
               <Card>
                 <p className="text-gray-500 text-center py-8">
-                  Žiadne služby. Kliknite na "Pridať novú službu" pre vytvorenie prvej.
+                  Žiadne služby. Kliknite na &quot;Pridať novú službu&quot; pre vytvorenie prvej.
                 </p>
               </Card>
             ) : (

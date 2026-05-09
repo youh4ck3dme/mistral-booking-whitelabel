@@ -1,21 +1,21 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { TenantContext } from './tenant.service';
+import type { TenantContext as TenantContextValue } from './tenant.service';
 import { usePathname } from 'next/navigation';
 
 interface TenantProviderProps {
   children: React.ReactNode;
-  initialContext: TenantContext;
+  initialContext: TenantContextValue;
 }
 
-const TenantContext = createContext<TenantContext | null>(null);
+const TenantContext = createContext<TenantContextValue | null>(null);
 
 export const TenantProvider: React.FC<TenantProviderProps> = ({
   children,
   initialContext,
 }) => {
-  const [context, setContext] = useState<TenantContext>(initialContext);
+  const [context, setContext] = useState<TenantContextValue>(initialContext);
   const pathname = usePathname();
 
   // Update tenant context when route changes
