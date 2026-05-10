@@ -2,27 +2,13 @@ import Link from 'next/link';
 import type { CSSProperties } from 'react';
 
 import type { Service, Tenant, TenantBranding } from '@repo/core';
+import {
+  type VerticalKey,
+  type VerticalRouteConfig,
+  verticalRouteList,
+} from '@repo/web/src/lib/booking/vertical-routing';
 
 import styles from './booking-landing.module.css';
-
-type VerticalKey =
-  | 'barber'
-  | 'beauty'
-  | 'massage'
-  | 'fitness'
-  | 'physio'
-  | 'clinic'
-  | 'tattoo'
-  | 'default';
-
-type VerticalCard = {
-  id: Exclude<VerticalKey, 'default'>;
-  icon: string;
-  title: string;
-  description: string;
-  accent: string;
-  cta: string;
-};
 
 export type FeaturedServiceCard = Service & {
   accent: string;
@@ -36,65 +22,6 @@ type BookingLandingPageProps = {
   tenants: Tenant[];
   branding: TenantBranding[];
 };
-
-const verticals: VerticalCard[] = [
-  {
-    id: 'barber',
-    icon: '✂',
-    title: 'Barber',
-    description: 'Cuts, grooming, beard care, and fast repeat bookings for modern barbershops.',
-    accent: '#ff5a5f',
-    cta: 'View barber services',
-  },
-  {
-    id: 'beauty',
-    icon: '✦',
-    title: 'Beauty',
-    description: 'Appointments for nails, skin, lashes, and premium salon experiences.',
-    accent: '#ff6fb5',
-    cta: 'View beauty services',
-  },
-  {
-    id: 'massage',
-    icon: '◌',
-    title: 'Massage',
-    description: 'Wellness-focused scheduling for therapies, recovery, and relaxation sessions.',
-    accent: '#6ec8ff',
-    cta: 'View massage services',
-  },
-  {
-    id: 'fitness',
-    icon: '▲',
-    title: 'Fitness',
-    description: 'Classes, personal training, and performance sessions with clean booking flows.',
-    accent: '#8dff8a',
-    cta: 'View fitness services',
-  },
-  {
-    id: 'physio',
-    icon: '＋',
-    title: 'Physio',
-    description: 'Therapy and rehabilitation appointments with clear timing and availability.',
-    accent: '#7c9bff',
-    cta: 'View physio services',
-  },
-  {
-    id: 'clinic',
-    icon: '■',
-    title: 'Clinic',
-    description: 'Medical and consultation bookings for structured, tenant-specific operations.',
-    accent: '#5aa8ff',
-    cta: 'View clinic services',
-  },
-  {
-    id: 'tattoo',
-    icon: '✷',
-    title: 'Tattoo',
-    description: 'Artist scheduling for consultations, custom sessions, and design follow-ups.',
-    accent: '#f59e0b',
-    cta: 'View tattoo services',
-  },
-];
 
 const steps = [
   {
@@ -124,6 +51,10 @@ function getBookHref(tenants: Tenant[]) {
 function getServicesHref(featuredServices: FeaturedServiceCard[], tenants: Tenant[]) {
   const firstServiceTenant = featuredServices.find((service) => service.tenantSlug)?.tenantSlug;
   return firstServiceTenant ? `/${firstServiceTenant}` : `/${tenants[0]?.slug ?? 'demo-clinic'}`;
+}
+
+function getVerticalHref(vertical: VerticalRouteConfig) {
+  return `/${vertical.tenantSlug}/book?service=${vertical.serviceId}`;
 }
 
 export default function BookingLandingPage({
@@ -225,20 +156,24 @@ export default function BookingLandingPage({
           </div>
 
           <div className={styles.verticalGrid}>
-            {verticals.map((vertical) => (
-              <article
-                key={vertical.id}
-                className={styles.verticalCard}
-                style={{ '--accent': vertical.accent } as CSSProperties}
-              >
-                <span className={styles.verticalIcon}>{vertical.icon}</span>
-                <h3 className={styles.cardTitle}>{vertical.title}</h3>
-                <p className={styles.cardText}>{vertical.description}</p>
-                <a href="#services" className={styles.inlineLink}>
-                  {vertical.cta}
-                </a>
-              </article>
-            ))}
+            {verticalRouteList.map((vertical) => {
+              const verticalHref = getVerticalHref(vertical);
+
+              return (
+                <article
+                  key={vertical.id}
+                  className={styles.verticalCard}
+                  style={{ '--accent': vertical.accent } as CSSProperties}
+                >
+                  <span className={styles.verticalIcon}>{vertical.icon}</span>
+                  <h3 className={styles.cardTitle}>{vertical.title}</h3>
+                  <p className={styles.cardText}>{vertical.description}</p>
+                  <Link href={verticalHref} className={styles.inlineLink}>
+                    {vertical.cta}
+                  </Link>
+                </article>
+              );
+            })}
           </div>
         </div>
       </section>

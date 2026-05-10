@@ -2,13 +2,11 @@ import { NextResponse } from 'next/server';
 
 import { runReminderDispatchCycle } from '@repo/web/src/lib/notifications/reminders';
 
-function isAuthorized(request: Request) {
-  const secret = process.env.NOTIFICATION_CRON_SECRET;
+function getCronSecret() {
+  return process.env.NOTIFICATION_CRON_SECRET;
+}
 
-  if (!secret) {
-    throw new Error('NOTIFICATION_CRON_SECRET is not configured.');
-  }
-
+function isAuthorized(request: Request, secret: string) {
   const authorization = request.headers.get('authorization');
   const headerSecret = request.headers.get('x-notification-secret');
 
@@ -16,7 +14,16 @@ function isAuthorized(request: Request) {
 }
 
 export async function POST(request: Request) {
-  if (!isAuthorized(request)) {
+  const secret = getCronSecret();
+
+  if (!secret) {
+    return NextResponse.json(
+      { error: 'NOTIFICATION_CRON_SECRET is not configured.' },
+      { status: 503 }
+    );
+  }
+
+  if (!isAuthorized(request, secret)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

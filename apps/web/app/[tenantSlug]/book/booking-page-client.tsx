@@ -8,7 +8,13 @@ import { useTenant } from '@repo/web/src/lib/tenant/TenantProvider';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { CSSProperties, FormEvent } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
+type BookingDraft = {
+  serviceId: string;
+  selectedDate: string;
+  selectedTime: string;
+};
 
 export default function BookingPageClient({
   initialServices,
@@ -33,13 +39,32 @@ export default function BookingPageClient({
   const [emailStatus, setEmailStatus] = useState<'sent' | 'pending'>('pending');
 
   const primaryColor = tenant.branding?.primary_color || '#3B82F6';
+  const bookingDraftStorageKey = `bookingDraft:${tenant.tenant.slug}`;
+  const hasHydratedDraft = useRef(false);
+
+  const clearPersistedBookingState = () => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    window.sessionStorage.removeItem(bookingDraftStorageKey);
+    window.sessionStorage.removeItem('returnTo');
+  };
+
+  const buildReturnTo = () => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (selectedService?.id) {
+      params.set('service', selectedService.id);
+    }
+
+    const query = params.toString();
+    return `/${tenant.tenant.slug}/book${query ? `?${query}` : ''}`;
+  };
 
   const setReturnTo = () => {
-      if (typeof window !== 'undefined') {
-        window.sessionStorage.setItem(
-          'returnTo',
-          `/${tenant.tenant.slug}/book${window.location.search || ''}`
-        );
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem('returnTo', buildReturnTo());
     }
   };
 
@@ -54,25 +79,92 @@ export default function BookingPageClient({
   }, [searchParams, services]);
 
   useEffect(() => {
+    if (typeof window === 'undefined' || hasHydratedDraft.current || services.length === 0) {
+      return;
+    }
+
+    hasHydratedDraft.current = true;
+
+    const rawDraft = window.sessionStorage.getItem(bookingDraftStorageKey);
+    if (!rawDraft) {
+      return;
+    }
+
+    try {
+      const persistedDraft = JSON.parse(rawDraft) as Partial<BookingDraft>;
+      const persistedService = services.find((service) => service.id === persistedDraft.serviceId);
+
+      if (!persistedService) {
+        window.sessionStorage.removeItem(bookingDraftStorageKey);
+        return;
+      }
+
+      setSelectedService(persistedService);
+      setSelectedDate(typeof persistedDraft.selectedDate === 'string' ? persistedDraft.selectedDate : '');
+      setSelectedTime(typeof persistedDraft.selectedTime === 'string' ? persistedDraft.selectedTime : '');
+      setError(null);
+    } catch {
+      window.sessionStorage.removeItem(bookingDraftStorageKey);
+    }
+  }, [bookingDraftStorageKey, services]);
+
+  useEffect(() => {
     if (!selectedService || !selectedDate) {
       setTimeSlots([]);
       return;
     }
 
     const slots: string[] = [];
-    const startHour = 8;
-    const endHour = 18;
+    const startMinutes = 8 * 60;
+    const endMinutes = 18 * 60;
     const duration = selectedService.duration;
 
-    for (let hour = startHour; hour <= endHour - Math.ceil(duration / 60); hour++) {
-      const startTime = `${hour.toString().padStart(2, '0')}:00`;
-      const end = hour + Math.ceil(duration / 60);
-      const endTime = `${end.toString().padStart(2, '0')}:00`;
+    for (
+      let slotStartMinutes = startMinutes;
+      slotStartMinutes + duration <= endMinutes;
+      slotStartMinutes += 30
+    ) {
+      const slotEndMinutes = slotStartMinutes + duration;
+      const startHours = Math.floor(slotStartMinutes / 60)
+        .toString()
+        .padStart(2, '0');
+      const startMins = (slotStartMinutes % 60).toString().padStart(2, '0');
+      const endHours = Math.floor(slotEndMinutes / 60)
+        .toString()
+        .padStart(2, '0');
+      const endMins = (slotEndMinutes % 60).toString().padStart(2, '0');
+      const startTime = `${startHours}:${startMins}`;
+      const endTime = `${endHours}:${endMins}`;
       slots.push(`${startTime}-${endTime}`);
     }
 
     setTimeSlots(slots);
   }, [selectedDate, selectedService]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !hasHydratedDraft.current) {
+      return;
+    }
+
+    if (!selectedService) {
+      window.sessionStorage.removeItem(bookingDraftStorageKey);
+      return;
+    }
+
+    const draft: BookingDraft = {
+      serviceId: selectedService.id,
+      selectedDate,
+      selectedTime,
+    };
+
+    window.sessionStorage.setItem(bookingDraftStorageKey, JSON.stringify(draft));
+  }, [bookingDraftStorageKey, selectedDate, selectedService, selectedTime]);
+
+  useEffect(() => {
+    if (selectedTime && timeSlots.length > 0 && !timeSlots.includes(selectedTime)) {
+      setSelectedTime('');
+    }
+  }, [selectedTime, timeSlots]);
 
   const handleServiceSelect = (service: Service) => {
     setSelectedService(service);
@@ -161,6 +253,7 @@ export default function BookingPageClient({
       setSelectedService(null);
       setSelectedDate('');
       setSelectedTime('');
+      clearPersistedBookingState();
 
       try {
         const dispatchResult = await dispatchBookingNotificationsRequest(booking as string);

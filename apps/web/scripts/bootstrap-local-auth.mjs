@@ -23,7 +23,19 @@ const sleep = (ms) => new Promise((resolve) => {
 const isRetryableError = (error) => {
   if (!error) return false;
   const status = typeof error.status === 'number' ? error.status : null;
-  return status === null || status >= 500;
+  return status === null || status >= 500 || error.code === 'PGRST002';
+};
+
+const unwrapResponse = (result, label) => {
+  if (result?.error) {
+    throw result.error;
+  }
+
+  if (!result?.data) {
+    throw new Error(`${label} returned no data`);
+  }
+
+  return result.data;
 };
 
 async function withRetry(task, label, attempts = 8) {
@@ -46,46 +58,40 @@ async function withRetry(task, label, attempts = 8) {
   throw lastError ?? new Error(`${label} failed`);
 }
 
-const { data: listedUsers, error: listError } = await withRetry(
-  () => supabase.auth.admin.listUsers(),
+const listedUsers = await withRetry(
+  async () => unwrapResponse(await supabase.auth.admin.listUsers(), 'list users'),
   'list users'
 );
-
-if (listError) {
-  throw listError;
-}
 
 let adminUser = listedUsers.users.find((user) => user.email === adminEmail) ?? null;
 
 if (adminUser) {
-  const { data, error } = await withRetry(
-    () =>
-      supabase.auth.admin.updateUserById(adminUser.id, {
-        password: adminPassword,
-        email_confirm: true,
-      }),
+  const data = await withRetry(
+    async () =>
+      unwrapResponse(
+        await supabase.auth.admin.updateUserById(adminUser.id, {
+          password: adminPassword,
+          email_confirm: true,
+        }),
+        'update user'
+      ),
     'update user'
   );
 
-  if (error) {
-    throw error;
-  }
-
   adminUser = data.user;
 } else {
-  const { data, error } = await withRetry(
-    () =>
-      supabase.auth.admin.createUser({
-        email: adminEmail,
-        password: adminPassword,
-        email_confirm: true,
-      }),
+  const data = await withRetry(
+    async () =>
+      unwrapResponse(
+        await supabase.auth.admin.createUser({
+          email: adminEmail,
+          password: adminPassword,
+          email_confirm: true,
+        }),
+        'create user'
+      ),
     'create user'
   );
-
-  if (error) {
-    throw error;
-  }
 
   adminUser = data.user;
 }
@@ -94,39 +100,54 @@ if (!adminUser?.id) {
   throw new Error('Failed to provision local admin user');
 }
 
-const { data: tenant, error: tenantError } = await withRetry(
-  () =>
-    supabase
-      .from('tenants')
-      .select('id')
-      .eq('slug', 'demo-clinic')
-      .single(),
+const tenant = await withRetry(
+  async () =>
+    unwrapResponse(
+      await supabase
+        .from('tenants')
+        .select('id')
+        .eq('slug', 'demo-clinic')
+        .single(),
+      'load demo tenant'
+    ),
   'load demo tenant'
 );
 
-if (tenantError || !tenant) {
-  throw tenantError ?? new Error('demo-clinic tenant not found');
+if (!tenant) {
+  throw new Error('demo-clinic tenant not found');
 }
 
-const { data: existingMembership, error: membershipLookupError } = await supabase
-  .from('tenant_users')
-  .select('id')
-  .eq('tenant_id', tenant.id)
-  .eq('user_id', adminUser.id)
-  .maybeSingle();
+const existingMembership = await withRetry(
+  async () => {
+    const result = await supabase
+      .from('tenant_users')
+      .select('id')
+      .eq('tenant_id', tenant.id)
+      .eq('user_id', adminUser.id)
+      .maybeSingle();
 
-if (membershipLookupError) {
-  throw membershipLookupError;
-}
+    if (result.error) {
+      throw result.error;
+    }
+
+    return result.data;
+  },
+  'load membership'
+);
 
 if (!existingMembership) {
-  const { error: insertMembershipError } = await supabase.from('tenant_users').insert({
-    tenant_id: tenant.id,
-    user_id: adminUser.id,
-    role: 'admin',
-  });
+  await withRetry(
+    async () => {
+      const result = await supabase.from('tenant_users').insert({
+        tenant_id: tenant.id,
+        user_id: adminUser.id,
+        role: 'admin',
+      });
 
-  if (insertMembershipError) {
-    throw insertMembershipError;
-  }
+      if (result.error) {
+        throw result.error;
+      }
+    },
+    'insert membership'
+  );
 }

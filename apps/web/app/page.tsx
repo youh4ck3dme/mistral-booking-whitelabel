@@ -1,30 +1,13 @@
 import type { Metadata } from 'next';
 
 import { createServerClient } from '@repo/supabase';
-import type { Service, Tenant, TenantBranding } from '@repo/core';
+import type { Tenant, TenantBranding } from '@repo/core';
+import {
+  type VerticalKey,
+  verticalRouteList,
+} from '@repo/web/src/lib/booking/vertical-routing';
 
 import BookingLandingPage, { type FeaturedServiceCard } from './booking-landing';
-
-type VerticalKey =
-  | 'barber'
-  | 'beauty'
-  | 'massage'
-  | 'fitness'
-  | 'physio'
-  | 'clinic'
-  | 'tattoo'
-  | 'default';
-
-const verticalAccents: Record<VerticalKey, string> = {
-  barber: '#ff5a5f',
-  beauty: '#ff6fb5',
-  massage: '#6ec8ff',
-  fitness: '#8dff8a',
-  physio: '#7c9bff',
-  clinic: '#5aa8ff',
-  tattoo: '#f59e0b',
-  default: '#9b8cff',
-};
 
 export const metadata: Metadata = {
   title: 'Book Your Perfect Service | NEXIFY TECH CENTER',
@@ -34,40 +17,13 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic';
 
-function inferVertical(service: Pick<Service, 'name' | 'description'>, tenantName?: string): VerticalKey {
-  const haystack = `${service.name} ${service.description ?? ''} ${tenantName ?? ''}`.toLowerCase();
-
-  if (haystack.includes('barber') || haystack.includes('hair') || haystack.includes('cut')) {
-    return 'barber';
-  }
-  if (haystack.includes('beauty') || haystack.includes('nail') || haystack.includes('skin')) {
-    return 'beauty';
-  }
-  if (haystack.includes('massage') || haystack.includes('wellness') || haystack.includes('spa')) {
-    return 'massage';
-  }
-  if (haystack.includes('fitness') || haystack.includes('training') || haystack.includes('gym')) {
-    return 'fitness';
-  }
-  if (haystack.includes('physio') || haystack.includes('rehab') || haystack.includes('therapy')) {
-    return 'physio';
-  }
-  if (haystack.includes('clinic') || haystack.includes('medical') || haystack.includes('consult')) {
-    return 'clinic';
-  }
-  if (haystack.includes('tattoo') || haystack.includes('ink') || haystack.includes('piercing')) {
-    return 'tattoo';
-  }
-
-  return 'default';
-}
-
 async function getLandingData(): Promise<{
   featuredServices: FeaturedServiceCard[];
   tenants: Tenant[];
   branding: TenantBranding[];
 }> {
   const supabase = createServerClient();
+  const serviceIds = verticalRouteList.map((vertical) => vertical.serviceId);
 
   try {
     const [{ data: tenants }, { data: branding }, { data: services }] = await Promise.all([
@@ -76,28 +32,34 @@ async function getLandingData(): Promise<{
       supabase
         .from('services')
         .select('*')
+        .in('id', serviceIds)
         .eq('is_active', true)
-        .order('created_at', { ascending: false })
-        .limit(12),
+        .order('created_at', { ascending: true }),
     ]);
 
     const safeTenants = tenants ?? [];
     const safeBranding = branding ?? [];
-    const tenantsById = new Map(safeTenants.map((tenant) => [tenant.id, tenant]));
+    const tenantsBySlug = new Map(safeTenants.map((tenant) => [tenant.slug, tenant]));
     const brandingByTenant = new Map(safeBranding.map((entry) => [entry.tenant_id, entry]));
+    const servicesById = new Map((services ?? []).map((service) => [service.id, service]));
 
-    const featuredServices: FeaturedServiceCard[] = (services ?? []).map((service) => {
-      const tenant = tenantsById.get(service.tenant_id);
-      const brand = brandingByTenant.get(service.tenant_id);
-      const vertical = inferVertical(service, tenant?.name);
+    const featuredServices: FeaturedServiceCard[] = verticalRouteList.flatMap((vertical) => {
+      const service = servicesById.get(vertical.serviceId);
+      const tenant = tenantsBySlug.get(vertical.tenantSlug);
 
-      return {
+      if (!service || !tenant) {
+        return [];
+      }
+
+      const brand = brandingByTenant.get(tenant.id);
+
+      return [{
         ...service,
-        accent: brand?.primary_color ?? verticalAccents[vertical],
-        tenantName: tenant?.name ?? 'Independent studio',
-        tenantSlug: tenant?.slug ?? '',
-        vertical,
-      };
+        accent: brand?.primary_color ?? vertical.accent,
+        tenantName: tenant.name,
+        tenantSlug: tenant.slug,
+        vertical: vertical.id as VerticalKey,
+      }];
     });
 
     return {

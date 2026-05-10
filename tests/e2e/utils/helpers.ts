@@ -14,6 +14,17 @@ export function is404Path(page: Page) {
   return url.pathname === '/404';
 }
 
+export async function expectNo404(page: Page) {
+  expect(is404Path(page)).toBeFalsy();
+  await expect(page.locator('main')).toBeVisible();
+}
+
+export async function expectRouteContent(page: Page, pattern: RegExp, heading: RegExp | string) {
+  await expectNo404(page);
+  await expect(page).toHaveURL(pattern);
+  await expect(page.getByRole('heading', { level: 1, name: heading })).toBeVisible();
+}
+
 export async function disableMotion(page: Page) {
   await page.addStyleTag({
     content: `

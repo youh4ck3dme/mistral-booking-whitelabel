@@ -18,6 +18,7 @@ export NEXT_PUBLIC_APP_URL="http://127.0.0.1:3000"
 export PLAYWRIGHT_BASE_URL="http://127.0.0.1:3000"
 export PLAYWRIGHT_EMAIL="${PLAYWRIGHT_EMAIL:-playwright-admin@example.com}"
 export PLAYWRIGHT_PASSWORD="${PLAYWRIGHT_PASSWORD:-Playwright-Admin-123!}"
+export NOTIFICATION_CRON_SECRET="${NOTIFICATION_CRON_SECRET:-local-notification-cron-secret}"
 
 wait_for_auth() {
   for _ in {1..60}; do

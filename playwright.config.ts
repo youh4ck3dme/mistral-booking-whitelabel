@@ -22,6 +22,11 @@ export default defineConfig({
     ? undefined
     : {
         command: 'pnpm --filter @repo/web start -- --hostname 127.0.0.1 --port 3000',
+        env: {
+          ...process.env,
+          NOTIFICATION_CRON_SECRET:
+            process.env.NOTIFICATION_CRON_SECRET ?? 'local-notification-cron-secret',
+        },
         url: baseURL,
         reuseExistingServer: true,
         timeout: 120_000,
