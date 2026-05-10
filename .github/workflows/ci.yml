@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [feat/whitelabel-nextjs-platform]
   pull_request:
-    branches: [main]
+    branches: [feat/whitelabel-nextjs-platform]
 
 jobs:
   lint:
