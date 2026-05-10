@@ -1,3 +1,4 @@
+import { createClient } from '@supabase/supabase-js';
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import { NextResponse, NextRequest } from 'next/server';
 
@@ -33,13 +34,26 @@ export async function middleware(req: NextRequest) {
 
   await supabase.auth.getSession();
 
-  // Set tenant context for RLS (this is a placeholder - actual RLS is handled in Supabase)
-  // In production, you would set a cookie or header with the tenant ID
-  const { data: tenant } = await supabase
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const tenantLookupKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !tenantLookupKey) {
+    return NextResponse.redirect(new URL('/404', req.url));
+  }
+
+  const tenantLookupClient = createClient(supabaseUrl, tenantLookupKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+
+  const { data: tenant } = await tenantLookupClient
     .from('tenants')
     .select('id, slug, name')
     .eq('slug', tenantSlug)
-    .single();
+    .maybeSingle();
 
   if (!tenant) {
     return NextResponse.redirect(new URL('/404', req.url));
