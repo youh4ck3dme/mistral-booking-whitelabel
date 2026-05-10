@@ -1,0 +1,528 @@
+.page {
+  background:
+    radial-gradient(circle at top, rgba(67, 56, 202, 0.12), transparent 28%),
+    var(--page-bg);
+  color: var(--page-fg);
+  min-height: 100vh;
+  overflow: clip;
+  position: relative;
+}
+
+.container {
+  margin: 0 auto;
+  max-width: 1400px;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.gridOverlay,
+.heroGlow {
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+.gridOverlay {
+  background-image:
+    linear-gradient(var(--page-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--page-grid-line) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.85), transparent 92%);
+}
+
+.heroGlow {
+  background:
+    radial-gradient(circle at 15% 20%, var(--page-glow-primary), transparent 22%),
+    radial-gradient(circle at 80% 10%, var(--page-glow-secondary), transparent 20%);
+}
+
+.header {
+  padding: 24px 0 0;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.navShell {
+  align-items: center;
+  backdrop-filter: blur(20px);
+  background: var(--page-nav-bg);
+  border: 1px solid var(--page-border);
+  border-radius: 999px;
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  margin: 0 auto;
+  max-width: 1400px;
+  min-height: 68px;
+  padding: 0 14px 0 22px;
+}
+
+.logo {
+  align-items: baseline;
+  color: inherit;
+  display: inline-flex;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.logoWord {
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  letter-spacing: -0.04em;
+}
+
+.logoMark {
+  color: var(--page-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.navLinks,
+.navActions,
+.heroActions,
+.heroStats,
+.serviceMeta,
+.serviceFooter,
+.footerLinks,
+.footerBottom {
+  align-items: center;
+  display: flex;
+}
+
+.navLinks {
+  gap: 28px;
+}
+
+.navLink,
+.footerLinks a,
+.footerLinks span {
+  color: var(--page-muted);
+  font-size: 0.92rem;
+  text-decoration: none;
+  transition: color 0.25s ease;
+}
+
+.navLink:hover,
+.footerLinks a:hover {
+  color: var(--page-fg);
+}
+
+.navActions,
+.heroActions {
+  gap: 12px;
+}
+
+.primaryButton,
+.secondaryButton,
+.inlineButton {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.94rem;
+  font-weight: 500;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 20px;
+  text-decoration: none;
+  transition:
+    transform 0.25s ease,
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease;
+}
+
+.primaryButton,
+.inlineButton {
+  background: var(--page-primary-button-bg);
+  color: var(--page-primary-button-text);
+}
+
+.secondaryButton {
+  background: var(--page-secondary-button-bg);
+  border: 1px solid var(--page-border-strong);
+  color: var(--page-secondary-button-text);
+}
+
+.primaryButton:hover,
+.secondaryButton:hover,
+.inlineButton:hover {
+  transform: translateY(-1px);
+}
+
+.primaryButton:hover,
+.inlineButton:hover {
+  background: var(--page-primary-button-bg-hover);
+}
+
+.secondaryButton:hover {
+  border-color: var(--page-border-hover);
+}
+
+.heroSection {
+  padding: 112px 0 56px;
+}
+
+.heroContent {
+  max-width: 900px;
+}
+
+.eyebrow,
+.sectionLabel,
+.stepNumber,
+.serviceBadge,
+.emptyLabel {
+  color: var(--page-subtle-strong);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.heroTitle,
+.sectionTitle,
+.ctaTitle {
+  font-family: var(--font-heading);
+  letter-spacing: -0.06em;
+  line-height: 0.92;
+  margin: 0;
+}
+
+.heroTitle {
+  font-size: clamp(3.5rem, 10vw, 7rem);
+  margin-top: 18px;
+}
+
+.gradientWord {
+  background: linear-gradient(120deg, #ff6fb5 0%, #8ba5ff 45%, #6ec8ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.heroLead,
+.sectionLead,
+.cardText,
+.footerText {
+  color: var(--page-muted);
+  line-height: 1.7;
+}
+
+.heroLead {
+  font-size: clamp(1.05rem, 2vw, 1.25rem);
+  margin: 26px 0 0;
+  max-width: 720px;
+}
+
+.heroActions {
+  margin-top: 32px;
+}
+
+.heroStats {
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 40px;
+}
+
+.statCard,
+.verticalCard,
+.stepCard,
+.serviceCard,
+.emptyCard,
+.ctaCard {
+  background: var(--page-card-bg);
+  border: 1px solid var(--page-border);
+  position: relative;
+}
+
+.statCard {
+  border-radius: 22px;
+  min-width: 180px;
+  padding: 18px 20px;
+}
+
+.statValue,
+.priceValue {
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4vw, 2.75rem);
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.statLabel,
+.priceMeta,
+.serviceTenant {
+  color: var(--page-subtle);
+  display: block;
+  font-size: 0.9rem;
+  margin-top: 6px;
+}
+
+.section {
+  padding: 48px 0 0;
+}
+
+.sectionHeader {
+  margin-bottom: 28px;
+  max-width: 840px;
+}
+
+.sectionTitle {
+  font-size: clamp(2.5rem, 6vw, 4.8rem);
+  margin-top: 12px;
+}
+
+.sectionLead {
+  font-size: 1.04rem;
+  margin-top: 20px;
+  max-width: 720px;
+}
+
+.verticalGrid,
+.stepGrid,
+.servicesGrid,
+.footerGrid {
+  display: grid;
+  gap: 16px;
+}
+
+.verticalGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.verticalCard,
+.stepCard,
+.serviceCard,
+.emptyCard,
+.ctaCard {
+  border-radius: 28px;
+  overflow: hidden;
+  padding: 28px;
+}
+
+.verticalCard::before,
+.serviceCard::before {
+  background: linear-gradient(135deg, var(--accent), transparent 45%);
+  content: '';
+  height: 84px;
+  opacity: 0.18;
+  position: absolute;
+  right: -12px;
+  top: -12px;
+  width: 84px;
+}
+
+.verticalIcon {
+  align-items: center;
+  background: var(--page-card-elevated);
+  border: 1px solid var(--page-border);
+  border-radius: 16px;
+  display: inline-flex;
+  font-size: 1.3rem;
+  height: 48px;
+  justify-content: center;
+  margin-bottom: 24px;
+  width: 48px;
+}
+
+.cardTitle {
+  font-family: var(--font-heading);
+  font-size: 1.45rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+
+.cardText {
+  margin: 14px 0 0;
+}
+
+.inlineLink {
+  color: var(--page-fg);
+  display: inline-flex;
+  margin-top: 20px;
+  text-decoration: none;
+}
+
+.stepGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.stepCard {
+  min-height: 220px;
+}
+
+.stepNumber {
+  color: var(--page-step-number);
+  display: block;
+  margin-bottom: 18px;
+}
+
+.servicesGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.serviceCard {
+  min-height: 260px;
+}
+
+.serviceMeta {
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.serviceBadge {
+  align-items: center;
+  background: var(--page-card-elevated-strong);
+  border-radius: 999px;
+  display: inline-flex;
+  padding: 7px 10px;
+}
+
+.serviceFooter {
+  justify-content: space-between;
+  margin-top: 26px;
+}
+
+.inlineButton {
+  min-height: 42px;
+  padding: 0 16px;
+}
+
+.emptyCard {
+  max-width: 560px;
+}
+
+.ctaCard {
+  padding: 40px;
+}
+
+.footer {
+  border-top: 1px solid var(--page-border);
+  margin-top: 72px;
+  padding: 32px 0 40px;
+}
+
+.footerGrid {
+  grid-template-columns: 1.5fr 1fr 1fr;
+  padding-bottom: 24px;
+}
+
+.footerBrand {
+  max-width: 420px;
+}
+
+.footerHeading {
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  margin: 0 0 14px;
+}
+
+.footerLinks {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.footerBottom {
+  border-top: 1px solid var(--page-border);
+  color: var(--page-subtle);
+  font-size: 0.88rem;
+  justify-content: space-between;
+  padding-top: 18px;
+}
+
+@media (max-width: 1199px) {
+  .verticalGrid,
+  .servicesGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1023px) {
+  .header {
+    position: static;
+  }
+
+  .navShell,
+  .navLinks,
+  .footerBottom {
+    flex-direction: column;
+  }
+
+  .navShell {
+    border-radius: 28px;
+    padding: 18px 20px;
+  }
+
+  .navLinks {
+    align-items: flex-start;
+    gap: 14px;
+    width: 100%;
+  }
+
+  .navActions {
+    width: 100%;
+  }
+
+  .navActions a {
+    flex: 1;
+  }
+
+  .stepGrid,
+  .footerGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .verticalGrid,
+  .servicesGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .footerBrand {
+    grid-column: span 2;
+    max-width: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .container {
+    padding: 0 18px;
+  }
+
+  .heroSection {
+    padding-top: 64px;
+  }
+
+  .heroActions,
+  .heroStats,
+  .serviceFooter,
+  .footerBottom {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .stepGrid,
+  .verticalGrid,
+  .servicesGrid,
+  .footerGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .footerBrand {
+    grid-column: auto;
+  }
+
+  .verticalCard,
+  .stepCard,
+  .serviceCard,
+  .emptyCard,
+  .ctaCard {
+    border-radius: 24px;
+    padding: 24px;
+  }
+}

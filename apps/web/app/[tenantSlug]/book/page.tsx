@@ -1,49 +1,22 @@
-'use client';
+import { getServerSession } from '@repo/web/src/lib/auth/server-session';
+import { getServicesByTenant } from '@repo/web/src/lib/booking/booking.service';
+import { getServerTenantContext } from '@repo/web/src/lib/tenant/server-tenant-context';
+import { redirect } from 'next/navigation';
+import BookingPageClient from './booking-page-client';
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import { createClient } from '@repo/supabase-client';
+export default async function BookingPage({
+  params,
+}: {
+  params: { tenantSlug: string };
+}) {
+  const session = await getServerSession();
+  const tenantContext = await getServerTenantContext(params.tenantSlug, session?.user?.id);
 
-export default function BookingPage() {
-  const params = useParams<{ tenantSlug: string }>();
-  const [services, setServices] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  if (!tenantContext) {
+    redirect('/404');
+  }
 
-  useEffect(() => {
-    const fetchServices = async () => {
-      const { data, error } = await supabase
-        .from('services')
-        .select('*')
-        .eq('tenant_slug', params.tenantSlug);
-      
-      if (error) {
-        console.error('Error fetching services:', error);
-      } else {
-        setServices(data || []);
-      }
-      setLoading(false);
-    };
-    
-    fetchServices();
-  }, [params.tenantSlug]);
+  const initialServices = await getServicesByTenant(tenantContext.tenant.id);
 
-  if (loading) return <div>Loading...</div>;
-
-  return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Book a Service</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {services.map((service) => (
-          <div key={service.id} className="border p-4 rounded-lg">
-            <h2 className="text-xl font-semibold">{service.name}</h2>
-            <p className="text-gray-600">{service.description}</p>
-            <button className="mt-2 bg-blue-500 text-white px-4 py-2 rounded">
-              Book Now
-            </button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  return <BookingPageClient initialServices={initialServices} />;
 }
