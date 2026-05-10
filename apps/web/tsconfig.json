@@ -1,7 +1,5 @@
 {
-  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "target": "es5",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
@@ -20,10 +18,11 @@
       }
     ],
     "paths": {
-      "@repo/ui/*": ["../../packages/@repo/ui/src/*"],
-      "@repo/core/*": ["../../packages/@repo/core/src/*"],
-      "@repo/supabase/*": ["../../packages/@repo/supabase/src/*"],
-      "@repo/ai/*": ["../../packages/@repo/ai/src/*"]
+      "@repo/web/*": ["./*"],
+      "@repo/ui": ["../../packages/@repo/ui/src"],
+      "@repo/core": ["../../packages/@repo/core/src"],
+      "@repo/supabase": ["../../packages/@repo/supabase/src"],
+      "@repo/ai": ["../../packages/@repo/ai/src"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

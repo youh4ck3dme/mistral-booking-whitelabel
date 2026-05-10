@@ -1,0 +1,19 @@
+{
+  "name": "@repo/core",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@repo/supabase": "workspace:*"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.5",
+    "vitest": "^4.1.5",
+    "typescript": "^5.0.0"
+  }
+}
