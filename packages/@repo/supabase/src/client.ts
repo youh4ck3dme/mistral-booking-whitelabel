@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { Database } from './types/database';
 
-const buildTimeSupabaseUrl = 'http://127.0.0.1:54321';
+const buildTimeSupabaseUrl = 'https://supabase.invalid';
 const buildTimeSupabaseAnonKey = 'build-time-placeholder-key';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? buildTimeSupabaseUrl;
