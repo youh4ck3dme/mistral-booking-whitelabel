@@ -120,7 +120,7 @@ export default function ClientPortalPage() {
         return;
       }
 
-      const success = await cancelBooking(bookingId);
+      const success = await cancelBooking(bookingId, user.id);
 
       if (success) {
         const { data: refreshData } = await supabase

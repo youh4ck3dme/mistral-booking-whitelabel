@@ -5,10 +5,11 @@ import type { Service } from '@repo/core';
 import { dispatchBookingNotificationsRequest, storeFlashToast } from '@repo/web/src/lib/notifications/client';
 import { useNotifications } from '@repo/web/app/notifications-provider';
 import { useTenant } from '@repo/web/src/lib/tenant/TenantProvider';
+import { Calendar, TimeSlotPicker, calendarStyles, timeSlotPickerStyles } from '@repo/web/src/lib/booking';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { CSSProperties, FormEvent } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 type BookingDraft = {
   serviceId: string;
@@ -31,15 +32,14 @@ export default function BookingPageClient({
 
   const [services] = useState<Service[]>(initialServices);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
-  const [selectedDate, setSelectedDate] = useState('');
-  const [selectedTime, setSelectedTime] = useState('');
-  const [timeSlots, setTimeSlots] = useState<string[]>([]);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [emailStatus, setEmailStatus] = useState<'sent' | 'pending'>('pending');
-  const [bookedSlots, setBookedSlots] = useState<{ start_time: string; end_time: string }[]>([]);
+  const [bookedSlotsByDate, setBookedSlotsByDate] = useState<Record<string, { start_time: string; end_time: string }[]>>({});
   const [isFetchingSlots, setIsFetchingSlots] = useState(false);
 
   const primaryColor = tenant.branding?.primary_color || '#3B82F6';
@@ -72,6 +72,82 @@ export default function BookingPageClient({
     }
   };
 
+  // Fetch booked slots for the selected service and date range
+  const fetchBookedSlots = useCallback(async (date: string) => {
+    if (!selectedService || !date) {
+      setBookedSlotsByDate({});
+      return;
+    }
+
+    try {
+      setIsFetchingSlots(true);
+      
+      // Fetch for a range around the selected date (7 days before and after)
+      const dateObj = new Date(date);
+      const startRange = new Date(dateObj);
+      startRange.setDate(startRange.getDate() - 7);
+      startRange.setHours(0, 0, 0, 0);
+      
+      const endRange = new Date(dateObj);
+      endRange.setDate(endRange.getDate() + 7);
+      endRange.setHours(23, 59, 59, 999);
+
+      const { data, error: fetchError } = await supabase.rpc('get_booked_slots', {
+        p_tenant_id: tenant.tenant.id,
+        p_service_id: selectedService.id,
+        p_start_range: startRange.toISOString(),
+        p_end_range: endRange.toISOString(),
+      });
+
+      if (fetchError) throw fetchError;
+      
+      // Group booked slots by date (YYYY-MM-DD)
+      const grouped: Record<string, { start_time: string; end_time: string }[]> = {};
+      (data || []).forEach((slot: { start_time: string; end_time: string }) => {
+        const dateKey = new Date(slot.start_time).toISOString().split('T')[0];
+        if (!grouped[dateKey]) {
+          grouped[dateKey] = [];
+        }
+        grouped[dateKey].push(slot);
+      });
+      
+      setBookedSlotsByDate(grouped);
+    } catch (err: any) {
+      console.error('Failed to fetch booked slots:', err);
+      notifyError('Chyba', 'Nepodarilo sa načítať obsadené termíny.');
+    } finally {
+      setIsFetchingSlots(false);
+    }
+  }, [selectedService, tenant.tenant.id, supabase, notifyError]);
+
+  // Handle service selection
+  const handleServiceSelect = useCallback((service: Service) => {
+    setSelectedService(service);
+    setSelectedDate(null);
+    setSelectedTime(null);
+    setError(null);
+    setBookedSlotsByDate({});
+  }, []);
+
+  // Handle date selection from calendar
+  const handleDateSelect = useCallback((date: string) => {
+    setSelectedDate(date);
+    setSelectedTime(null);
+    setError(null);
+    
+    // Fetch booked slots for this date
+    if (selectedService) {
+      fetchBookedSlots(date);
+    }
+  }, [selectedService, fetchBookedSlots]);
+
+  // Handle time slot selection
+  const handleTimeSelect = useCallback((slot: { startTime: string; endTime: string; display: string }) => {
+    setSelectedTime(slot.display);
+    setError(null);
+  }, []);
+
+  // Handle service selection with slot fetching
   useEffect(() => {
     const serviceId = searchParams.get('service');
     if (!serviceId) return;
@@ -82,6 +158,7 @@ export default function BookingPageClient({
     }
   }, [searchParams, services]);
 
+  // Hydrate draft from sessionStorage
   useEffect(() => {
     if (typeof window === 'undefined' || hasHydratedDraft.current || services.length === 0) {
       return;
@@ -104,91 +181,30 @@ export default function BookingPageClient({
       }
 
       setSelectedService(persistedService);
-      setSelectedDate(typeof persistedDraft.selectedDate === 'string' ? persistedDraft.selectedDate : '');
-      setSelectedTime(typeof persistedDraft.selectedTime === 'string' ? persistedDraft.selectedTime : '');
+      
+      if (persistedDraft.selectedDate) {
+        setSelectedDate(persistedDraft.selectedDate);
+        // Fetch booked slots for this date
+        fetchBookedSlots(persistedDraft.selectedDate);
+      }
+      
+      setSelectedTime(persistedDraft.selectedTime || null);
       setError(null);
     } catch {
       window.sessionStorage.removeItem(bookingDraftStorageKey);
     }
-  }, [bookingDraftStorageKey, services]);
+  }, [bookingDraftStorageKey, services, fetchBookedSlots]);
 
+  // Fetch booked slots when service changes
   useEffect(() => {
-    if (!selectedService || !selectedDate) {
-      setTimeSlots([]);
-      return;
+    if (selectedService && selectedDate) {
+      fetchBookedSlots(selectedDate);
+    } else {
+      setBookedSlotsByDate({});
     }
+  }, [selectedService, selectedDate, fetchBookedSlots]);
 
-    // Parse operating hours (support both 'HH:MM' and 'HH:MM:SS' formats)
-    const parseTime = (t: string) => {
-      const [h, m] = t.split(':').map(Number);
-      return h * 60 + m;
-    };
-
-    const slots: string[] = [];
-    const startMinutes = parseTime(operatingHours.start);
-    const endMinutes = parseTime(operatingHours.end);
-    const duration = selectedService.duration;
-
-    for (
-      let slotStart = startMinutes;
-      slotStart + duration <= endMinutes;
-      slotStart += 30
-    ) {
-      const slotEnd = slotStart + duration;
-      const fmt = (mins: number) =>
-        `${Math.floor(mins / 60).toString().padStart(2, '0')}:${(mins % 60).toString().padStart(2, '0')}`;
-      slots.push(`${fmt(slotStart)}-${fmt(slotEnd)}`);
-    }
-
-    setTimeSlots(slots);
-  }, [selectedDate, selectedService, operatingHours]);
-
-  useEffect(() => {
-    if (!selectedService || !selectedDate) {
-      setBookedSlots([]);
-      return;
-    }
-
-    const fetchBookedSlots = async () => {
-      try {
-        setIsFetchingSlots(true);
-        const startRange = new Date(`${selectedDate}T00:00:00`).toISOString();
-        const endRange = new Date(`${selectedDate}T23:59:59`).toISOString();
-
-        const { data, error: fetchError } = await supabase.rpc('get_booked_slots', {
-          p_tenant_id: tenant.tenant.id,
-          p_service_id: selectedService.id,
-          p_start_range: startRange,
-          p_end_range: endRange,
-        });
-
-        if (fetchError) throw fetchError;
-        setBookedSlots(data ?? []);
-      } catch (err: any) {
-        console.error('Failed to fetch booked slots:', err);
-        notifyError('Chyba', 'Nepodarilo sa načítať obsadené termíny.');
-      } finally {
-        setIsFetchingSlots(false);
-      }
-    };
-
-    void fetchBookedSlots();
-  }, [selectedDate, selectedService, tenant.tenant.id, supabase, notifyError]);
-
-  const isSlotBooked = (slot: string) => {
-    if (bookedSlots.length === 0) return false;
-
-    const [slotStartStr, slotEndStr] = slot.split('-');
-    const slotStart = new Date(`${selectedDate}T${slotStartStr}:00`).getTime();
-    const slotEnd = new Date(`${selectedDate}T${slotEndStr}:00`).getTime();
-
-    return bookedSlots.some((b) => {
-      const bStart = new Date(b.start_time).getTime();
-      const bEnd = new Date(b.end_time).getTime();
-      return slotStart < bEnd && slotEnd > bStart;
-    });
-  };
-
+  // Save draft to sessionStorage
   useEffect(() => {
     if (typeof window === 'undefined' || !hasHydratedDraft.current) {
       return;
@@ -201,52 +217,45 @@ export default function BookingPageClient({
 
     const draft: BookingDraft = {
       serviceId: selectedService.id,
-      selectedDate,
-      selectedTime,
+      selectedDate: selectedDate || '',
+      selectedTime: selectedTime || '',
     };
 
     window.sessionStorage.setItem(bookingDraftStorageKey, JSON.stringify(draft));
   }, [bookingDraftStorageKey, selectedDate, selectedService, selectedTime]);
 
+  // Clear selected time if it's no longer in the available slots
   useEffect(() => {
-    if (selectedTime && timeSlots.length > 0 && !timeSlots.includes(selectedTime)) {
-      setSelectedTime('');
+    if (!selectedDate || !selectedService || !selectedTime) return;
+    
+    // Check if the selected time is still valid
+    const [startTime, endTime] = selectedTime.split('-');
+    const dateObj = new Date(selectedDate);
+    const slotStart = new Date(`${selectedDate}T${startTime}:00`);
+    const slotEnd = new Date(`${selectedDate}T${endTime}:00`);
+    
+    const isBooked = (bookedSlotsByDate[selectedDate] || []).some(booked => {
+      const bookedStart = new Date(booked.start_time);
+      const bookedEnd = new Date(booked.end_time);
+      return slotStart.getTime() < bookedEnd.getTime() && bookedStart.getTime() < slotEnd.getTime();
+    });
+    
+    const isPast = new Date() > slotStart;
+    
+    if (isBooked || isPast) {
+      setSelectedTime(null);
     }
-  }, [selectedTime, timeSlots]);
+  }, [selectedDate, selectedService, selectedTime, bookedSlotsByDate]);
 
-  const handleServiceSelect = (service: Service) => {
-    setSelectedService(service);
-    setSelectedDate('');
-    setSelectedTime('');
-    setTimeSlots([]);
-    setError(null);
-  };
-
-  const handleDateSelect = (date: string) => {
-    setSelectedDate(date);
-    setSelectedTime('');
-    setError(null);
-  };
-
-  const getAvailableDates = (): string[] => {
-    const dates: string[] = [];
-    const today = new Date();
-
-    for (let index = 0; index < 14; index++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + index);
-      dates.push(date.toISOString().split('T')[0]);
-    }
-
-    return dates;
-  };
-
-  const formatDate = (dateString: string) =>
+  // Format date for display
+  const formatDate = useCallback((dateString: string) =>
     new Date(dateString).toLocaleDateString('sk-SK', {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
-    });
+    }),
+  [],
+  );
 
   const handleBookingSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -286,8 +295,10 @@ export default function BookingPageClient({
         return;
       }
 
+      // Call create_booking RPC - DO NOT use direct insert
       const { data: booking, error: bookingError } = await supabase.rpc('create_booking', {
         p_tenant_id: tenant.tenant.id,
+        p_user_id: user.id,
         p_service_id: selectedService.id,
         p_start_time: startDate.toISOString(),
         p_end_time: endDate.toISOString(),
@@ -298,8 +309,8 @@ export default function BookingPageClient({
       setSuccess(true);
       setBookingId(booking as string);
       setSelectedService(null);
-      setSelectedDate('');
-      setSelectedTime('');
+      setSelectedDate(null);
+      setSelectedTime(null);
       clearPersistedBookingState();
 
       try {
@@ -471,23 +482,27 @@ export default function BookingPageClient({
             <span className="premium-section-label">Step 2</span>
             <h2 className="premium-section-title">Vyberte dátum</h2>
           </div>
-          <div className="premium-grid-4">
-            {getAvailableDates().map((date) => (
-              <button
-                key={date}
-                type="button"
-                onClick={() => handleDateSelect(date)}
-                className="premium-chip-button"
-                style={{
-                  backgroundColor: selectedDate === date ? primaryColor : undefined,
-                  borderColor: selectedDate === date ? primaryColor : undefined,
-                  color: selectedDate === date ? '#fff' : undefined,
-                }}
-              >
-                {formatDate(date)}
-              </button>
-            ))}
-          </div>
+          
+          {isFetchingSlots ? (
+            <div className="premium-inline-actions" style={{ padding: '1rem 0' }}>
+              <div className="premium-spinner" />
+              <span className="premium-copy">Načítavam obsadené termíny…</span>
+            </div>
+          ) : (
+            <>
+              <style jsx global>{calendarStyles}</style>
+              <Calendar
+                selectedDate={selectedDate}
+                onDateSelect={handleDateSelect}
+                operatingHours={operatingHours}
+                serviceDuration={selectedService.duration}
+                bookedSlotsByDate={bookedSlotsByDate}
+                primaryColor={primaryColor}
+                disablePastDates={true}
+                maxFutureDays={60}
+              />
+            </>
+          )}
         </section>
       )}
 
@@ -495,41 +510,31 @@ export default function BookingPageClient({
         <section className="premium-section">
           <div className="premium-section-header">
             <span className="premium-section-label">Step 3</span>
-            <h2 className="premium-section-title">Vyberte čas</h2>
+            <h2 className="premium-section-title">
+              Vyberte čas ({selectedService.duration} min)
+            </h2>
           </div>
+          
           {isFetchingSlots ? (
             <div className="premium-inline-actions" style={{ padding: '1rem 0' }}>
               <div className="premium-spinner" />
               <span className="premium-copy">Overujem dostupnosť termínov…</span>
             </div>
-          ) : timeSlots.length === 0 ? (
-            <div className="premium-empty">
-              <span className="premium-kicker">Nedostupné</span>
-              <p className="premium-empty-copy">Pre vybraný deň nie sú k dispozícii žiadne termíny.</p>
-            </div>
           ) : (
-            <div className="premium-grid-4">
-              {timeSlots.map((slot) => {
-                const isBooked = isSlotBooked(slot);
-                const isSelected = selectedTime === slot;
-                return (
-                  <button
-                    key={slot}
-                    type="button"
-                    onClick={() => setSelectedTime(slot)}
-                    disabled={isBooked}
-                    className="premium-chip-button"
-                    style={{
-                      backgroundColor: isSelected ? primaryColor : undefined,
-                      borderColor: isSelected ? primaryColor : undefined,
-                      color: isSelected ? '#fff' : undefined,
-                    }}
-                  >
-                    {slot} {isBooked && ' (Obsadené)'}
-                  </button>
-                );
-              })}
-            </div>
+            <>
+              <style jsx global>{timeSlotPickerStyles}</style>
+              <TimeSlotPicker
+                selectedDate={selectedDate}
+                serviceDuration={selectedService.duration}
+                operatingHours={operatingHours}
+                bookedSlots={bookedSlotsByDate[selectedDate] || []}
+                selectedTime={selectedTime}
+                onTimeSelect={handleTimeSelect}
+                primaryColor={primaryColor}
+                disablePastSlots={true}
+                showNextAvailable={true}
+              />
+            </>
           )}
         </section>
       )}

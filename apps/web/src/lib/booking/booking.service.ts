@@ -7,6 +7,14 @@ export interface BookingSlot {
   isAvailable: boolean;
 }
 
+// Re-export calendar utilities for backward compatibility
+export type { TimeSlot } from './calendar.utils';
+export {
+  generateTimeSlotsForDate,
+  markBookedSlots,
+  getNextAvailableSlot,
+} from './calendar.utils';
+
 /**
  * Fetch all services for a tenant
  */
@@ -152,11 +160,13 @@ export async function getBookingsByUser(
  * Cancel a booking
  */
 export async function cancelBooking(
-  bookingId: string
+  bookingId: string,
+  userId: string
 ): Promise<boolean> {
   try {
     const { data, error } = await supabase.rpc('cancel_booking', {
       p_booking_id: bookingId,
+      p_user_id: userId,
     });
 
     if (error) {
