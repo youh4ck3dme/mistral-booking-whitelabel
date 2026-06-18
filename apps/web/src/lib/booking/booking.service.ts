@@ -158,15 +158,14 @@ export async function getBookingsByUser(
 
 /**
  * Cancel a booking
+ * RPC uses auth.uid() internally - never trust client-supplied user_id
  */
 export async function cancelBooking(
-  bookingId: string,
-  userId: string
+  bookingId: string
 ): Promise<boolean> {
   try {
     const { data, error } = await supabase.rpc('cancel_booking', {
       p_booking_id: bookingId,
-      p_user_id: userId,
     });
 
     if (error) {

@@ -120,7 +120,8 @@ export default function ClientPortalPage() {
         return;
       }
 
-      const success = await cancelBooking(bookingId, user.id);
+      // RPC uses auth.uid() internally - never trust client-supplied user_id
+      const success = await cancelBooking(bookingId);
 
       if (success) {
         const { data: refreshData } = await supabase

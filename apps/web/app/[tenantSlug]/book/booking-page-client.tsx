@@ -296,9 +296,9 @@ export default function BookingPageClient({
       }
 
       // Call create_booking RPC - DO NOT use direct insert
+      // RPC uses auth.uid() internally - never trust client-supplied user_id
       const { data: booking, error: bookingError } = await supabase.rpc('create_booking', {
         p_tenant_id: tenant.tenant.id,
-        p_user_id: user.id,
         p_service_id: selectedService.id,
         p_start_time: startDate.toISOString(),
         p_end_time: endDate.toISOString(),

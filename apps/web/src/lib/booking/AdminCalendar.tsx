@@ -165,20 +165,9 @@ export function AdminCalendar({
       setCancellingId(bookingId);
       setIsLoading(true);
       
-      // Get the user ID for the booking
-      const { data: bookingData, error: fetchError } = await supabase
-        .from('bookings')
-        .select('user_id')
-        .eq('id', bookingId)
-        .single();
-      
-      if (fetchError) throw fetchError;
-      if (!bookingData?.user_id) {
-        throw new Error('Booking user not found');
-      }
-      
       // Call cancel_booking RPC - DO NOT use direct update
-      const success = await cancelBooking(bookingId, bookingData.user_id);
+      // RPC uses auth.uid() internally - never trust client-supplied user_id
+      const success = await cancelBooking(bookingId);
       
       if (success) {
         await refreshBookings();
