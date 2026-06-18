@@ -3,13 +3,14 @@
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { hasPublicSupabaseEnv } from '@repo/web/src/lib/app-url';
 import { storeFlashToast } from '@repo/web/src/lib/notifications/client';
 import { useNotifications } from '@repo/web/app/notifications-provider';
 import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
 
 export default function ResetPasswordPage() {
-  const supabase = createClientComponentClient();
+  const [supabase] = useState(() => (hasPublicSupabaseEnv() ? createClientComponentClient() : null));
   const router = useRouter();
   const searchParams = useSearchParams();
   const { notifyError, notifySuccess } = useNotifications();
@@ -50,6 +51,10 @@ export default function ResetPasswordPage() {
     try {
       setIsLoading(true);
       setError(null);
+
+      if (!supabase) {
+        throw new Error('Reset hesla teraz nie je dostupný. Chýba konfigurácia Supabase.');
+      }
 
       const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(token);
       if (exchangeError) throw exchangeError;

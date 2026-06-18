@@ -18,8 +18,10 @@ type BookingDraft = {
 
 export default function BookingPageClient({
   initialServices,
+  operatingHours = { start: '08:00', end: '18:00' },
 }: {
   initialServices: Service[];
+  operatingHours?: { start: string; end: string };
 }) {
   const [supabase] = useState(() => createClientComponentClient());
   const router = useRouter();
@@ -37,6 +39,8 @@ export default function BookingPageClient({
   const [success, setSuccess] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [emailStatus, setEmailStatus] = useState<'sent' | 'pending'>('pending');
+  const [bookedSlots, setBookedSlots] = useState<{ start_time: string; end_time: string }[]>([]);
+  const [isFetchingSlots, setIsFetchingSlots] = useState(false);
 
   const primaryColor = tenant.branding?.primary_color || '#3B82F6';
   const bookingDraftStorageKey = `bookingDraft:${tenant.tenant.slug}`;
@@ -114,32 +118,76 @@ export default function BookingPageClient({
       return;
     }
 
+    // Parse operating hours (support both 'HH:MM' and 'HH:MM:SS' formats)
+    const parseTime = (t: string) => {
+      const [h, m] = t.split(':').map(Number);
+      return h * 60 + m;
+    };
+
     const slots: string[] = [];
-    const startMinutes = 8 * 60;
-    const endMinutes = 18 * 60;
+    const startMinutes = parseTime(operatingHours.start);
+    const endMinutes = parseTime(operatingHours.end);
     const duration = selectedService.duration;
 
     for (
-      let slotStartMinutes = startMinutes;
-      slotStartMinutes + duration <= endMinutes;
-      slotStartMinutes += 30
+      let slotStart = startMinutes;
+      slotStart + duration <= endMinutes;
+      slotStart += 30
     ) {
-      const slotEndMinutes = slotStartMinutes + duration;
-      const startHours = Math.floor(slotStartMinutes / 60)
-        .toString()
-        .padStart(2, '0');
-      const startMins = (slotStartMinutes % 60).toString().padStart(2, '0');
-      const endHours = Math.floor(slotEndMinutes / 60)
-        .toString()
-        .padStart(2, '0');
-      const endMins = (slotEndMinutes % 60).toString().padStart(2, '0');
-      const startTime = `${startHours}:${startMins}`;
-      const endTime = `${endHours}:${endMins}`;
-      slots.push(`${startTime}-${endTime}`);
+      const slotEnd = slotStart + duration;
+      const fmt = (mins: number) =>
+        `${Math.floor(mins / 60).toString().padStart(2, '0')}:${(mins % 60).toString().padStart(2, '0')}`;
+      slots.push(`${fmt(slotStart)}-${fmt(slotEnd)}`);
     }
 
     setTimeSlots(slots);
-  }, [selectedDate, selectedService]);
+  }, [selectedDate, selectedService, operatingHours]);
+
+  useEffect(() => {
+    if (!selectedService || !selectedDate) {
+      setBookedSlots([]);
+      return;
+    }
+
+    const fetchBookedSlots = async () => {
+      try {
+        setIsFetchingSlots(true);
+        const startRange = new Date(`${selectedDate}T00:00:00`).toISOString();
+        const endRange = new Date(`${selectedDate}T23:59:59`).toISOString();
+
+        const { data, error: fetchError } = await supabase.rpc('get_booked_slots', {
+          p_tenant_id: tenant.tenant.id,
+          p_service_id: selectedService.id,
+          p_start_range: startRange,
+          p_end_range: endRange,
+        });
+
+        if (fetchError) throw fetchError;
+        setBookedSlots(data ?? []);
+      } catch (err: any) {
+        console.error('Failed to fetch booked slots:', err);
+        notifyError('Chyba', 'Nepodarilo sa načítať obsadené termíny.');
+      } finally {
+        setIsFetchingSlots(false);
+      }
+    };
+
+    void fetchBookedSlots();
+  }, [selectedDate, selectedService, tenant.tenant.id, supabase, notifyError]);
+
+  const isSlotBooked = (slot: string) => {
+    if (bookedSlots.length === 0) return false;
+
+    const [slotStartStr, slotEndStr] = slot.split('-');
+    const slotStart = new Date(`${selectedDate}T${slotStartStr}:00`).getTime();
+    const slotEnd = new Date(`${selectedDate}T${slotEndStr}:00`).getTime();
+
+    return bookedSlots.some((b) => {
+      const bStart = new Date(b.start_time).getTime();
+      const bEnd = new Date(b.end_time).getTime();
+      return slotStart < bEnd && slotEnd > bStart;
+    });
+  };
 
   useEffect(() => {
     if (typeof window === 'undefined' || !hasHydratedDraft.current) {
@@ -240,7 +288,6 @@ export default function BookingPageClient({
 
       const { data: booking, error: bookingError } = await supabase.rpc('create_booking', {
         p_tenant_id: tenant.tenant.id,
-        p_user_id: user.id,
         p_service_id: selectedService.id,
         p_start_time: startDate.toISOString(),
         p_end_time: endDate.toISOString(),
@@ -450,23 +497,40 @@ export default function BookingPageClient({
             <span className="premium-section-label">Step 3</span>
             <h2 className="premium-section-title">Vyberte čas</h2>
           </div>
-          <div className="premium-grid-4">
-            {timeSlots.map((slot) => (
-              <button
-                key={slot}
-                type="button"
-                onClick={() => setSelectedTime(slot)}
-                className="premium-chip-button"
-                style={{
-                  backgroundColor: selectedTime === slot ? primaryColor : undefined,
-                  borderColor: selectedTime === slot ? primaryColor : undefined,
-                  color: selectedTime === slot ? '#fff' : undefined,
-                }}
-              >
-                {slot}
-              </button>
-            ))}
-          </div>
+          {isFetchingSlots ? (
+            <div className="premium-inline-actions" style={{ padding: '1rem 0' }}>
+              <div className="premium-spinner" />
+              <span className="premium-copy">Overujem dostupnosť termínov…</span>
+            </div>
+          ) : timeSlots.length === 0 ? (
+            <div className="premium-empty">
+              <span className="premium-kicker">Nedostupné</span>
+              <p className="premium-empty-copy">Pre vybraný deň nie sú k dispozícii žiadne termíny.</p>
+            </div>
+          ) : (
+            <div className="premium-grid-4">
+              {timeSlots.map((slot) => {
+                const isBooked = isSlotBooked(slot);
+                const isSelected = selectedTime === slot;
+                return (
+                  <button
+                    key={slot}
+                    type="button"
+                    onClick={() => setSelectedTime(slot)}
+                    disabled={isBooked}
+                    className="premium-chip-button"
+                    style={{
+                      backgroundColor: isSelected ? primaryColor : undefined,
+                      borderColor: isSelected ? primaryColor : undefined,
+                      color: isSelected ? '#fff' : undefined,
+                    }}
+                  >
+                    {slot} {isBooked && ' (Obsadené)'}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </section>
       )}
 

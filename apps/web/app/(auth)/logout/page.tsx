@@ -2,15 +2,18 @@
 
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { hasPublicSupabaseEnv } from '@repo/web/src/lib/app-url';
+import { useEffect, useState } from 'react';
 
 export default function LogoutPage() {
-  const supabase = createClientComponentClient();
+  const [supabase] = useState(() => (hasPublicSupabaseEnv() ? createClientComponentClient() : null));
   const router = useRouter();
 
   useEffect(() => {
     const logout = async () => {
-      await supabase.auth.signOut();
+      if (supabase) {
+        await supabase.auth.signOut();
+      }
       router.push('/login');
     };
 

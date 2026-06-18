@@ -4,12 +4,13 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { storeFlashToast } from '@repo/web/src/lib/notifications/client';
+import { getClientAppUrl, hasPublicSupabaseEnv } from '@repo/web/src/lib/app-url';
 import { useNotifications } from '@repo/web/app/notifications-provider';
 import type { FormEvent } from 'react';
 import { useState } from 'react';
 
 export default function SignupPage() {
-  const supabase = createClientComponentClient();
+  const [supabase] = useState(() => (hasPublicSupabaseEnv() ? createClientComponentClient() : null));
   const router = useRouter();
   const { notifyError, notifySuccess } = useNotifications();
 
@@ -33,12 +34,15 @@ export default function SignupPage() {
       setIsLoading(true);
       setError(null);
 
+      if (!supabase) {
+        throw new Error('Registrácia teraz nie je dostupná. Chýba konfigurácia Supabase.');
+      }
+
       const { error: signupError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo:
-            typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000',
+          emailRedirectTo: getClientAppUrl(),
         },
       });
 

@@ -2,12 +2,13 @@
 
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Link from 'next/link';
+import { getClientAppUrl, getAppUrlWithPath, hasPublicSupabaseEnv } from '@repo/web/src/lib/app-url';
 import { useNotifications } from '@repo/web/app/notifications-provider';
 import type { FormEvent } from 'react';
 import { useState } from 'react';
 
 export default function ForgotPasswordPage() {
-  const supabase = createClientComponentClient();
+  const [supabase] = useState(() => (hasPublicSupabaseEnv() ? createClientComponentClient() : null));
   const { notifyError, notifySuccess } = useNotifications();
 
   const [email, setEmail] = useState('');
@@ -22,11 +23,15 @@ export default function ForgotPasswordPage() {
       setIsLoading(true);
       setError(null);
 
+      if (!supabase) {
+        throw new Error('Reset hesla teraz nie je dostupný. Chýba konfigurácia Supabase.');
+      }
+
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo:
           typeof window !== 'undefined'
-            ? `${window.location.origin}/reset-password`
-            : 'http://localhost:3000/reset-password',
+            ? `${getClientAppUrl()}/reset-password`
+            : getAppUrlWithPath('/reset-password'),
       });
 
       if (resetError) throw resetError;

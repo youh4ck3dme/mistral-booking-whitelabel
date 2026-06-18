@@ -3,8 +3,10 @@ import './globals.css';
 import { NotificationsProvider } from './notifications-provider';
 import PwaRegister from './pwa-register';
 import ThemeToggle from './theme-toggle';
+import CookieConsent from './cookie-consent';
+import { getAppUrl } from '@repo/web/src/lib/app-url';
 
-const metadataBase = new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'http://127.0.0.1:3000');
+const metadataBase = new URL(getAppUrl());
 const themeColors = {
   dark: '#0a0a0a',
   light: '#f7f4f0',
@@ -74,6 +76,7 @@ export default function RootLayout({
         <NotificationsProvider>
           <PwaRegister />
           <ThemeToggle />
+          <CookieConsent />
           {children}
         </NotificationsProvider>
       </body>

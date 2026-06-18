@@ -3,24 +3,30 @@
 import type { Booking, Service, TenantBranding } from '@repo/core';
 import { useNotifications } from '@repo/web/app/notifications-provider';
 import { useTenant } from '@repo/web/src/lib/tenant/TenantProvider';
+import { UsersTab } from './users-tab';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { CSSProperties } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function TenantAdminPage() {
   const supabase = createClientComponentClient();
   const router = useRouter();
   const tenant = useTenant();
-  const { notifyError, notifySuccess } = useNotifications();
+  const { notifyError, notifyInfo, notifySuccess } = useNotifications();
 
   const [services, setServices] = useState<Service[]>([]);
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  type BookingWithService = Booking & {
+    service: { name: string; price: number; duration: number } | null;
+  };
+  const [bookings, setBookings] = useState<BookingWithService[]>([]);
   const [branding, setBranding] = useState<TenantBranding | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'services' | 'bookings' | 'branding' | 'ai' | 'users'>('services');
+
+  const brandingDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const primaryColor = tenant.branding?.primary_color || '#3B82F6';
 
@@ -52,10 +58,10 @@ export default function TenantAdminPage() {
         } else if (activeTab === 'bookings') {
           const { data } = await supabase
             .from('bookings')
-            .select('*')
+            .select('*, service:services(name, price, duration)')
             .eq('tenant_id', tenant.tenant.id)
             .order('start_time', { ascending: false });
-          setBookings(data || []);
+          setBookings((data || []) as any);
         } else if (activeTab === 'branding') {
           const { data } = await supabase
             .from('tenant_branding')
@@ -115,6 +121,22 @@ export default function TenantAdminPage() {
       notifyError('Branding sa nepodarilo uložiť', 'Skontrolujte údaje a skúste to znova.');
     }
   };
+
+  const handleUpdateBrandingDebounced = (field: keyof TenantBranding, value: string) => {
+    // Optimistically update local state immediately for responsive UI
+    setBranding((current) => current ? { ...current, [field]: value } : current);
+    // Debounce the actual DB write
+    if (brandingDebounceRef.current) clearTimeout(brandingDebounceRef.current);
+    brandingDebounceRef.current = setTimeout(() => {
+      void handleUpdateBranding(field, value);
+    }, 500);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (brandingDebounceRef.current) clearTimeout(brandingDebounceRef.current);
+    };
+  }, []);
 
   const handleToggleService = async (serviceId: string, isActive: boolean) => {
     try {
@@ -328,14 +350,18 @@ export default function TenantAdminPage() {
                   {bookings.map((booking) => (
                     <tr key={booking.id}>
                       <td><strong>{booking.id.slice(0, 8)}...</strong></td>
-                      <td>{booking.service_id}</td>
-                      <td>{booking.user_id.slice(0, 8)}...</td>
+                      <td><strong>{(booking as BookingWithService).service?.name ?? booking.service_id.slice(0, 8)}</strong></td>
+                      <td><span className="premium-muted">{booking.user_id.slice(0, 8)}…</span></td>
                       <td>{formatDateTime(booking.start_time)} - {formatDateTime(booking.end_time)}</td>
                       <td>
                         <span className={badgeClass(booking.status)}>{formatStatus(booking.status)}</span>
                       </td>
                       <td>
-                        <button type="button" className="premium-button-secondary">
+                        <button
+                          type="button"
+                          className="premium-button-secondary"
+                          onClick={() => notifyInfo('Rezervácia', `Služba: ${(booking as BookingWithService).service?.name ?? '—'} | ${formatDateTime(booking.start_time)}`)}
+                        >
                           Zobraziť
                         </button>
                       </td>
@@ -362,7 +388,7 @@ export default function TenantAdminPage() {
                   type="text"
                   className="premium-input"
                   value={branding?.logo_url || ''}
-                  onChange={(event) => handleUpdateBranding('logo_url', event.target.value)}
+                  onChange={(event) => handleUpdateBrandingDebounced('logo_url', event.target.value)}
                   placeholder="https://example.com/logo.png"
                 />
               </div>
@@ -374,7 +400,7 @@ export default function TenantAdminPage() {
                   type="text"
                   className="premium-input"
                   value={branding?.favicon_url || ''}
-                  onChange={(event) => handleUpdateBranding('favicon_url', event.target.value)}
+                  onChange={(event) => handleUpdateBrandingDebounced('favicon_url', event.target.value)}
                   placeholder="https://example.com/favicon.ico"
                 />
               </div>
@@ -387,13 +413,13 @@ export default function TenantAdminPage() {
                     type="color"
                     className="premium-color-input"
                     value={branding?.primary_color || '#3B82F6'}
-                    onChange={(event) => handleUpdateBranding('primary_color', event.target.value)}
+                    onChange={(event) => handleUpdateBrandingDebounced('primary_color', event.target.value)}
                   />
                   <input
                     type="text"
                     className="premium-input"
                     value={branding?.primary_color || '#3B82F6'}
-                    onChange={(event) => handleUpdateBranding('primary_color', event.target.value)}
+                    onChange={(event) => handleUpdateBrandingDebounced('primary_color', event.target.value)}
                     maxLength={7}
                   />
                 </div>
@@ -484,13 +510,7 @@ export default function TenantAdminPage() {
       )}
 
       {activeTab === 'users' && (
-        <section className="premium-card premium-stack">
-          <span className="premium-section-label">Users</span>
-          <h2 className="premium-section-title">Používatelia</h2>
-          <p className="premium-copy">
-            Správa používateľov bude implementovaná v nasledujúcej fáze.
-          </p>
-        </section>
+        <UsersTab tenantId={tenant.tenant.id} supabase={supabase} />
       )}
     </div>
   );

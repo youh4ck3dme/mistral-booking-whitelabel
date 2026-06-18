@@ -1,25 +1,32 @@
-const CACHE_NAME = 'nexify-shell-v1';
+const CACHE_NAME = 'nexify-shell-v2';
+
+// Static shell routes cached on install
 const SHELL_ROUTES = ['/', '/404', '/manifest.webmanifest'];
+
+// Path prefixes that always use stale-while-revalidate
 const STATIC_PATH_PREFIXES = ['/_next/static/', '/icons/'];
 
+// ---------------------------------------------------------------------------
+// Install — pre-cache shell routes
+// ---------------------------------------------------------------------------
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) =>
-      Promise.allSettled(
-        SHELL_ROUTES.map((route) =>
-          cache.add(
-            new Request(route, {
-              cache: 'reload',
-            })
+    caches
+      .open(CACHE_NAME)
+      .then((cache) =>
+        Promise.allSettled(
+          SHELL_ROUTES.map((route) =>
+            cache.add(new Request(route, { cache: 'reload' }))
           )
         )
       )
-    )
   );
-
   self.skipWaiting();
 });
 
+// ---------------------------------------------------------------------------
+// Activate — purge old caches
+// ---------------------------------------------------------------------------
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
@@ -35,65 +42,75 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// ---------------------------------------------------------------------------
+// Network-first: try network, fall back to cache
+// ---------------------------------------------------------------------------
 async function networkFirst(request) {
   const cache = await caches.open(CACHE_NAME);
-
   try {
     const response = await fetch(request);
-    cache.put(request, response.clone());
-    return response;
-  } catch (error) {
-    const cachedResponse = await cache.match(request);
-
-    if (cachedResponse) {
-      return cachedResponse;
+    // Only cache valid responses
+    if (response.ok) {
+      cache.put(request, response.clone());
     }
-
-    throw error;
+    return response;
+  } catch {
+    const cached = await cache.match(request);
+    if (cached) return cached;
+    // Offline fallback: serve the root shell for navigation requests
+    if (request.mode === 'navigate') {
+      const shell = await cache.match('/');
+      if (shell) return shell;
+    }
+    return Response.error();
   }
 }
 
+// ---------------------------------------------------------------------------
+// Stale-while-revalidate: serve cache instantly, update in background
+// ---------------------------------------------------------------------------
 async function staleWhileRevalidate(request) {
   const cache = await caches.open(CACHE_NAME);
-  const cachedResponse = await cache.match(request);
+  const cached = await cache.match(request);
 
-  const networkResponsePromise = fetch(request)
+  const networkPromise = fetch(request)
     .then((response) => {
-      cache.put(request, response.clone());
+      if (response.ok) cache.put(request, response.clone());
       return response;
     })
     .catch(() => null);
 
-  if (cachedResponse) {
-    return cachedResponse;
-  }
-
-  const networkResponse = await networkResponsePromise;
-
-  if (networkResponse) {
-    return networkResponse;
-  }
-
-  return Response.error();
+  return cached ?? (await networkPromise) ?? Response.error();
 }
 
+// ---------------------------------------------------------------------------
+// Fetch handler
+// ---------------------------------------------------------------------------
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  if (request.method !== 'GET' || url.origin !== self.location.origin) {
-    return;
-  }
+  // Only handle same-origin GETs
+  if (request.method !== 'GET' || url.origin !== self.location.origin) return;
 
-  if (request.mode === 'navigate' && SHELL_ROUTES.includes(url.pathname)) {
-    event.respondWith(networkFirst(request));
-    return;
-  }
-
+  // Static assets (_next/static, icons, fonts, images) — stale-while-revalidate
   if (
     STATIC_PATH_PREFIXES.some((prefix) => url.pathname.startsWith(prefix)) ||
     ['style', 'script', 'font', 'image'].includes(request.destination)
   ) {
     event.respondWith(staleWhileRevalidate(request));
+    return;
   }
+
+  // Navigation requests (page loads):
+  // - Shell routes: network-first with offline fallback
+  // - Tenant booking routes (/[slug], /[slug]/book, /[slug]/portal): network-first
+  //   so users get fresh server-rendered content, with shell fallback if offline
+  if (request.mode === 'navigate') {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  // API routes — never intercept
+  if (url.pathname.startsWith('/api/')) return;
 });

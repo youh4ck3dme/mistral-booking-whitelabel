@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import React from 'react';
 import { getServerSession } from '@repo/web/src/lib/auth/server-session';
+import { isPlatformAdmin } from '@repo/web/src/lib/auth/platform-admin';
 
 export default async function PlatformLayout({
   children,
@@ -10,10 +11,16 @@ export default async function PlatformLayout({
 }) {
   const session = await getServerSession();
 
-  // In production, check if user has platform admin role
-  // For demo, we'll just check if user is logged in
-  if (!session) {
+  if (!session?.user) {
     redirect('/login');
+  }
+
+  // Double-check: middleware already guards /platform, but the layout
+  // re-validates so that direct server renders (e.g. Next.js prerendering)
+  // never leak content to non-platform-admins.
+  const adminAccess = await isPlatformAdmin(session.user.id);
+  if (!adminAccess) {
+    redirect('/404');
   }
 
   return (

@@ -1,55 +1,19 @@
-'use client';
-
 import type { Tenant } from '@repo/core';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createServiceRoleClient } from '@repo/web/src/lib/supabase/service-role';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
 
-export default function PlatformAdminPage() {
-  const supabase = createClientComponentClient();
-  const router = useRouter();
+// Server Component — auth is already enforced by middleware + layout.
+// No client-side auth checks needed here.
+export default async function PlatformAdminPage() {
+  const supabase = createServiceRoleClient();
 
-  const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, error } = await supabase
+    .from('tenants')
+    .select('id, name, slug, created_at')
+    .order('created_at', { ascending: false });
 
-  useEffect(() => {
-    const checkAdmin = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        router.push('/login');
-      }
-    };
-
-    checkAdmin();
-  }, [router, supabase.auth]);
-
-  useEffect(() => {
-    const fetchTenants = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        const { data, error: tenantsError } = await supabase
-          .from('tenants')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (tenantsError) throw tenantsError;
-        setTenants(data || []);
-      } catch {
-        setError('Nepodarilo sa načítať tenantov');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTenants();
-  }, [supabase]);
+  const tenants: Tenant[] = data ?? [];
+  const fetchError = error?.message ?? null;
 
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString('sk-SK', {
@@ -58,27 +22,7 @@ export default function PlatformAdminPage() {
       year: 'numeric',
     });
 
-  if (isLoading) {
-    return (
-      <div className="premium-card premium-stack">
-        <div className="premium-inline-actions">
-          <div className="premium-spinner" />
-          <span className="premium-copy">Loading platform overview…</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="premium-stack">
-        <div className="premium-alert premium-alert--error">{error}</div>
-        <button type="button" className="premium-button" onClick={() => router.push('/')}>
-          Späť na domovskú stránku
-        </button>
-      </div>
-    );
-  }
+  const thirtyDaysAgo = Date.now() - 30 * 86_400_000;
 
   return (
     <div className="premium-stack">
@@ -98,79 +42,87 @@ export default function PlatformAdminPage() {
         </div>
       </section>
 
-      <section className="premium-kpi-grid">
-        <div className="premium-stat">
-          <span className="premium-stat-value">{tenants.length}</span>
-          <span className="premium-stat-label">tenantov celkom</span>
+      {fetchError ? (
+        <div className="premium-alert premium-alert--error">
+          Chyba pri načítaní tenantov: {fetchError}
         </div>
-        <div className="premium-stat">
-          <span className="premium-stat-value">{tenants.filter(() => true).length}</span>
-          <span className="premium-stat-label">aktívni tenanti</span>
-        </div>
-        <div className="premium-stat">
-          <span className="premium-stat-value">
-            {tenants.filter((tenant) => Date.now() - new Date(tenant.created_at).getTime() < 30 * 86400000).length}
-          </span>
-          <span className="premium-stat-label">noví za 30 dní</span>
-        </div>
-      </section>
+      ) : (
+        <>
+          <section className="premium-kpi-grid">
+            <div className="premium-stat">
+              <span className="premium-stat-value">{tenants.length}</span>
+              <span className="premium-stat-label">tenantov celkom</span>
+            </div>
+            <div className="premium-stat">
+              <span className="premium-stat-value">{tenants.length}</span>
+              <span className="premium-stat-label">aktívni tenanti</span>
+            </div>
+            <div className="premium-stat">
+              <span className="premium-stat-value">
+                {tenants.filter((t) => new Date(t.created_at).getTime() > thirtyDaysAgo).length}
+              </span>
+              <span className="premium-stat-label">noví za 30 dní</span>
+            </div>
+          </section>
 
-      <section className="premium-section">
-        <div className="premium-toolbar">
-          <div className="premium-section-header">
-            <span className="premium-section-label">Tenants</span>
-            <h2 className="premium-section-title">Zoznam tenantov</h2>
-          </div>
-          <Link href="/platform/tenants/new" className="premium-button-secondary">
-            Create tenant
-          </Link>
-        </div>
+          <section className="premium-section">
+            <div className="premium-toolbar">
+              <div className="premium-section-header">
+                <span className="premium-section-label">Tenants</span>
+                <h2 className="premium-section-title">Zoznam tenantov</h2>
+              </div>
+              <Link href="/platform/tenants/new" className="premium-button-secondary">
+                Create tenant
+              </Link>
+            </div>
 
-        {tenants.length === 0 ? (
-          <div className="premium-empty">
-            <span className="premium-kicker">Fallback state</span>
-            <h3 className="premium-card-title">Žiadni tenanti</h3>
-            <p className="premium-empty-copy">
-              Kliknite na „Pridať nového tenanta“ a vytvorte prvý workspace.
-            </p>
-          </div>
-        ) : (
-          <div className="premium-table-wrap">
-            <table className="premium-table">
-              <thead>
-                <tr>
-                  <th>Názov</th>
-                  <th>Slug</th>
-                  <th>Vytvorený</th>
-                  <th>Akcie</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tenants.map((tenant) => (
-                  <tr key={tenant.id}>
-                    <td><strong>{tenant.name}</strong></td>
-                    <td>/{tenant.slug}/book</td>
-                    <td>{formatDate(tenant.created_at)}</td>
-                    <td>
-                      <div className="premium-inline-actions">
-                        <Link
-                          href={`/platform/tenants/${tenant.id}/edit`}
-                          className="premium-button-secondary"
-                        >
-                          Upraviť
-                        </Link>
-                        <Link href={`/${tenant.slug}`} className="premium-button">
-                          Zobraziť
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+            {tenants.length === 0 ? (
+              <div className="premium-empty">
+                <span className="premium-kicker">Fallback state</span>
+                <h3 className="premium-card-title">Žiadni tenanti</h3>
+                <p className="premium-empty-copy">
+                  Kliknite na &ldquo;Pridať nového tenanta&rdquo; a vytvorte prvý workspace.
+                </p>
+              </div>
+            ) : (
+              <div className="premium-table-wrap">
+                <table className="premium-table">
+                  <thead>
+                    <tr>
+                      <th>Názov</th>
+                      <th>Slug</th>
+                      <th>Vytvorený</th>
+                      <th>Akcie</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tenants.map((tenant) => (
+                      <tr key={tenant.id}>
+                        <td><strong>{tenant.name}</strong></td>
+                        <td>/{tenant.slug}/book</td>
+                        <td>{formatDate(tenant.created_at)}</td>
+                        <td>
+                          <div className="premium-inline-actions">
+                            <Link
+                              href={`/platform/tenants/${tenant.id}/edit`}
+                              className="premium-button-secondary"
+                            >
+                              Upraviť
+                            </Link>
+                            <Link href={`/${tenant.slug}`} className="premium-button">
+                              Zobraziť
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        </>
+      )}
     </div>
   );
 }

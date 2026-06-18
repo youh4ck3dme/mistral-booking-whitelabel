@@ -1,4 +1,5 @@
 import type { NotificationContext, NotificationEmailPayload } from './types';
+import { getAppUrl } from '@repo/web/src/lib/app-url';
 
 const DEFAULT_BRAND_COLOR = '#8ba5ff';
 const DEFAULT_BRAND_NAME = 'NEXIFY TECH CENTER';
@@ -11,10 +12,6 @@ function formatDateTime(date: string) {
     month: 'long',
     year: 'numeric',
   }).format(new Date(date));
-}
-
-function getAppUrl() {
-  return process.env.NEXT_PUBLIC_APP_URL ?? 'http://127.0.0.1:3000';
 }
 
 function getBrandColor(context: NotificationContext) {

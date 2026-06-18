@@ -92,7 +92,6 @@ export async function isSlotAvailable(
  */
 export async function createBooking(
   tenantId: string,
-  userId: string,
   serviceId: string,
   startTime: string,
   endTime: string
@@ -100,7 +99,6 @@ export async function createBooking(
   try {
     const { data, error } = await supabase.rpc('create_booking', {
       p_tenant_id: tenantId,
-      p_user_id: userId,
       p_service_id: serviceId,
       p_start_time: startTime,
       p_end_time: endTime,
@@ -154,13 +152,11 @@ export async function getBookingsByUser(
  * Cancel a booking
  */
 export async function cancelBooking(
-  bookingId: string,
-  userId: string
+  bookingId: string
 ): Promise<boolean> {
   try {
     const { data, error } = await supabase.rpc('cancel_booking', {
       p_booking_id: bookingId,
-      p_user_id: userId,
     });
 
     if (error) {

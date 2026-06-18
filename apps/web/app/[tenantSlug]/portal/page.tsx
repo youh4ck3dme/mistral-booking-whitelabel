@@ -3,7 +3,7 @@
 import type { Booking } from '@repo/core';
 import { dispatchBookingNotificationsRequest, storeFlashToast } from '@repo/web/src/lib/notifications/client';
 import { useNotifications } from '@repo/web/app/notifications-provider';
-import { cancelBooking, getBookingsByUser } from '@repo/web/src/lib/booking/booking.service';
+import { cancelBooking } from '@repo/web/src/lib/booking/booking.service';
 import { useTenant } from '@repo/web/src/lib/tenant/TenantProvider';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Link from 'next/link';
@@ -17,7 +17,10 @@ export default function ClientPortalPage() {
   const tenant = useTenant();
   const { notifyError, notifyInfo, notifySuccess } = useNotifications();
 
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  type BookingWithService = Booking & {
+    service: { name: string; price: number; duration: number } | null;
+  };
+  const [bookings, setBookings] = useState<BookingWithService[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
@@ -51,8 +54,18 @@ export default function ClientPortalPage() {
           return;
         }
 
-        const items = await getBookingsByUser(tenant.tenant.id, user.id);
-        setBookings(items);
+        const { data, error: fetchError } = await supabase
+          .from('bookings')
+          .select('*, service:services(name, price, duration)')
+          .eq('tenant_id', tenant.tenant.id)
+          .eq('user_id', user.id)
+          .order('start_time', { ascending: true });
+
+        if (fetchError) {
+          setError('Nepodarilo sa načítať vaše rezervácie');
+          return;
+        }
+        setBookings((data || []) as any);
       } catch {
         setError('Nepodarilo sa načítať vaše rezervácie');
       } finally {
@@ -107,11 +120,16 @@ export default function ClientPortalPage() {
         return;
       }
 
-      const success = await cancelBooking(bookingId, user.id);
+      const success = await cancelBooking(bookingId);
 
       if (success) {
-        const updatedBookings = await getBookingsByUser(tenant.tenant.id, user.id);
-        setBookings(updatedBookings);
+        const { data: refreshData } = await supabase
+          .from('bookings')
+          .select('*, service:services(name, price, duration)')
+          .eq('tenant_id', tenant.tenant.id)
+          .eq('user_id', user.id)
+          .order('start_time', { ascending: true });
+        setBookings((refreshData || []) as any);
         notifySuccess('Rezervácia bola zrušená', 'Klientský portál aj stav rezervácie sú aktualizované.');
 
         try {
@@ -220,7 +238,8 @@ export default function ClientPortalPage() {
                 {bookings.map((booking) => (
                   <tr key={booking.id}>
                     <td>
-                      <strong>{booking.service_id}</strong>
+                      <strong>{(booking as BookingWithService).service?.name ?? '—'}</strong>
+                      <div className="premium-muted">{(booking as BookingWithService).service?.price} € · {(booking as BookingWithService).service?.duration} min</div>
                     </td>
                     <td>{formatDateTime(booking.start_time)} - {formatDateTime(booking.end_time)}</td>
                     <td>

@@ -276,6 +276,24 @@ export interface Database {
         };
         Relationships: [];
       };
+      platform_admins: {
+        Row: {
+          id: string;
+          user_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -284,7 +302,6 @@ export interface Database {
       create_booking: {
         Args: {
           p_tenant_id: string;
-          p_user_id: string;
           p_service_id: string;
           p_start_time: string;
           p_end_time: string;
@@ -301,9 +318,20 @@ export interface Database {
       cancel_booking: {
         Args: {
           p_booking_id: string;
-          p_user_id: string;
         };
         Returns: boolean;
+      };
+      get_booked_slots: {
+        Args: {
+          p_tenant_id: string;
+          p_service_id: string;
+          p_start_range: string;
+          p_end_range: string;
+        };
+        Returns: {
+          start_time: string;
+          end_time: string;
+        }[];
       };
       schedule_booking_reminders: {
         Args: {

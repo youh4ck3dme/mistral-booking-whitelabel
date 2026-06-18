@@ -4,12 +4,13 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { storeFlashToast } from '@repo/web/src/lib/notifications/client';
+import { getClientAppUrl, hasPublicSupabaseEnv } from '@repo/web/src/lib/app-url';
 import { useNotifications } from '@repo/web/app/notifications-provider';
 import type { FormEvent } from 'react';
 import { useState } from 'react';
 
 export default function LoginPage() {
-  const supabase = createClientComponentClient();
+  const [supabase] = useState(() => (hasPublicSupabaseEnv() ? createClientComponentClient() : null));
   const router = useRouter();
   const { notifyError } = useNotifications();
 
@@ -24,6 +25,10 @@ export default function LoginPage() {
     try {
       setIsLoading(true);
       setError(null);
+
+      if (!supabase) {
+        throw new Error('Prihlásenie teraz nie je dostupné. Chýba konfigurácia Supabase.');
+      }
 
       const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
       if (loginError) throw loginError;
@@ -59,11 +64,14 @@ export default function LoginPage() {
       setIsLoading(true);
       setError(null);
 
+      if (!supabase) {
+        throw new Error('Google prihlásenie teraz nie je dostupné. Chýba konfigurácia Supabase.');
+      }
+
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo:
-            typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000',
+          redirectTo: getClientAppUrl(),
         },
       });
 
