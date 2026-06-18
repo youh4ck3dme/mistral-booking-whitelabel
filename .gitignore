@@ -39,6 +39,7 @@ next-env.d.ts
 supabase/config.toml
 supabase/.env
 supabase/.temp/
+supabase/.branches/
 
 # Turbo
 .turbo/
