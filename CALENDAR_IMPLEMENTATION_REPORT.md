@@ -21,6 +21,10 @@
 - `apps/web/app/[tenantSlug]/book/booking-page-client.tsx` - Updated with Calendar and TimeSlotPicker
 - `apps/web/app/[tenantSlug]/admin/page.tsx` - Added AdminCalendar component
 - `apps/web/src/lib/booking/booking.service.ts` - Added re-exports for calendar utilities
+- `apps/web/app/[tenantSlug]/portal/page.tsx` - Fixed to pass user_id to cancelBooking RPC
+
+### Bug Fixes Applied:
+- **BLOCKER FIXED**: `cancelBooking` function now accepts and passes `userId` parameter to `cancel_booking` RPC (required by database function signature)
 
 ---
 
@@ -131,15 +135,16 @@
 - **Safety**: NEVER uses direct INSERT into bookings table
 
 ### `cancel_booking` RPC Usage:
-- **Where**: `AdminCalendar.tsx` (handleCancelBooking function)
+- **Where**: `AdminCalendar.tsx` (handleCancelBooking function), `portal/page.tsx` (handleCancelBooking)
 - **Purpose**: Cancel an existing booking with validation
-- **Parameters**: `p_booking_id`, `p_user_id`
+- **Parameters**: `p_booking_id`, `p_user_id` (both required)
 - **Returns**: Boolean success
 - **Validations Performed**:
   - Booking exists
   - Booking belongs to user
   - Booking is not already cancelled
 - **Safety**: NEVER uses direct UPDATE on bookings table
+- **Fix Applied**: Updated all call sites to pass both booking_id and user_id parameters
 
 ---
 

@@ -146,9 +146,17 @@ The workflow includes:
 1. Visit your Vercel deployment URL
 2. Test the following:
    - Home page loads
-   - Navigate to `/demo-clinic/book` (should show booking page)
-   - Navigate to `/wellness-center/book` (should show different branding)
+   - Navigate to `/demo-clinic/book` (should show **interactive calendar**)
+   - Navigate to `/wellness-center/book` (should show different branding and calendar)
+   - **Test Calendar Features**:
+     - Select a service
+     - Navigate through months using prev/next buttons
+     - Click "Today" button
+     - Select a date (past dates should be disabled)
+     - View available time slots
+     - Booked slots should be marked unavailable
    - Try to make a test booking (if auth is configured)
+   - **Admin Calendar**: Navigate to `/demo-clinic/admin` and verify calendar view with bookings
 
 ### 4.3 Test Authentication
 1. If you enabled email auth:
@@ -254,6 +262,8 @@ When you make schema changes:
 | **CORS errors** | Add your frontend domain to **Allowed Origins** in Supabase Auth settings. |
 | **Build failures** | Check Node.js version (must be >= 18.0.0). Run `pnpm install` and `pnpm build` locally. |
 | **Booking creation fails** | Verify the `create_booking` RPC function exists and has correct permissions. |
+| **Calendar not loading** | Check `get_booked_slots` RPC function. Verify time_slots_config table has data. |
+| **Time slots not showing** | Check operating hours in time_slots_config or verify fallback hours (09:00-17:00). |
 | **Tenant not found** | Check the `tenants` table has the correct slug. Verify URL routing in Next.js. |
 
 ### Debugging Tips
