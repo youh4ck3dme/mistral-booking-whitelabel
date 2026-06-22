@@ -24,7 +24,7 @@ export default function TenantAdminPage() {
   const [branding, setBranding] = useState<TenantBranding | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'services' | 'bookings' | 'branding' | 'ai' | 'users'>('services');
+  const [activeTab, setActiveTab] = useState<'services' | 'bookings' | 'branding' | 'ai' | 'users' | 'leads'>('services');
 
   const brandingDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -231,6 +231,7 @@ export default function TenantAdminPage() {
           { id: 'branding', label: 'Branding' },
           { id: 'ai', label: 'AI Nastavenia' },
           { id: 'users', label: 'Používatelia' },
+          { id: 'leads', label: 'Leads' },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -511,6 +512,31 @@ export default function TenantAdminPage() {
 
       {activeTab === 'users' && (
         <UsersTab tenantId={tenant.tenant.id} supabase={supabase} />
+      )}
+
+      {activeTab === 'leads' && (
+        <section className="premium-section">
+          <div className="premium-toolbar">
+            <div className="premium-section-header">
+              <span className="premium-section-label">Sales Pipeline</span>
+              <h2 className="premium-section-title">Booking Growth Leads</h2>
+            </div>
+            <Link href={`/${tenant.tenant.slug}/admin/leads`} className="premium-button">
+              View All Leads
+            </Link>
+          </div>
+          <div className="premium-card premium-stack">
+            <p className="premium-card-copy">
+              Manage your sales pipeline for booking PWA opportunities. 
+              View, filter, and track leads across different verticals.
+            </p>
+            <div className="premium-inline-actions" style={{ marginTop: '1rem' }}>
+              <Link href={`/${tenant.tenant.slug}/admin/leads`} className="premium-button">
+                Go to Leads Dashboard
+              </Link>
+            </div>
+          </div>
+        </section>
       )}
     </div>
   );
