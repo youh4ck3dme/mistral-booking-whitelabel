@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import type { CSSProperties } from 'react';
 import {
-  getLeadsWithMessagesAndOffers,
+  client as leadsClient,
   getLeadStatusOptions,
   getVerticalOptions,
   getPriorityOptions,
@@ -45,6 +45,8 @@ const PRIORITY_LABELS: Record<number, string> = {
   5: 'P5',
 };
 
+const { getLeadsWithMessagesAndOffersClient } = leadsClient;
+
 export default function LeadsAdminPage() {
   const tenant = useTenant();
   const primaryColor = tenant.branding?.primary_color || '#3B82F6';
@@ -72,7 +74,7 @@ export default function LeadsAdminPage() {
       try {
         setIsLoading(true);
         setError(null);
-        const data = await getLeadsWithMessagesAndOffers();
+        const data = await getLeadsWithMessagesAndOffersClient();
         setLeads(data);
       } catch (err) {
         console.error('Error fetching leads:', err);
