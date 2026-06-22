@@ -5,7 +5,7 @@ import Link from 'next/link';
 import type { CSSProperties } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  getLeadById,
+  client as leadsClient,
   getLeadStatusOptions,
   getVerticalOptions,
   getPriorityOptions,
@@ -52,6 +52,8 @@ const OFFER_STATUS_COLORS: Record<string, string> = {
   rejected: '#EF4444',
 };
 
+const { getLeadByIdClient } = leadsClient;
+
 export default function LeadDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -71,7 +73,7 @@ export default function LeadDetailPage() {
       try {
         setIsLoading(true);
         setError(null);
-        const data = await getLeadById(leadId);
+        const data = await getLeadByIdClient(leadId);
         setLead(data);
       } catch (err) {
         console.error('Error fetching lead:', err);
