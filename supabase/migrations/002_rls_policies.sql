@@ -42,7 +42,7 @@ USING (
 
 -- Bookings: Users can only access their own bookings or bookings for their tenant
 CREATE POLICY "Tenant users can access their bookings"
-ON bookings FOR ALL
+ON bookings FOR SELECT
 TO authenticated
 USING (
   (user_id = auth.uid()) OR
@@ -53,6 +53,30 @@ USING (
     AND role IN ('admin', 'staff')
   ))
 );
+
+-- Bookings: Restrict INSERT to authenticated users with tenant membership
+-- Inserts are allowed via the create_booking RPC which uses SECURITY DEFINER
+CREATE POLICY "Authenticated users can create bookings via RPC"
+ON bookings FOR INSERT
+TO authenticated
+WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM services
+    WHERE services.id = bookings.service_id AND services.is_active = true
+  ) AND
+  EXISTS (
+    SELECT 1 FROM tenant_users
+    WHERE tenant_users.tenant_id = bookings.tenant_id AND tenant_users.user_id = auth.uid()
+  )
+);
+
+-- Bookings: Restrict UPDATE - only allow status changes via RPC functions
+-- Direct client UPDATE is denied; use cancel_booking() RPC instead.
+-- Admin/staff can update bookings within their tenant, but should use RPCs.
+CREATE POLICY "Deny direct booking updates"
+ON bookings FOR UPDATE
+TO authenticated
+USING (false);
 
 -- Tenant branding: Users can only access branding for their tenant
 CREATE POLICY "Tenant users can access their branding"
@@ -129,17 +153,5 @@ ON time_slots_config FOR SELECT
 TO public
 USING (is_active = true);
 
--- Public can create bookings (but need to be authenticated)
-CREATE POLICY "Authenticated users can create bookings"
-ON bookings FOR INSERT
-TO authenticated
-WITH CHECK (
-  EXISTS (
-    SELECT 1 FROM services
-    WHERE services.id = bookings.service_id AND services.is_active = true
-  ) AND
-  EXISTS (
-    SELECT 1 FROM tenant_users
-    WHERE tenant_users.tenant_id = bookings.tenant_id AND tenant_users.user_id = auth.uid()
-  )
-);
+-- Note: The INSERT policy for bookings is defined earlier (lines 59-71)
+-- The UPDATE policy (lines 76-79) denies direct client updates.

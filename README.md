@@ -83,6 +83,7 @@ mistral-booking-whitelabel/
 | Multi-Tenancy | Single DB + `tenant_id` + RLS isolation | ✅ Implemented |
 | White-Label | Custom branding, domains, and theming per tenant | ✅ Implemented |
 | Booking System | Secure RPC-based booking with time slot validation | ✅ Implemented |
+| **Clickable Calendar** | Interactive calendar with time slot picker for reservations | ✅ Implemented |
 | AI CRO | Recommendations, upsell bundles, A/B testing | ✅ Implemented |
 | Admin Dashboards | Tenant and platform-level admin panels | ✅ Implemented |
 
@@ -125,15 +126,17 @@ pnpm lint
 ```
 
 ### Test Coverage
-- Unit tests: Core booking logic, RLS policies, AI fallback
+- Unit tests: Core booking logic, RLS policies, AI fallback, **calendar utilities (51 tests)**
 - Integration tests: FE/BE slot parity, tenant isolation
-- E2E tests: Full booking flow for 2+ tenants
+- E2E tests: Full booking flow for 2+ tenants, **calendar interaction tests**
 
 ---
 
 ## 📄 Documentation
 - [Architecture Overview](docs/ARCHITECTURE.md)
 - [Deployment Guide](docs/DEPLOYMENT.md)
+- [Clickable Booking Calendar Implementation](CALENDAR_IMPLEMENTATION_REPORT.md)
+- [Calendar QA Checklist](apps/web/src/lib/booking/CALENDAR_QA_CHECKLIST.md)
 
 ---
 

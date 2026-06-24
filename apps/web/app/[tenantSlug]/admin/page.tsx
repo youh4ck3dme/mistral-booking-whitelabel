@@ -8,7 +8,25 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { CSSProperties } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, lazy, Suspense } from 'react';
+import dynamic from 'next/dynamic';
+
+// Dynamically import AdminCalendar to avoid SSR issues with client-side only features
+const DynamicAdminCalendar = dynamic(
+  () => import('@repo/web/src/lib/booking/AdminCalendar').then((mod) => mod.AdminCalendar),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="premium-inline-actions">
+        <div className="premium-spinner" />
+        <span className="premium-copy">Načítavam kalendár...</span>
+      </div>
+    ),
+  }
+);
+
+// Import styles for server-side rendering
+import { adminCalendarStyles } from '@repo/web/src/lib/booking/AdminCalendar';
 
 export default function TenantAdminPage() {
   const supabase = createClientComponentClient();
@@ -335,42 +353,17 @@ export default function TenantAdminPage() {
               <p className="premium-empty-copy">Keď zákazníci začnú rezervovať, objavia sa tu.</p>
             </div>
           ) : (
-            <div className="premium-table-wrap">
-              <table className="premium-table">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Služba</th>
-                    <th>Používateľ</th>
-                    <th>Dátum a čas</th>
-                    <th>Stav</th>
-                    <th>Akcie</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bookings.map((booking) => (
-                    <tr key={booking.id}>
-                      <td><strong>{booking.id.slice(0, 8)}...</strong></td>
-                      <td><strong>{(booking as BookingWithService).service?.name ?? booking.service_id.slice(0, 8)}</strong></td>
-                      <td><span className="premium-muted">{booking.user_id.slice(0, 8)}…</span></td>
-                      <td>{formatDateTime(booking.start_time)} - {formatDateTime(booking.end_time)}</td>
-                      <td>
-                        <span className={badgeClass(booking.status)}>{formatStatus(booking.status)}</span>
-                      </td>
-                      <td>
-                        <button
-                          type="button"
-                          className="premium-button-secondary"
-                          onClick={() => notifyInfo('Rezervácia', `Služba: ${(booking as BookingWithService).service?.name ?? '—'} | ${formatDateTime(booking.start_time)}`)}
-                        >
-                          Zobraziť
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <>
+              <style jsx global>{`
+                ${(typeof window !== 'undefined' && document.getElementById('admin-calendar-styles')) ? '' : adminCalendarStyles}
+              `}</style>
+              <DynamicAdminCalendar
+                tenantId={tenant.tenant.id}
+                services={services}
+                bookings={bookings as BookingWithService[]}
+                primaryColor={primaryColor}
+              />
+            </>
           )}
         </section>
       )}

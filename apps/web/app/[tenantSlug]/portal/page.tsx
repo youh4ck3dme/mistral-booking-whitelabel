@@ -120,6 +120,7 @@ export default function ClientPortalPage() {
         return;
       }
 
+      // RPC uses auth.uid() internally - never trust client-supplied user_id
       const success = await cancelBooking(bookingId);
 
       if (success) {
