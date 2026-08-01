@@ -2,6 +2,7 @@ export interface Tenant {
   id: string;
   name: string;
   slug: string;
+  locale: string;
   created_at: string;
 }
 

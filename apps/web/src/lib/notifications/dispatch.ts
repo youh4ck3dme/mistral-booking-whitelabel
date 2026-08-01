@@ -6,12 +6,12 @@ import {
   markNotificationDeliverySent,
 } from './repository';
 import { sendTransactionalEmail } from './provider';
-import { renderNotificationEmail } from './templates';
+import { renderNotificationEmailWithAI } from './ai-content';
 import type { NotificationDelivery, NotificationDispatchResult } from './types';
 
 async function processDelivery(delivery: NotificationDelivery) {
   const context = await getNotificationContext(delivery);
-  const emailPayload = renderNotificationEmail(context);
+  const emailPayload = await renderNotificationEmailWithAI(context);
   const providerResponse = await sendTransactionalEmail(emailPayload);
 
   await markNotificationDeliverySent(delivery.id, providerResponse.id, emailPayload.subject);

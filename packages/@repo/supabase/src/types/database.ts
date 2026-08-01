@@ -8,18 +8,21 @@ export interface Database {
           id: string;
           name: string;
           slug: string;
+          locale: string;
           created_at: string;
         };
         Insert: {
           id?: string;
           name: string;
           slug: string;
+          locale?: string;
           created_at?: string;
         };
         Update: {
           id?: string;
           name?: string;
           slug?: string;
+          locale?: string;
           created_at?: string;
         };
         Relationships: [];
@@ -273,6 +276,27 @@ export interface Database {
           user_id?: string;
           variant?: string;
           created_at?: string;
+        };
+        Relationships: [];
+      };
+      ai_conversions: {
+        Row: {
+          id: string;
+          impression_id: string | null;
+          user_id: string;
+          converted_at: string;
+        };
+        Insert: {
+          id?: string;
+          impression_id?: string | null;
+          user_id: string;
+          converted_at?: string;
+        };
+        Update: {
+          id?: string;
+          impression_id?: string | null;
+          user_id?: string;
+          converted_at?: string;
         };
         Relationships: [];
       };
