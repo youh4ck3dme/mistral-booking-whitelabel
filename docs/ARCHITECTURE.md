@@ -98,17 +98,20 @@ mistral-booking-whitelabel/
 ## 🔗 Key Components
 
 ### 1. Multi-Tenancy Model
+
 - **Single Database**: All tenants share one PostgreSQL database
 - **Tenant Isolation**: `tenant_id` column in all tenant-scoped tables
 - **Row Level Security (RLS)**: Policies ensure tenants can only access their own data
 - **Custom Domains**: Each tenant can have their own domain (e.g., `clinic1.nexify.tech`)
 
 ### 2. Authentication & Authorization
+
 - **Supabase Auth**: Built-in authentication with email/password, OAuth, etc.
 - **Role-Based Access**: `admin`, `staff`, `client` roles per tenant
 - **Service Role**: Privileged operations use Supabase service role key
 
 ### 3. Booking System
+
 - **Time Slot Management**: Configurable operating hours per tenant (fallback: 09:00-17:00)
 - **RPC Functions**: Secure server-side booking creation/cancellation
 - **Idempotency**: Prevent duplicate bookings via database EXCLUDE constraint
@@ -118,12 +121,14 @@ mistral-booking-whitelabel/
 - **Conflict Prevention**: Database-level EXCLUDE constraint blocks overlapping active bookings
 
 ### 4. AI CRO Layer
+
 - **Recommendation Engine**: Suggest services based on user history
 - **Upsell Bundles**: AI-driven bundle suggestions at checkout
 - **A/B Testing**: Experiment tracking for optimization
 - **Fallback**: Deterministic behavior when AI is unavailable
 
 ### 5. Booking Calendar Components
+
 - **Calendar.tsx**: Month view calendar with navigation, date selection, booking density indicators
 - **TimeSlotPicker.tsx**: Time slot grid with availability status, next available slot helper
 - **AdminCalendar.tsx**: Admin dashboard calendar with filters, booking list, cancel functionality
@@ -131,6 +136,7 @@ mistral-booking-whitelabel/
 - **booking.service.ts**: RPC clients for booking operations (create, cancel, availability checks)
 
 ### 5. White-Label Capabilities
+
 - **Branding**: Logo, colors, favicon per tenant
 - **Localization**: Multi-language support
 - **Theming**: Custom CSS variables per tenant
@@ -141,6 +147,7 @@ mistral-booking-whitelabel/
 ## 🔄 Data Flow
 
 ### Booking Flow
+
 ```
 1. User visits /[tenantSlug]/book
 2. System resolves tenant by slug
@@ -166,6 +173,7 @@ mistral-booking-whitelabel/
 ```
 
 ### Admin Calendar Flow
+
 ```
 1. Admin visits /[tenantSlug]/admin
 2. System loads AdminCalendar component
@@ -178,6 +186,7 @@ mistral-booking-whitelabel/
 ```
 
 ### Tenant Resolution
+
 ```
 1. User visits any tenant-specific route
 2. Next.js middleware extracts tenantSlug from URL
@@ -191,17 +200,20 @@ mistral-booking-whitelabel/
 ## 🛡️ Security
 
 ### RLS Policies
+
 - All tables have RLS enabled
 - Policies ensure users can only access data for their tenant
 - Public policies for read-only access (services, time slots)
 - Authenticated policies for mutations (bookings)
 
 ### Service Role
+
 - Used for privileged operations (migrations, admin functions)
 - Never exposed to frontend
 - Stored in server-side environment variables
 
 ### Input Validation
+
 - All RPC functions validate inputs
 - Time range checks (valid_time_range CHECK constraint)
 - Service existence checks
@@ -214,16 +226,19 @@ mistral-booking-whitelabel/
 ## 🚀 Performance Considerations
 
 ### Indexes
+
 - Composite indexes on frequently queried columns
 - Tenant ID + User ID for tenant-scoped queries
 - Time-based indexes for booking lookups
 
 ### Caching
+
 - Supabase client-side caching for UI
 - Server-side caching for tenant config
 - CDN caching for static assets
 
 ### Query Optimization
+
 - Select only needed columns
 - Use RLS to limit result sets
 - Batch operations where possible
@@ -250,16 +265,19 @@ mistral-booking-whitelabel/
 ## 📊 Scalability
 
 ### Horizontal Scaling
+
 - Vercel: Automatic scaling for frontend
 - Supabase: Database read replicas for read-heavy workloads
 - Edge Functions: Serverless scaling for backend logic
 
 ### Multi-Tenant Scaling
+
 - Single database supports thousands of tenants
 - RLS policies add minimal overhead
 - Tenant-specific indexes optimize queries
 
 ### Future Considerations
+
 - Database sharding for very large scale
 - Multi-region deployment for global tenants
 - Microservices architecture for complex features
@@ -269,17 +287,20 @@ mistral-booking-whitelabel/
 ## 📝 Best Practices
 
 ### Code Organization
+
 - Group by feature, not by layer
 - Keep business logic in `@repo/core`
 - Keep UI components in `@repo/ui`
 - Keep database types in `@repo/supabase`
 
 ### Type Safety
+
 - Use TypeScript throughout
 - Generate database types from Supabase
 - Share types between packages
 
 ### Testing
+
 - Unit tests for business logic (51 calendar utility tests)
 - Integration tests for FE/BE parity
 - E2E tests for critical user flows
@@ -287,6 +308,7 @@ mistral-booking-whitelabel/
 - **Calendar-specific tests**: Slot generation, overlap detection, past slot filtering
 
 ### Security
+
 - Never hardcode tenant IDs
 - Use RLS for all data access
 - Validate all user inputs
@@ -295,6 +317,7 @@ mistral-booking-whitelabel/
 ---
 
 ## 🔗 Related Documents
+
 - [Deployment Guide](DEPLOYMENT.md)
 - [API Documentation](../apps/web/app/api/README.md) (TBD)
 - [Database Schema](../supabase/migrations/README.md) (TBD)

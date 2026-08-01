@@ -1,6 +1,6 @@
 'use client';
 
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@repo/web/src/utils/supabase/client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { storeFlashToast } from '@repo/web/src/lib/notifications/client';
@@ -10,7 +10,7 @@ import type { FormEvent } from 'react';
 import { useState } from 'react';
 
 export default function LoginPage() {
-  const [supabase] = useState(() => (hasPublicSupabaseEnv() ? createClientComponentClient() : null));
+  const [supabase] = useState(() => (hasPublicSupabaseEnv() ? createClient() : null));
   const router = useRouter();
   const { notifyError } = useNotifications();
 

@@ -1,6 +1,19 @@
-import { createClient } from '@supabase/supabase-js';
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
-import { NextResponse, NextRequest } from 'next/server';
+import { updateSession } from '@repo/web/src/utils/supabase/middleware';
+import { createServerClient } from '@supabase/ssr';
+import { NextResponse, type NextRequest } from 'next/server';
+
+// ---------------------------------------------------------------------------
+// Configuration validation
+// ---------------------------------------------------------------------------
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  throw new Error(
+    'Missing Supabase configuration. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env.local file. ' +
+    'Get these values from your Supabase project: https://app.supabase.com/project/_/settings/api'
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Tenant slug → tenant row cache
@@ -69,7 +82,10 @@ export async function middleware(req: NextRequest) {
   // -------------------------------------------------------------------------
   if (pathname === '/platform' || pathname.startsWith('/platform/')) {
     const res = NextResponse.next();
-    const supabase = createMiddlewareClient({ req, res });
+    
+    // Použijeme updateSession z utils
+    const supabase = updateSession(req, res);
+    
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -79,28 +95,35 @@ export async function middleware(req: NextRequest) {
     }
 
     // Check platform_admins table with service-role key.
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (!supabaseUrl || !serviceKey) {
+    if (!SUPABASE_URL || !serviceKey) {
       // Cannot verify → deny access to be safe.
       console.error('[middleware] Missing env vars for platform admin check');
       return NextResponse.redirect(new URL('/404', req.url));
     }
 
-    const adminClient = createClient(supabaseUrl, serviceKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
+    try {
+      const adminClient = createServerClient(SUPABASE_URL, serviceKey, {
+        cookies: {
+          getAll() { return req.cookies.getAll() },
+          setAll() {}
+        }
+      });
 
-    const { data: platformAdmin } = await adminClient
-      .from('platform_admins')
-      .select('id')
-      .eq('user_id', session.user.id)
-      .maybeSingle();
+      const { data: platformAdmin } = await adminClient
+        .from('platform_admins')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
 
-    if (!platformAdmin) {
-      // Authenticated but not a platform admin → 404 (don't reveal the route exists).
-      return NextResponse.redirect(new URL('/404', req.url));
+      if (!platformAdmin) {
+        // Authenticated but not a platform admin → 404
+        return NextResponse.redirect(new URL('/404', req.url));
+      }
+    } catch (e) {
+      console.error('[middleware] Failed to verify platform admin:', e);
+      return NextResponse.redirect(new URL('/500', req.url));
     }
 
     // Inject platform-admin context header for downstream Server Components.
@@ -129,7 +152,7 @@ export async function middleware(req: NextRequest) {
 
   // Refresh Supabase session cookies.
   const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req, res });
+  const supabase = updateSession(req, res);
   await supabase.auth.getSession();
 
   // ---- Tenant lookup with cache ----
@@ -137,27 +160,35 @@ export async function middleware(req: NextRequest) {
 
   if (tenant === undefined) {
     // Cache miss → hit the DB.
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const tenantLookupKey =
-      process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      process.env.SUPABASE_SERVICE_ROLE_KEY ?? SUPABASE_ANON_KEY;
 
-    if (!supabaseUrl || !tenantLookupKey) {
+    if (!SUPABASE_URL || !tenantLookupKey) {
       return NextResponse.redirect(new URL('/404', req.url));
     }
 
-    const tenantLookupClient = createClient(supabaseUrl, tenantLookupKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
+    try {
+      const tenantLookupClient = createServerClient(SUPABASE_URL, tenantLookupKey, {
+        cookies: {
+          getAll() { return req.cookies.getAll() },
+          setAll() {}
+        }
+      });
 
-    const { data } = await tenantLookupClient
-      .from('tenants')
-      .select('id, slug, name')
-      .eq('slug', tenantSlug)
-      .maybeSingle();
+      const { data } = await tenantLookupClient
+        .from('tenants')
+        .select('id, slug, name')
+        .eq('slug', tenantSlug)
+        .maybeSingle();
 
-    // Cache result — including null (unknown slug) to avoid repeated DB hits.
-    tenant = data ?? null;
-    setCachedTenant(tenantSlug, tenant);
+      // Cache result — including null (unknown slug) to avoid repeated DB hits.
+      tenant = data ?? null;
+      setCachedTenant(tenantSlug, tenant);
+    } catch (e) {
+      console.error('[middleware] Failed to lookup tenant:', e);
+      // Return 500 error instead of failing hard
+      return NextResponse.redirect(new URL('/500', req.url));
+    }
   }
 
   if (!tenant) {

@@ -5,14 +5,14 @@ import { dispatchBookingNotificationsRequest, storeFlashToast } from '@repo/web/
 import { useNotifications } from '@repo/web/app/notifications-provider';
 import { cancelBooking } from '@repo/web/src/lib/booking/booking.service';
 import { useTenant } from '@repo/web/src/lib/tenant/TenantProvider';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@repo/web/src/utils/supabase/client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { CSSProperties } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 
 export default function ClientPortalPage() {
-  const [supabase] = useState(() => createClientComponentClient());
+  const [supabase] = useState(() => createClient());
   const router = useRouter();
   const tenant = useTenant();
   const { notifyError, notifyInfo, notifySuccess } = useNotifications();

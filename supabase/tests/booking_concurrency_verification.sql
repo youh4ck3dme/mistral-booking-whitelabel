@@ -52,7 +52,7 @@ VALUES (
 -- Verification query for Test A
 SELECT 
   'Test A: Overlap must fail' AS test_name,
-  COUNT(*) = 1 AS only_one_booking_exists,
+  CASE WHEN COUNT(*) = 1 THEN true ELSE false END AS only_one_booking_exists,
   COUNT(*) AS actual_count
 FROM bookings 
 WHERE tenant_id = '00000000-0000-0000-0000-000000000001'
@@ -79,7 +79,7 @@ VALUES (
 -- Verification query for Test B
 SELECT 
   'Test B: Adjacent booking must pass' AS test_name,
-  COUNT(*) = 2 AS two_bookings_exist,
+  CASE WHEN COUNT(*) = 2 THEN true ELSE false END AS two_bookings_exist,
   COUNT(*) AS actual_count
 FROM bookings 
 WHERE tenant_id = '00000000-0000-0000-0000-000000000001'
@@ -112,7 +112,7 @@ VALUES (
 -- Verification query for Test C
 SELECT 
   'Test C: Cancelled booking must not block' AS test_name,
-  COUNT(*) = 2 AS two_active_bookings_exist,
+  CASE WHEN COUNT(*) = 2 THEN true ELSE false END AS two_active_bookings_exist,
   COUNT(*) AS actual_count
 FROM bookings 
 WHERE tenant_id = '00000000-0000-0000-0000-000000000001'
@@ -141,7 +141,7 @@ WHERE tenant_id = '00000000-0000-0000-0000-000000000001'
 -- Verification query for Test D
 SELECT 
   'Test D: Exact duplicate active booking must fail' AS test_name,
-  COUNT(*) = 2 AS still_only_two_active_bookings,
+  CASE WHEN COUNT(*) = 2 THEN true ELSE false END AS still_only_two_active_bookings,
   COUNT(*) AS actual_count
 FROM bookings 
 WHERE tenant_id = '00000000-0000-0000-0000-000000000001'
@@ -177,7 +177,7 @@ VALUES (
 -- Check that the confirmed booking is still confirmed
 SELECT 
   'Test E: Invalid status transitions must fail' AS test_name,
-  status = 'confirmed' AS status_unchanged,
+  CASE WHEN status = 'confirmed' THEN true ELSE false END AS status_unchanged,
   status AS actual_status
 FROM bookings 
 WHERE id = '60000000-0000-0000-0000-000000000001';
@@ -207,8 +207,8 @@ UPDATE bookings SET status = 'cancelled' WHERE id = '70000000-0000-0000-0000-000
 -- Verification query for Test F
 SELECT 
   'Test F1: pending -> confirmed must pass' AS test_name,
-  id = '70000000-0000-0000-0000-000000000001' AS booking_exists,
-  status = 'cancelled' AS status_is_cancelled
+  CASE WHEN id = '70000000-0000-0000-0000-000000000001' THEN true ELSE false END AS booking_exists,
+  CASE WHEN status = 'cancelled' THEN true ELSE false END AS status_is_cancelled
 FROM bookings 
 WHERE id = '70000000-0000-0000-0000-000000000001';
 -- Expected: booking_exists = true, status_is_cancelled = true

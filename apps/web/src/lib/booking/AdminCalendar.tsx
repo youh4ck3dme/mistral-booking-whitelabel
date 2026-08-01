@@ -13,7 +13,7 @@ import {
   MONTH_NAMES_SK,
   DAY_NAMES_SHORT_SK,
 } from './calendar.utils';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@repo/web/src/utils/supabase/client';
 import { useNotifications } from '@repo/web/app/notifications-provider';
 import { cancelBooking } from './booking.service';
 
@@ -48,7 +48,7 @@ export function AdminCalendar({
   bookings: initialBookings,
   primaryColor = DEFAULT_PRIMARY_COLOR,
 }: AdminCalendarProps) {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const { notifyError, notifySuccess, notifyInfo } = useNotifications();
   
   const [currentMonth, setCurrentMonth] = useState(() => getCurrentMonthAndYear());

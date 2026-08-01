@@ -4,7 +4,7 @@ import type { Booking, Service, TenantBranding } from '@repo/core';
 import { useNotifications } from '@repo/web/app/notifications-provider';
 import { useTenant } from '@repo/web/src/lib/tenant/TenantProvider';
 import { UsersTab } from './users-tab';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@repo/web/src/utils/supabase/client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { CSSProperties } from 'react';
@@ -29,7 +29,7 @@ const DynamicAdminCalendar = dynamic(
 import { adminCalendarStyles } from '@repo/web/src/lib/booking/AdminCalendar';
 
 export default function TenantAdminPage() {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const router = useRouter();
   const tenant = useTenant();
   const { notifyError, notifyInfo, notifySuccess } = useNotifications();

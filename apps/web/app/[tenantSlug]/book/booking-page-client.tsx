@@ -1,6 +1,6 @@
 'use client';
 
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@repo/web/src/utils/supabase/client';
 import type { Service } from '@repo/core';
 import { dispatchBookingNotificationsRequest, storeFlashToast } from '@repo/web/src/lib/notifications/client';
 import { useNotifications } from '@repo/web/app/notifications-provider';
@@ -24,7 +24,7 @@ export default function BookingPageClient({
   initialServices: Service[];
   operatingHours?: { start: string; end: string };
 }) {
-  const [supabase] = useState(() => createClientComponentClient());
+  const [supabase] = useState(() => createClient());
   const router = useRouter();
   const searchParams = useSearchParams();
   const tenant = useTenant();
