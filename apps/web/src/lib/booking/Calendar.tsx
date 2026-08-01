@@ -207,7 +207,7 @@ export function Calendar({
         )}
       </button>
     );
-  }, [getDayClassName, isDateSelectable, handleDateClick, isDateSelected, getBookingCount, primaryColor, locale]);
+  }, [getDayClassName, isDateSelectable, handleDateClick, getBookingCount, primaryColor, locale]);
 
   // Render week header
   const renderWeekHeader = useCallback(() => {

@@ -153,7 +153,7 @@ export function AdminCalendar({
     } finally {
       setRefreshing(false);
     }
-  }, [tenantId, notifyError, notifySuccess]);
+  }, [tenantId, notifyError, notifySuccess, supabase]);
 
   // Cancel booking using RPC
   const handleCancelBooking = useCallback(async (bookingId: string) => {

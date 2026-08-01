@@ -148,10 +148,28 @@ async function getAvailableSlots(
     throw new Error(bookedError.message);
   }
 
-  const durationMs = service.duration * 60_000;
+  return computeAvailableSlots(dateISO, service.duration, hours, booked ?? []);
+}
+
+export type TimeWindow = { start_time: string; end_time: string };
+export type BookedRange = { start_time: string; end_time: string };
+
+/**
+ * Pure slot generation, no I/O. time_slots_config.start_time/end_time are
+ * timezone-less TIME values compared against p_start_time::TIME inside
+ * create_booking, which casts under the DB session's (UTC) timezone — so
+ * slots are generated in UTC here to match.
+ */
+export function computeAvailableSlots(
+  dateISO: string,
+  durationMinutes: number,
+  operatingHours: TimeWindow[],
+  booked: BookedRange[]
+): string[] {
+  const durationMs = durationMinutes * 60_000;
   const slots: string[] = [];
 
-  for (const window of hours) {
+  for (const window of operatingHours) {
     const [startH, startM] = window.start_time.split(':').map(Number);
     const [endH, endM] = window.end_time.split(':').map(Number);
 
@@ -162,7 +180,7 @@ async function getAvailableSlots(
 
     while (cursor.getTime() + durationMs <= windowEnd.getTime()) {
       const slotEndMs = cursor.getTime() + durationMs;
-      const overlaps = (booked ?? []).some((b: { start_time: string; end_time: string }) => {
+      const overlaps = booked.some((b) => {
         const bStart = new Date(b.start_time).getTime();
         const bEnd = new Date(b.end_time).getTime();
         return cursor.getTime() < bEnd && slotEndMs > bStart;
