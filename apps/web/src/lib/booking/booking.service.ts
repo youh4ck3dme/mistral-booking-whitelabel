@@ -7,6 +7,14 @@ export interface BookingSlot {
   isAvailable: boolean;
 }
 
+// Re-export calendar utilities for backward compatibility
+export type { TimeSlot } from './calendar.utils';
+export {
+  generateTimeSlotsForDate,
+  markBookedSlots,
+  getNextAvailableSlot,
+} from './calendar.utils';
+
 /**
  * Fetch all services for a tenant
  */
@@ -150,6 +158,7 @@ export async function getBookingsByUser(
 
 /**
  * Cancel a booking
+ * RPC uses auth.uid() internally - never trust client-supplied user_id
  */
 export async function cancelBooking(
   bookingId: string

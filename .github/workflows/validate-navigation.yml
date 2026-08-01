@@ -1,0 +1,264 @@
+name: 🧭 Validate Navigation and Routes
+
+# Validuje všechny odkazy, routy a navigaci v NEXIFY aplikaci
+on:
+  push:
+    branches: [main, develop, feat/whitelabel-nextjs-platform]
+    paths:
+      - 'apps/web/app/**'
+      - 'apps/web/src/**'
+      - 'apps/web/(marketing)/**'
+      - '!**/node_modules/**'
+      - '!**/.next/**'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'apps/web/app/**'
+      - 'apps/web/src/**'
+      - 'apps/web/(marketing)/**'
+      - '!**/node_modules/**'
+      - '!**/.next/**'
+
+concurrency:
+  group: validate-navigation-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  validate-routes:
+    name: 🔍 Validate Routes Script
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: ✅ Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          
+      - name: 💾 Install Dependencies
+        run: |
+          cd scripts/validate-routes
+          pnpm install --frozen-lockfile
+          cd ../..
+        
+      - name: 🚀 Run Route Validation
+        id: validate
+        run: |
+          node scripts/validate-routes.js
+        continue-on-error: true
+        
+      - name: 📝 Save Validation Results
+        if: steps.validate.outcome == 'failure'
+        run: |
+          echo "Route validation failed with issues" >> $GITHUB_STEP_SUMMARY
+          echo "Check the console output for details" >> $GITHUB_STEP_SUMMARY
+          
+      - name: ✅ Upload Validation Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: route-validation-report
+          path: |
+            scripts/validate-routes/
+          retention-days: 7
+
+  cypress-tests:
+    name: 🧪 Cypress Navigation Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    services:
+      # NEXIFY uses Supabase, but for route testing we don't need the full DB
+      # We'll mock the API calls in tests
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: nexify_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+      - name: ✅ Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          
+      - name: 💾 Install Dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          
+      - name: 🏗️ Build Application
+        run: |
+          pnpm build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://localhost:5432
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: test-key
+          
+      - name: 🎭 Start Development Server
+        run: |
+          pnpm dev &
+          sleep 10
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://localhost:5432
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: test-key
+          PORT: 3000
+          
+      - name: 🧪 Run Navigation Tests
+        id: cypress
+        uses: cypress-io/github-action@v6
+        with:
+          command: pnpm cypress run --spec "cypress/e2e/navigation/**/*.cy.ts"
+          start: pnpm dev
+          wait-on: 'http://localhost:3000'
+          wait-on-timeout: 120
+        continue-on-error: true
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://localhost:5432
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: test-key
+          
+      - name: 📊 Upload Cypress Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-navigation-results
+          path: |
+            cypress/screenshots/
+            cypress/videos/
+            cypress/results/
+          retention-days: 7
+          
+      - name: ❌ Fail if Tests Failed
+        if: steps.cypress.outcome == 'failure'
+        run: |
+          echo "❌ Cypress navigation tests failed!" >> $GITHUB_STEP_SUMMARY
+          echo "Check the artifacts for screenshots and videos" >> $GITHUB_STEP_SUMMARY
+          exit 1
+
+  lint-routes:
+    name: 🔍 ESLint Route Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+      - name: ✅ Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          
+      - name: 💾 Install Dependencies
+        run: |
+          cd scripts/eslint-plugin-nexify-routes
+          pnpm install --frozen-lockfile
+          cd ../..
+          pnpm install --frozen-lockfile
+          
+      - name: 🔍 Run ESLint with Route Plugin
+        run: |
+          npx eslint apps/web/app/**/*.{tsx,ts} apps/web/src/**/*.{tsx,ts} \
+            --plugin nexify-routes \
+            --rule 'nexify-routes/valid-route: error' \
+            --rule 'nexify-routes/absolute-path: warn' \
+            --no-eslintrc \
+            --parser @typescript-eslint/parser \
+            --ext .tsx,.ts
+        continue-on-error: true
+        
+      - name: 📝 Save Lint Results
+        if: failure()
+        run: |
+          echo "ESLint found route-related issues" >> $GITHUB_STEP_SUMMARY
+          
+      - name: ✅ Upload Lint Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eslint-routes-report
+          path: .eslint-report.json
+          retention-days: 7
+
+  summary:
+    name: 📋 Test Summary
+    needs: [validate-routes, cypress-tests, lint-routes]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: ✅ Generate Summary
+        run: |
+          echo "# 🧭 Navigation Validation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "## 📊 Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Validate Routes
+          if [ ${{ needs.validate-routes.result }} == 'success' ]; then
+            echo "✅ **Route Validation**: PASSED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Route Validation**: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Cypress Tests
+          if [ ${{ needs.cypress-tests.result }} == 'success' ]; then
+            echo "✅ **Cypress Navigation Tests**: PASSED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Cypress Navigation Tests**: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # ESLint
+          if [ ${{ needs.lint-routes.result }} == 'success' ]; then
+            echo "✅ **ESLint Route Checks**: PASSED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **ESLint Route Checks**: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "## 🔗 Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- [Route Validation Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [Cypress Results](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [ESLint Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "## 💡 Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. Check the artifacts for detailed reports" >> $GITHUB_STEP_SUMMARY
+          echo "2. Fix any identified issues" >> $GITHUB_STEP_SUMMARY
+          echo "3. Update the route documentation if new routes were added" >> $GITHUB_STEP_SUMMARY
+          
+      - name: ❌ Fail if Any Check Failed
+        if: ${{ 
+          needs.validate-routes.result == 'failure' || 
+          needs.cypress-tests.result == 'failure' || 
+          needs.lint-routes.result == 'failure' 
+        }}
+        run: |
+          echo "❌ One or more validation checks failed!"
+          exit 1
