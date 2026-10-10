@@ -1,16 +1,15 @@
-import { createClient } from '@repo/web/src/utils/supabase/server';
+import { getServerUser } from './server-user';
 
-import type { Database } from '@repo/supabase';
-
+/**
+ * Returns `{ user }` for a request with a verified user, or null.
+ * Built on `getServerUser()`, so the result is validated by Supabase Auth.
+ */
 export async function getServerSession() {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     return null;
   }
 
-  const supabase = createClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const user = await getServerUser();
 
-  return session;
+  return user ? { user } : null;
 }

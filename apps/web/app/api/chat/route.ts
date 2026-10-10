@@ -1,17 +1,17 @@
 import { createAgentUIStreamResponse } from 'ai';
 import { createBookingAssistant } from '@repo/ai';
 import { createClient } from '@repo/web/src/utils/supabase/server';
+import { getServerUser } from '@repo/web/src/lib/auth/server-user';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
-  const supabase = createClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const user = await getServerUser();
 
-  if (!session?.user?.id) {
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  const supabase = createClient();
 
   const body = await request.json();
   const { messages, tenantId } = body as { messages: unknown[]; tenantId?: string };

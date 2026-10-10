@@ -87,10 +87,10 @@ export async function middleware(req: NextRequest) {
     const supabase = updateSession(req, res);
     
     const {
-      data: { session },
-    } = await supabase.auth.getSession();
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    if (!session?.user) {
+    if (!user) {
       return NextResponse.redirect(new URL('/login', req.url));
     }
 
@@ -114,7 +114,7 @@ export async function middleware(req: NextRequest) {
       const { data: platformAdmin } = await adminClient
         .from('platform_admins')
         .select('id')
-        .eq('user_id', session.user.id)
+        .eq('user_id', user.id)
         .maybeSingle();
 
       if (!platformAdmin) {
@@ -129,7 +129,7 @@ export async function middleware(req: NextRequest) {
     // Inject platform-admin context header for downstream Server Components.
     const headers = new Headers(res.headers);
     headers.set('x-platform-admin', 'true');
-    headers.set('x-platform-user-id', session.user.id);
+    headers.set('x-platform-user-id', user.id);
 
     return NextResponse.next({ request: { headers } });
   }
@@ -153,7 +153,8 @@ export async function middleware(req: NextRequest) {
   // Refresh Supabase session cookies.
   const res = NextResponse.next();
   const supabase = updateSession(req, res);
-  await supabase.auth.getSession();
+  // Validates the JWT with Supabase Auth and refreshes session cookies.
+  await supabase.auth.getUser();
 
   // ---- Tenant lookup with cache ----
   let tenant = getCachedTenant(tenantSlug);
