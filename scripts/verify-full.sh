@@ -17,7 +17,8 @@ export SUPABASE_DB_URL="$DB_URL"
 export NEXT_PUBLIC_APP_URL="http://127.0.0.1:3000"
 export PLAYWRIGHT_BASE_URL="http://127.0.0.1:3000"
 export PLAYWRIGHT_EMAIL="${PLAYWRIGHT_EMAIL:-playwright-admin@example.com}"
-export PLAYWRIGHT_PASSWORD="${PLAYWRIGHT_PASSWORD:-Playwright-Admin-123!}"
+# Random per run unless provided; bootstrap-local-auth.mjs creates the user with it.
+export PLAYWRIGHT_PASSWORD="${PLAYWRIGHT_PASSWORD:-$(openssl rand -hex 16)}"
 export NOTIFICATION_CRON_SECRET="${NOTIFICATION_CRON_SECRET:-local-notification-cron-secret}"
 
 wait_for_auth() {
