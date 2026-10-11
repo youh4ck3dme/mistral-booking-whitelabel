@@ -79,7 +79,8 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_PASSWORD: postgres
+          # Per-run value, same pattern as ci.yml. Nothing in this job connects with it.
+          POSTGRES_PASSWORD: ${{ github.run_id }}
           POSTGRES_USER: postgres
           POSTGRES_DB: nexify_test
         ports:
