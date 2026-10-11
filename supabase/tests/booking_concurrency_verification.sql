@@ -82,6 +82,12 @@ INSERT INTO public.services (id, tenant_id, name, duration, price, is_active) VA
 INSERT INTO public.time_slots_config (id, tenant_id, start_time, end_time, is_active) VALUES
   ('d0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000001', '09:00', '17:00', true);
 
+-- Default staff (created by trigger on tenant insert) works every day 09:00-17:00 local.
+INSERT INTO public.staff_working_hours (tenant_id, staff_id, weekday, start_time, end_time)
+SELECT 'b0000000-0000-0000-0000-000000000001', st.id, d.wd, '09:00', '17:00'
+FROM public.staff st CROSS JOIN generate_series(1, 7) AS d(wd)
+WHERE st.tenant_id = 'b0000000-0000-0000-0000-000000000001';
+
 -- ============================================
 -- 1. Booking via RPC, then overlap, adjacency, duplicate and cancel-reuse
 -- ============================================
@@ -115,9 +121,10 @@ SELECT public.create_booking('b0000000-0000-0000-0000-000000000001', 'c0000000-0
 -- 2. RLS: direct client writes
 -- ============================================
 -- A user cannot insert a booking on behalf of another user.
-SELECT pg_temp.expect_sqlstate($q$INSERT INTO public.bookings (tenant_id, user_id, service_id, start_time, end_time, status)
+SELECT pg_temp.expect_sqlstate($q$INSERT INTO public.bookings (tenant_id, user_id, service_id, staff_id, start_time, end_time, status)
   VALUES ('b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001',
-          'c0000000-0000-0000-0000-000000000001', '2030-02-01 10:00:00+00', '2030-02-01 11:00:00+00', 'confirmed')$q$,
+          'c0000000-0000-0000-0000-000000000001', (SELECT id FROM public.staff WHERE tenant_id = 'b0000000-0000-0000-0000-000000000001'),
+          '2030-02-01 10:00:00+00', '2030-02-01 11:00:00+00', 'confirmed')$q$,
   '42501', '%row-level security%');
 
 -- A user cannot update bookings directly (only via RPC).
@@ -202,11 +209,11 @@ INSERT INTO public.tenant_users (tenant_id, user_id, role) VALUES
   ('b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000002', 'client');
 
 -- Past confirmed booking (outcome allowed) and a past pending booking (outcome forbidden).
-INSERT INTO public.bookings (id, tenant_id, user_id, service_id, start_time, end_time, status) VALUES
+INSERT INTO public.bookings (id, tenant_id, user_id, service_id, staff_id, start_time, end_time, status) VALUES
   ('e0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000002',
-   'c0000000-0000-0000-0000-000000000001', '2020-01-01 10:00:00+00', '2020-01-01 11:00:00+00', 'confirmed'),
+   'c0000000-0000-0000-0000-000000000001', (SELECT id FROM public.staff WHERE tenant_id = 'b0000000-0000-0000-0000-000000000001'), '2020-01-01 10:00:00+00', '2020-01-01 11:00:00+00', 'confirmed'),
   ('e0000000-0000-0000-0000-000000000002', 'b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000002',
-   'c0000000-0000-0000-0000-000000000001', '2020-01-02 10:00:00+00', '2020-01-02 11:00:00+00', 'pending');
+   'c0000000-0000-0000-0000-000000000001', (SELECT id FROM public.staff WHERE tenant_id = 'b0000000-0000-0000-0000-000000000001'), '2020-01-02 10:00:00+00', '2020-01-02 11:00:00+00', 'pending');
 
 -- Client (non-staff) cannot set an outcome.
 SELECT pg_temp.as_user('a0000000-0000-0000-0000-000000000002');

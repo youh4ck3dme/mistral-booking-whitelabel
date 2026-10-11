@@ -80,18 +80,24 @@ INSERT INTO public.services (id, tenant_id, name, duration, price, is_active) VA
 INSERT INTO public.time_slots_config (tenant_id, start_time, end_time, is_active) VALUES
   ('f2000000-0000-0000-0000-000000000001', '08:00', '18:00', true);
 
+-- Default staff works every day 08:00-18:00 local (Europe/Bratislava).
+INSERT INTO public.staff_working_hours (tenant_id, staff_id, weekday, start_time, end_time)
+SELECT 'f2000000-0000-0000-0000-000000000001', st.id, d.wd, '08:00', '18:00'
+FROM public.staff st CROSS JOIN generate_series(1, 7) AS d(wd)
+WHERE st.tenant_id = 'f2000000-0000-0000-0000-000000000001';
+
 -- Confirmed future bookings. Inserted as owner (bypasses RLS on purpose for fixtures).
-INSERT INTO public.bookings (id, tenant_id, user_id, service_id, start_time, end_time, status) VALUES
+INSERT INTO public.bookings (id, tenant_id, user_id, service_id, staff_id, start_time, end_time, status) VALUES
   ('f4000000-0000-0000-0000-000000000001', 'f2000000-0000-0000-0000-000000000001', 'f1000000-0000-0000-0000-000000000001',
-   'f3000000-0000-0000-0000-000000000001', '2030-03-01 10:00+00', '2030-03-01 11:00+00', 'confirmed'),
+   'f3000000-0000-0000-0000-000000000001', (SELECT id FROM public.staff WHERE tenant_id = 'f2000000-0000-0000-0000-000000000001'), '2030-03-01 10:00+00', '2030-03-01 11:00+00', 'confirmed'),
   ('f4000000-0000-0000-0000-000000000002', 'f2000000-0000-0000-0000-000000000001', 'f1000000-0000-0000-0000-000000000001',
-   'f3000000-0000-0000-0000-000000000001', '2030-03-01 13:00+00', '2030-03-01 14:00+00', 'confirmed'),
+   'f3000000-0000-0000-0000-000000000001', (SELECT id FROM public.staff WHERE tenant_id = 'f2000000-0000-0000-0000-000000000001'), '2030-03-01 13:00+00', '2030-03-01 14:00+00', 'confirmed'),
   ('f4000000-0000-0000-0000-000000000003', 'f2000000-0000-0000-0000-000000000001', 'f1000000-0000-0000-0000-000000000001',
-   'f3000000-0000-0000-0000-000000000001', '2030-03-02 10:00+00', '2030-03-02 11:00+00', 'confirmed'),
+   'f3000000-0000-0000-0000-000000000001', (SELECT id FROM public.staff WHERE tenant_id = 'f2000000-0000-0000-0000-000000000001'), '2030-03-02 10:00+00', '2030-03-02 11:00+00', 'confirmed'),
   ('f4000000-0000-0000-0000-000000000004', 'f2000000-0000-0000-0000-000000000001', 'f1000000-0000-0000-0000-000000000001',
-   'f3000000-0000-0000-0000-000000000001', '2030-03-03 10:00+00', '2030-03-03 11:00+00', 'confirmed'),
+   'f3000000-0000-0000-0000-000000000001', (SELECT id FROM public.staff WHERE tenant_id = 'f2000000-0000-0000-0000-000000000001'), '2030-03-03 10:00+00', '2030-03-03 11:00+00', 'confirmed'),
   ('f4000000-0000-0000-0000-000000000005', 'f2000000-0000-0000-0000-000000000001', 'f1000000-0000-0000-0000-000000000001',
-   'f3000000-0000-0000-0000-000000000001', '2030-03-04 10:00+00', '2030-03-04 11:00+00', 'confirmed');
+   'f3000000-0000-0000-0000-000000000001', (SELECT id FROM public.staff WHERE tenant_id = 'f2000000-0000-0000-0000-000000000001'), '2030-03-04 10:00+00', '2030-03-04 11:00+00', 'confirmed');
 
 -- ============================================
 -- 1. Issuing links: authorization and input validation
