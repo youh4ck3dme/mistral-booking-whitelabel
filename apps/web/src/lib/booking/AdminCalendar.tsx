@@ -16,6 +16,12 @@ import {
 import { createClient } from '@repo/web/src/utils/supabase/client';
 import { useNotifications } from '@repo/web/app/notifications-provider';
 import { cancelBooking } from './booking.service';
+import {
+  canSetOutcome,
+  summarizeBookings,
+  toAccountingCsv,
+  type BookingOutcome,
+} from './outcomes';
 
 // ============================================================================
 // Types
@@ -59,6 +65,9 @@ export function AdminCalendar({
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [outcomeBusyId, setOutcomeBusyId] = useState<string | null>(null);
+
+  const summary = useMemo(() => summarizeBookings(bookings, new Date()), [bookings]);
 
   // Generate calendar month
   const calendarMonth: CalendarMonth = useMemo(() => {
@@ -183,6 +192,50 @@ export function AdminCalendar({
       setIsLoading(false);
     }
   }, [refreshBookings, notifyError, notifySuccess]);
+
+  // Record completed / no-show through the guarded API route (server checks role and start time)
+  const handleSetOutcome = useCallback(async (bookingId: string, outcome: BookingOutcome) => {
+    const question = outcome === 'no_show'
+      ? 'Označiť klienta ako nedostavenie sa?'
+      : 'Označiť rezerváciu ako dokončenú?';
+    if (!confirm(question)) {
+      return;
+    }
+
+    try {
+      setOutcomeBusyId(bookingId);
+      const res = await fetch(`/api/bookings/${bookingId}/outcome`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ outcome }),
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(body.error || 'Nepodarilo sa uložiť stav.');
+      }
+      await refreshBookings();
+      notifySuccess('Uložené', outcome === 'no_show' ? 'Označené ako nedostavenie sa.' : 'Rezervácia je dokončená.');
+    } catch (err: any) {
+      console.error('Failed to set booking outcome:', err);
+      notifyError('Chyba', err.message || 'Nepodarilo sa uložiť stav.');
+    } finally {
+      setOutcomeBusyId(null);
+    }
+  }, [refreshBookings, notifyError, notifySuccess]);
+
+  // Accounting export of the bookings this admin can already see (CSV, not an e-Faktúra)
+  const handleExportCsv = useCallback(() => {
+    const csv = toAccountingCsv(bookings);
+    const blob = new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `rezervacie-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }, [bookings]);
 
   // Get booking count for a date
   const getBookingCountForDate = useCallback((date: string): number => {
@@ -342,7 +395,27 @@ export function AdminCalendar({
           </span>
         </td>
         <td className="admin-booking-actions">
-          {booking.status !== 'cancelled' && (
+          {canSetOutcome(booking, new Date()) && (
+            <>
+              <button
+                type="button"
+                className="premium-button-secondary premium-button-small"
+                onClick={() => handleSetOutcome(booking.id, 'completed')}
+                disabled={outcomeBusyId === booking.id || isLoading}
+              >
+                Dokončená
+              </button>
+              <button
+                type="button"
+                className="premium-button-secondary premium-button-small"
+                onClick={() => handleSetOutcome(booking.id, 'no_show')}
+                disabled={outcomeBusyId === booking.id || isLoading}
+              >
+                Nedostavil sa
+              </button>
+            </>
+          )}
+          {booking.status !== 'cancelled' && booking.status !== 'completed' && booking.status !== 'no_show' && (
             <button
               type="button"
               className="premium-button-danger premium-button-small"
@@ -358,10 +431,37 @@ export function AdminCalendar({
         </td>
       </tr>
     );
-  }, [formatTime, formatStatus, getStatusColor, handleCancelBooking, cancellingId, isLoading]);
+  }, [formatTime, formatStatus, getStatusColor, handleCancelBooking, handleSetOutcome, cancellingId, outcomeBusyId, isLoading]);
 
   return (
     <div className="admin-booking-calendar" style={{ '--primary-color': primaryColor } as CSSProperties}>
+      {/* Dashboard: computed from loaded bookings only, no placeholder numbers */}
+      <div className="premium-kpi-grid" aria-label="Prehľad rezervácií">
+        <div className="premium-stat">
+          <span className="premium-stat-value">{summary.todayCount}</span>
+          <span className="premium-stat-label">dnes</span>
+        </div>
+        <div className="premium-stat">
+          <span className="premium-stat-value">{summary.counts.completed}</span>
+          <span className="premium-stat-label">dokončené</span>
+        </div>
+        <div className="premium-stat">
+          <span className="premium-stat-value">
+            {summary.noShowRate === null ? '—' : `${Math.round(summary.noShowRate * 100)} %`}
+          </span>
+          <span className="premium-stat-label">nedostavenie sa</span>
+        </div>
+        <div className="premium-stat">
+          <span className="premium-stat-value">{summary.completedRevenue.toFixed(2)} €</span>
+          <span className="premium-stat-label">tržby (dokončené)</span>
+        </div>
+      </div>
+      {summary.topServices.length > 0 && (
+        <p className="premium-section-label">
+          Najžiadanejšie: {summary.topServices.map(s => `${s.name} (${s.count})`).join(', ')}
+        </p>
+      )}
+
       {/* Calendar */}
       <div className="admin-calendar-section">
         <div className="admin-calendar-header-bar">
@@ -502,6 +602,15 @@ export function AdminCalendar({
             <span className="admin-bookings-list-count">
               {filteredBookings.length} rezervácií
             </span>
+            <button
+              type="button"
+              className="premium-button-secondary premium-button-small"
+              onClick={handleExportCsv}
+              disabled={bookings.length === 0}
+              title="Účtovný CSV export zo zobrazených rezervácií. Nie je to e-Faktúra."
+            >
+              Export CSV
+            </button>
           </div>
           
           <table className="premium-table admin-bookings-table">
