@@ -6,6 +6,7 @@ import { useNotifications } from '@repo/web/app/notifications-provider';
 import { useTenant } from '@repo/web/src/lib/tenant/TenantProvider';
 import { UsersTab } from './users-tab';
 import { StaffTab } from './staff-tab';
+import { RemindersCard } from './reminders-card';
 import { createClient } from '@repo/web/src/utils/supabase/client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -368,6 +369,7 @@ export default function TenantAdminPage() {
 
       {activeTab === 'bookings' && (
         <section className="premium-section">
+          <RemindersCard tenantSlug={tenant.tenant.slug} />
           <div className="premium-section-header">
             <span className="premium-section-label">Bookings</span>
             <h2 className="premium-section-title">Rezervácie</h2>
