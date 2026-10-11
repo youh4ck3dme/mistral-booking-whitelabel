@@ -92,6 +92,9 @@ Codex ani iný agent sa ich nesmie zmocniť. Pri narazení sa najprv spýtaj.
 - Cieľové prostredie: pilot, alebo reálni zákazníci s osobnými údajmi.
 - Next.js: zostať na 14.2.x, alebo ísť na 15.
 - Cenník a balíky produktu.
+- Vertikála prvého vydania (beauty/barber, wellness, kliniky, remeslá) a či bude zdravotnícky režim.
+- Marketplace: áno (voliteľný, nízka provízia), alebo nie.
+- Stratégia eKasa: vlastný certifikovaný adaptér, partner, alebo len upozornenie tenantov.
 - Právne texty (VOP, GDPR, zásady ochrany súkromia). Agent smie navrhnúť, schváliť ich môže len právnik.
 - Správanie pri prekročení limitov (napr. pri no-show poplatku).
 
@@ -116,3 +119,4 @@ Codex ani iný agent sa ich nesmie zmocniť. Pri narazení sa najprv spýtaj.
 - Hotové: SEC-1 (Next 14.2.35), SEC-2 (`getUser`), odstránené natvrdo testovacie heslo, DB hardening (migrácia 013).
 - Blokery: `main` sa nebuildí (`src/lib/leads/lead.service.server.ts`), GitGuardian check na PR #4 padá, Lint na PR #4 ešte nie je potvrdený ako zelený.
 - Zdroj úloh a detailný stav: `docs/BACKLOG.md`.
+- Výskum trhu a právne body (overené 2026-10-11, bez právneho poradenstva): `docs/MARKET_RESEARCH.md`.

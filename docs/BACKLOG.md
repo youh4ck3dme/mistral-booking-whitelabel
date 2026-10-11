@@ -49,6 +49,7 @@ Aktualizované: 2026-10-11.
 | FUN-7 | Reset hesla a verifikácia e-mailu end-to-end | Reset → nové heslo → prihlásenie, overené v Safari/iOS | M | ⬜ |
 | FUN-8 | Varovanie „deopted into client-side rendering“ na `/reset-password` | Build bez varovania | S | ✅ vyriešené pri SEC-1 |
 | FUN-9 | Hosťovská rezervácia cez magic link (bez hesla) | Rezervácia za ≤ 3 kroky, potvrdenie e-mailom, test | M | ⬜ |
+| LEG-1 | Právna analýza eKasa pre tenantov v SK: služby podľa SK NACE, výnimky § 3 ods. 2 písm. b), znenie po novele 30/2026 Z. z. Rozhodnutie: vlastný certifikovaný adaptér, partner, alebo len upozornenie | Písomné stanovisko právnika. Rozhodnutie vlastníka zapísané do SOURCE_OF_TRUTH.md sekcia 7 | M | ⛔ právna kontrola + rozhodnutie vlastníka |
 | QA-1 | E2E (Playwright) proti Vercel preview s testovacou DB | Testy `tests/e2e/integration/*` zelené | M | ⬜ |
 | QA-2 | CI na všetkých PR (base `main` aj `feat/*`) | PR do `main` spustí lint, typecheck, build, testy | S | ⬜ |
 | QA-3 | Typecheck v CI a turbo pipeline | CI padne pri type chybe | S | ⬜ |
@@ -69,6 +70,7 @@ Aktualizované: 2026-10-11.
 | OPS-6 | Duplicitný `@playwright/test` v koreňovom `package.json` | Lockfile a package.json konzistentné | S | ⬜ |
 | OPS-7 | GDPR: self-service export údajov a vymazanie účtu | Export JSON, vymazanie s anonymizáciou bookingov | M | ⬜ |
 | OPS-8 | GDPR: záznam súhlasov (consent log) | Verzia textu, čas, účel, test | S | ⬜ |
+| OPS-9 | Bezplatný export dát tenanta (CSV alebo JSON) kedykoľvek, bez poplatku | Export: rezervácie, klienti, služby. Test, že export obsahuje všetky tabuľky tenanta | M | ⬜ |
 
 ## P3: diferenciátory
 
@@ -116,9 +118,20 @@ Každá položka je **hypotéza**. Pred implementáciou musí prejsť validácio
 
 | ID | Hypotéza | Vel. | Stav |
 |---|---|---|---|
-| F-19 | Automatické faktúry s DPH podľa SK a CZ | M | ⬜ právna kontrola |
-| F-20 | Prepojenie na pokladnicu: eKasa (SK) a EET (CZ). Overiť, či a odkedy sa vzťahuje na tenantov | L | ⬜ právna kontrola |
+| F-19 | Automatické faktúry s DPH podľa SK a CZ. Prahy a obsah dokladu: docs/MARKET_RESEARCH.md, bod 2 | M | ⬜ právna kontrola |
+| F-20 | Pokladničná integrácia. SK: eKasa pre služby od 1. 1. 2026 (podľa LEG-1). CZ: EET 2.0 schválené 9/2026, účinnosť podľa návrhu 1. 1. 2027 (sledovať, nie je potvrdené vyhlásenie v Sbírce zákonů) | L | ⛔ LEG-1 a rozhodnutie vlastníka |
 | F-21 | Prístupnosť podľa European Accessibility Act. Overiť, či sa vzťahuje na službu rezervácie | S | ⬜ právna kontrola |
+
+### Doplnené z výskumu (2026-10-11)
+
+| ID | Hypotéza alebo úloha | Vel. | Stav |
+|---|---|---|---|
+| F-25 | Pay by Square QR kód na faktúrach pre SK účty v eurách (štandard SK, podľa payme.sk a SBA). CZ: SPAYD pre CZK | S | ⬜ |
+| F-26 | SK kontrolný výkaz DPH (ako CZ kontrolní hlášení): mesačne alebo štvrťročne podľa registrácie, termín 25 dní. Overiť s právnikom | M | ⬜ právna kontrola |
+| F-27 🔬 | Vernostné karty s cashback a odporúčací program (lokálne salóny ho používajú, globálne nástroje nie) | M | ⬜ |
+| F-28 🔬 | Evidencia POS a zásob spojená s rezerváciou (model MYFOX) | L | ⛔ rozhodnutie o vertikále |
+| F-29 🔬 | Zdravotnícky režim: intake, poznámky, telehealth. Len ak vlastník schváli vertikálu a zdravotné údaje | L | ⛔ rozhodnutie vlastníka + právna kontrola |
+| F-30 🔬 | Voliteľný marketplace s nízkou províziou a atribučným oknom | L | ⛔ rozhodnutie vlastníka |
 
 ### Analytika a platforma
 
@@ -140,6 +153,10 @@ Každá položka je **hypotéza**. Pred implementáciou musí prejsť validácio
 | Pilot alebo reálni zákazníci | OPS-7, OPS-8, rozsah OPS-1 až OPS-4 |
 | Next.js 14.2.x alebo 15 | Nič teraz, rieši sa pri ďalšom upgrade |
 | GitGuardian nález | PR-1 |
+| Prvý vertical (beauty, wellness, kliniky, remeslá) | F-1, F-28, F-29 |
+| Marketplace áno alebo nie | F-30 |
+| eKasa: vlastný adaptér, partner, alebo len upozornenie | LEG-1, F-20 |
+| Zdravotné údaje: uchovávať, alebo len termín a kontakt | F-29, OPS-8 |
 
 ---
 
