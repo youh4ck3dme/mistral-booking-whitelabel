@@ -2,41 +2,48 @@
 
 Stav: 2026-10-11. Tento dokument je vstup do `docs/BACKLOG.md`. Zdroj pravdy o produkte a pravidlách je `docs/SOURCE_OF_TRUTH.md`.
 
-**Nie je to právne ani daňové poradenstvo.** Právne body sú informácie z verejných zdrojov. Každý bod, ktorý ide do produktu, musí potvrdiť SK/CZ právnik alebo daňový poradca.
+**Nie je to právne ani daňové poradenstvo.** Každý právny bod, ktorý ide do produktu, musí potvrdiť SK/CZ právnik alebo daňový poradca.
 
-Legenda: ✅ potvrdené v tejto kontrole · 🟡 čiastočne alebo len sekundárny zdroj · ❌ oprava k pôvodnému tvrdeniu · ❓ neoverené
+Legenda stavov: **VERIFIED** = potvrdené zdrojom (uvedené URL a dátum prístupu) · **UNVERIFIED** = nepotvrdené alebo zdroje sa rozchádzajú · **LEGAL/TAX REVIEW** = vyžaduje právnu alebo daňovú kontrolu · ✅ / 🟡 / ❌ / ❓ = stav v tabuľkách ako doteraz.
+
+Dátum prístupu ku všetkým zdrojom v tomto dokumente: **2026-10-11**.
 
 ---
 
 ## 1. Čo sa overovalo
 
-- **Pôvodný výskum:** tri výstupy (fact-check, strategická mapa, slovenský preklad s doplnkami). Beriem to ako: 1 = fact-check, 2 = výskum, 3 + 4 = preklad a doplnenie. Ak je to inak, oprav ma.
-- **Táto kontrola:** 9 vyhľadávaní a 1 neúspešné otvorenie stránky (help.booksy.com nie je z prostredia dostupný). Vybrané tvrdenia sú v tabuľke nižšie.
-- **Neprebrané:** ostatné citácie (cca 100 odkazov z pôvodnej správy) som jednotlivo neotváral. Ich tvrdenia sú označené ❓, pokiaľ ich nepotvrdila táto kontrola.
+- **Pôvodný výskum:** tri výstupy (fact-check, strategická mapa, slovenský preklad s doplnkami). Beriem to ako: 1 = fact-check, 2 = výskum, 3 + 4 = preklad a doplnenie.
+- **Kontrola z 2026-10-11 (prvá):** 9 vyhľadávaní a 1 neúspešné otvorenie stránky (help.booksy.com nie je z prostredia dostupný).
+- **Opravná kontrola z 2026-10-11 (druhá):** ďalšie vyhľadávania k EET 2.0 (podpis, vyhlásenie), e‑Faktúre a Digitálnemu poštárovi a SimplyBook.me (podmienky a retencia dát). Výsledky sú v tabuľke v bode 5.
+- **Neprebrané:** ostatné citácie z pôvodnej správy (cca 100 odkazov) som jednotlivo neotváral. Ich tvrdenia sú označené UNVERIFIED, pokiaľ ich nepotvrdila kontrola.
 - **Ceny produktov:** nekontrolované. Pred rozhodnutím o cenníku ich over z oficiálnych stránok s dátumom.
 
 ## 2. Opravy k fact-checku a overené body
 
-| Tvrdenie | Stav | Čo platí | Zdroj |
+| Tvrdenie | Stav | Čo platí | Zdroj (URL) |
 |---|---|---|---|
-| CZ prah DPH 2 536 500 Kč | ❌ neúplné | Od 2025 sa počíta kalendárny rok, nie kĺzavých 12 mesiacov. Prah 2 000 000 Kč: registrácia od 1. 1. nasledujúceho roka. Prah 2 536 500 Kč: registrácia nasledujúci deň. Zdroje sa líšia v dni. Nerezidenti nemajú prah. | [Avalara](https://www.avalara.com/vatlive/en/country-guides/europe/czech-republic/czech-vat-registration.html), [KPMG](https://kpmg.com/us/en/taxnewsflash/news/2025/03/czech-republic-vat-registration-guidance.html) |
-| SK prah registrácie DPH 50 000 € / 62 500 € | 🟡 nepreverené v tejto kontrole | Podľa fact-checku: kalendárny rok, registrácia do 5 pracovných dní. | fact-check, podnikajte.sk, KROS |
-| SK zjednodušená faktúra do 100 € | 🟡 | Platí pre bežné zjednodušené doklady so sumou s DPH do 100 €. | [podnikajte.sk](https://www.podnikajte.sk/dan-z-pridanej-hodnoty/faktura-vs-zjednodusena-faktura) |
-| SK eKasa doklady: 400 € (fact-check) | ❌ konflikt | Zdroje uvádzajú 1 000 € (hotovosť) a 1 600 € (karta alebo iný náhrada hotovosti). Jeden český sprievodca uvádza 400 €. **Číslo nekódovať do produktu, kým ho nepotvrdí právnik.** | [podnikajte.sk](https://www.podnikajte.sk/ekasa/faktura-zaplatena-v-hotovosti-ekasa-limit), [Eurofiscalis](https://www.eurofiscalis.com/cs/facturer-client-slovaquie/) |
-| SK eKasa od 1. 1. 2026 | ✅ | Zákon 384/2025 Z. z., schválený 3. 12. 2025, účinný 1. 1. 2026, nahrádza 289/2008 Z. z. Vzťahuje sa na služby podľa SK NACE, s výnimkami v § 3 ods. 2 písm. b). Zoznam výnimiek z prílohy staršieho zákona v novom znení chýba. Novela 30/2026 Z. z. → **znenie overiť**. | [podnikajte.sk](https://www.podnikajte.sk/ekasa/zmeny-v-evidencii-trzieb-od-2026), [FS – služby podliehajúce eKase](https://podpora.financnasprava.sk/679547-Slu%C5%BEby-podliehaj%C3%BAce-povinnosti-evidencie-tr%C5%BEieb-v-pokladnici-eKasa-), [Slov-Lex PDF](https://static.slov-lex.sk/pdf/SK/ZZ/2025/384/ZZ_2025_384_20260101.pdf) |
-| CZ EET 2.0 „podpísaný a vyhlásený“ | ❌ nepotvrdené | Parlament schválil 9. 9. 2026. Zdroje sa líšia v podpise (17. 9. vs. ešte čaká). Vyhlásenie v Zbierke zákonů nepotvrdené, ministerstvo plánovalo koniec októbra alebo november 2026. Účinnosť 1. 1. 2027, prípravné časti od 1. 11. 2026. Rozsah: platby pri osobnom kontakte vrátane kariet a QR. | [LookupTax](https://lookuptax.com/tax-changes/czech-republic/eet-2-chamber-overrides-senate-2026), [epravo.cz](https://www.epravo.cz/top/aktualne/eet-20-je-na-svete-od-ledna-2027-budou-podnikatele-evidovat-i-platby-kartou-a-qr-kodem-121639.html) |
-| SK e-Faktúra od 1. 1. 2027 | 🟡 viac sekundárnych zdrojov | Štruktúrovaný XML (EN 16931 / UBL), prijímať musia aj neplatitelia DPH, PDF e-mailom nestačí, doručenie cez Peppol. „Digitálny poštár“ sa v zdrojoch nenašiel, treba overiť z Finančnej správy. | [podnikajte.sk](https://www.podnikajte.sk/dan-z-pridanej-hodnoty/efaktura-povinna-elektronicka-fakturacia-od-2027), [pravnenoviny.sk](https://pravnenoviny.sk/elektronicka-faktura-povinnost-prijimat/) |
-| SimplyBook.me: AI hlasová rezervácia | ✅ help wiki, ❓ Instagram | Web widget, Messenger a WhatsApp. Hlas ide cez OpenAI a neukladá sa, platí sa kreditmi. Instagram je len v marketingu. | [SimplyBook.me](https://simplybook.me/en/ai-voice-booking), [help wiki](https://help.simplybook.me/wiki/AI_Voice_Booking) |
-| Cal.com cloud je closed source | 🟡 | Hlavný kód už nie je verejný. Open-source časť je `calcom/cal.diy` pod MIT (predtým AGPL 3.0). Dátum: april 2026 (It's FOSS). | [Cal.com blog](https://cal.com/blog/cal-diy-open-source-to-closed-source), [It's FOSS](https://itsfoss.com/news/cal-com-goes-proprietary.md) |
-| Square Appointments nie je v CZ/SK | ❓ pravdepodobne áno | Komunita Square uvádza len US, Kanadu, Japonsko, Austráliu a UK (nedatovaná odpoveď). Nepotvrdené na oficiálnej podpore. | community.squareup.com (nedatované) |
-| Booksy nie je v CZ/SK | ❓ | Help center nebol dostupný. Nepotvrdené. | — |
-| Treatwell: 13 krajín, bez CZ/SK | ❓ | Potvrdené len sídlo v Londýne a anglo-taliansky pôvod (sekundárne). Zoznam krajín nie. | Capterra, Health Club Management |
-| Doctolib: FR, DE, IT, NL | 🟡 | Tretia strana (Similarweb, aug. 2026) uvádza FR, IT, DE, NL. CZ/SK nenájdené. | [Similarweb](https://www.similarweb.com/ko/company/doctolib.fr/) |
-| Vagaro: US, CA, UK, AU | 🟡 | Tretie strany konzistentne uvádzajú US, CA, UK, AU. CZ nenájdené. | [Vagaro](https://www.vagaro.com/pro/about-us) (fact-check) |
-| Pay by Square ako SK štandard | ✅ | Štandard QR kódu pre platbu faktúr v eurách na SK IBAN, podporuje ho Slovenská bankárska asociácia. CZ používa SPAYD pre CZK. | [payme.sk](https://payme.sk/en), [Fakturoid](https://www.fakturoid.cz/blog/2025/11/28/qr-kod-slovensko) |
-| Mindbody poplatok 500 $ za export dát | ❓ jediný zdroj | Nepreverené. Pred použitím v komunikácii overiť. | CheckThat |
-| No-show štatistiky (75 %, 45 %, 30–50 %, 9 % / 23 %) | ❓ marketingové zdroje | Nepoužívať ako dôkaz v produkte ani v materiáloch bez primárneho zdroja. | viaceré blogy |
-| Cancel button od 19. 6. 2026 | ❓ | Tvrdí pôvodný výskum. Overiť text smernice 2023/2673 a jej rozsah pre rezervácie. | — |
+| CZ prah DPH 2 536 500 Kč | ❌ neúplné | Od 2025 sa počíta kalendárny rok. Prah 2 000 000 Kč: registrácia od 1. 1. nasledujúceho roka. Prah 2 536 500 Kč: registrácia nasledujúci deň. Zdroje sa líšia v dni. Nerezidenti nemajú prah. VERIFIED (sekundárne). | [Avalara](https://www.avalara.com/vatlive/en/country-guides/europe/czech-republic/czech-vat-registration.html), [KPMG](https://kpmg.com/us/en/taxnewsflash/news/2025/03/czech-republic-vat-registration-guidance.html) |
+| SK prah registrácie DPH 50 000 € / 62 500 € | UNVERIFIED | Podľa fact-checku. V tejto kontrole nepreverené. | — (fact-check) |
+| SK zjednodušená faktúra do 100 € | VERIFIED (sekundárne) | Platí pre bežné zjednodušené doklady so sumou s DPH do 100 €. | [podnikajte.sk](https://www.podnikajte.sk/dan-z-pridanej-hodnoty/faktura-vs-zjednodusena-faktura) |
+| SK eKasa doklady: 400 € (fact-check) | UNVERIFIED (konflikt) | Zdroje uvádzajú 1 000 € (hotovosť) a 1 600 € (karta alebo iný náhrada hotovosti). Jeden český sprievodca uvádza 400 €. **Číslo nekódovať do produktu.** | [podnikajte.sk](https://www.podnikajte.sk/ekasa/faktura-zaplatena-v-hotovosti-ekasa-limit) |
+| SK eKasa od 1. 1. 2026 | VERIFIED | Zákon 384/2025 Z. z., schválený 3. 12. 2025, účinný 1. 1. 2026, nahrádza 289/2008 Z. z. Novela 30/2026 Z. z.: znenie treba overiť (UNVERIFIED časť). | [podnikajte.sk](https://www.podnikajte.sk/ekasa/zmeny-v-evidencii-trzieb-od-2026), [FS – služby podliehajúce eKase](https://podpora.financnasprava.sk/679547-Slu%C5%BEby-podliehaj%C3%BAce-povinnosti-evidencie-tr%C5%BEieb-v-pokladnici-eKasa-), [Slov-Lex PDF](https://static.slov-lex.sk/pdf/SK/ZZ/2025/384/ZZ_2025_384_20260101.pdf) |
+| CZ EET 2.0: prezident podpísal zákon | VERIFIED | Podpis 17. 9. 2026. Viaceré zdroje, jeden uvádza podpis verejne potvrdený Finančnou správou. | [fiscal-requirements](https://www.fiscal-requirements.com/news/6008), [expats.cz](https://www.expats.cz/czech-news/article/czechia-approves-return-of-eet-electronic-sales-tracking-to-resume-in-2027) |
+| CZ EET 2.0: vyhlásený ako 180/2026 Sb. 7. 10. 2026 | UNVERIFIED | Vyhľadávanie číslo ani dátum nenašlo. Zdroje z 24. 9. 2026 ich nemali. Overiť v Sbírce zákonů. | overiť: [e-sbírka](https://www.e-sbirka.cz) |
+| CZ EET 2.0: parlament schválil 9. 9. 2026 | VERIFIED | Poslanecká snemovna prehlasovala zmeny Senátu 9. 9. 2026. | [businessinfo.cz](https://www.businessinfo.cz/clanky/snemovna-schvalila-eet-2-0-moderni-evidence-trzeb-miri-do-senatu/), [FS tlačová správa](https://financnisprava.gov.cz/cs/financni-sprava/media-a-verejnost/tiskove-zpravy-gfr/tiskove-zpravy-2026/snemovna-schvalila-eet-2-0) |
+| CZ EET 2.0: účinnosť 1. 1. 2027 | VERIFIED (podľa návrhu) | Zdroje sa zhodujú. Potvrdiť po vyhlásení. Prípravné časti od 1. 11. 2026 (podľa návrhu). | [expats.cz](https://www.expats.cz/czech-news/article/czechia-approves-return-of-eet-electronic-sales-tracking-to-resume-in-2027) |
+| SK e-Faktúra od 1. 1. 2027 | VERIFIED | Povinnosť od 1. 1. 2027, viacero zdrojov. Primárny text overiť na portáli FS (sekcia eFaktúra). | [podnikajte.sk](https://www.podnikajte.sk/dan-z-pridanej-hodnoty/efaktura-povinna-elektronicka-fakturacia-od-2027), [pravnenoviny.sk](https://pravnenoviny.sk/elektronicka-faktura-povinnost-prijimat/) |
+| SK Digitálny poštár | VERIFIED (FS) | Certifikovaní poskytovatelia doručovacej služby, ktorých FS volá Digitálni poštári. Zoznam je na portáli FS. Portál FS som priamo nenačítal, potvrdenie je cez TASR, ktorý cituje FS. | [TASR / teraz.sk](https://www.teraz.sk/ekonomika/fs-podnikatelia-si-uz-mozu-vybrat-d/967633-clanok.html), [podnikajte.sk](https://www.podnikajte.sk/zakonne-povinnosti-podnikatela/ako-si-vybrat-digitalneho-postara) |
+| SimplyBook.me: AI hlasová rezervácia | VERIFIED | Pozri bod 5, riadok SimplyBook. | [marketingová stránka](https://simplybook.me/en/ai-voice-booking), [help wiki](https://help.simplybook.me/wiki/AI_Voice_Booking) |
+| Cal.com cloud je closed source | VERIFIED (sekundárne) | Hlavný kód už nie je verejný. Open-source časť je `calcom/cal.diy` pod MIT (predtým AGPL 3.0). Dátum: apríl 2026. | [Cal.com blog](https://cal.com/blog/cal-diy-open-source-to-closed-source), [It's FOSS](https://itsfoss.com/news/cal-com-goes-proprietary.md) |
+| Square Appointments nie je v CZ/SK | UNVERIFIED (pravdepodobne áno) | Komunita Square uvádza len US, Kanadu, Japonsko, Austráliu a UK (nedatovaná odpoveď). Nepotvrdené na oficiálnej podpore. | [Square community](https://community.squareup.com) (nedatované) |
+| Booksy nie je v CZ/SK | UNVERIFIED | Help center nebol dostupný. | — |
+| Treatwell: 13 krajín, bez CZ/SK | UNVERIFIED | Potvrdené len sídlo v Londýne a anglo-taliansky pôvod (sekundárne). | Capterra, Health Club Management |
+| Doctolib: FR, DE, IT, NL | UNVERIFIED (tretia strana) | Similarweb (aug. 2026) uvádza FR, IT, DE, NL. CZ/SK nenájdené. | [Similarweb](https://www.similarweb.com/ko/company/doctolib.fr/) |
+| Vagaro: US, CA, UK, AU | UNVERIFIED (tretia strana) | Tretie strany konzistentne uvádzajú US, CA, UK, AU. CZ nenájdené. | [Vagaro](https://www.vagaro.com/pro/about-us) (fact-check) |
+| Pay by Square ako SK štandard | VERIFIED (sekundárne) | QR štandard pre platbu faktúr v eurách na SK IBAN, za SBA. CZ používa SPAYD pre CZK. | [payme.sk](https://payme.sk/en), [Fakturoid](https://www.fakturoid.cz/blog/2025/11/28/qr-kod-slovensko) |
+| Mindbody poplatok 500 $ za export dát | UNVERIFIED | Jediný zdroj (CheckThat). Pred použitím overiť. | CheckThat |
+| No-show štatistiky (75 %, 45 %, 30–50 %, 9 % / 23 %) | UNVERIFIED | Marketingové zdroje. Nepoužívať ako dôkaz v produkte bez primárneho zdroja. | viaceré blogy |
+| Cancel button od 19. 6. 2026 | UNVERIFIED | Overiť text smernice 2023/2673 a jej rozsah pre rezervácie. | — |
 
 ## 3. Konkurencia v SK/CZ (stav dôkazu)
 
@@ -52,10 +59,10 @@ Legenda: ✅ potvrdené v tejto kontrole · 🟡 čiastočne alebo len sekundár
 | Fresha | 🟡 | Fact-check uvádza živé CZ listingy. Tu nepreverené. |
 | Calendly, Acuity, Cal.com, SimplyBook.me, Setmore | ❓ v SK/CZ | Globálne nástroje. Lokálna podpora nie je overená. |
 | Reservatic, Notado, MojaRezervácia, iSport System (SK/CZ) | ❓ | Uvedené v kritike reportu, nepreverené. Zaradiť do ďalšieho prieskumu. |
-| Microsoft Bookings, Google Appointment Schedules, WordPress Amelia | ❓ | Lacné alternatívy z kritiky reportu. Nepreverené: cena, lokálna prítomnosť, funkcie. | — |
-| Square, Booksy, Treatwell, Vagaro, Doctolib, Jane | ❓ | Viď tabuľku bodov vyššie. |
+| Microsoft Bookings, Google Appointment Schedules, WordPress Amelia | ❓ | Lacné alternatívy z kritiky reportu. Nepreverené: cena, lokálna prítomnosť, funkcie. |
+| Square, Booksy, Treatwell, Vagaro, Doctolib, Jane | ❓ | Viď bod 2. |
 
-**Záver:** Lokálni hráči (Bookio, Salona, Reservio, Anolla, Reenio, Reservanto) sú hlavná konkurencia v SK/CZ. Ich cenové údaje a funkcie treba overiť priamo na stránkach pred rozhodnutím o cenníku.
+**Záver:** Lokálni hráči (Bookio, Salona, Reservio, Anolla, Reenio, Reservanto) sú hlavná konkurencia v SK/CZ. Ich ceny a funkcie treba overiť priamo na stránkach pred rozhodnutím o cenníku.
 
 ## 4. Funkcie
 
@@ -65,9 +72,9 @@ Online rezervácia 24/7 · embed alebo odkaz · viac zamestnancov · pripomienky
 ### Diferenciátory (kandidáti, mapované na backlog)
 - Vlastníctvo dát a bezplatný export → **OPS-9**
 - Zdroje a kapacita za SMB cenu → **F-1**
-- WhatsApp rezervácie a pripomienky → **F-17**, **F-12**
-- Hlasový agent mimo otváracích hodín → **F-18** (náklady a právo overiť)
-- SK/CZ fiškálne a daňové vrstvy → **F-19**, **F-20**, **F-25**, **F-26**, **LEG-1**
+- WhatsApp rezervácie a pripomienky → **F-17**, **F-12** (konkurent SimplyBook.me to už má, diferenciácia musí byť lokálna)
+- Hlasový agent mimo otváracích hodín → **F-18** (konkurent to už má, overiť náklady a právo)
+- SK/CZ fiškálne a daňové vrstvy → **F-19**, **F-20**, **F-25**, **F-26**, **LEG-1**, **FIS-1**, **FIS-2**
 - Prístupnosť podľa EAA → **F-21**
 - Vernostné karty a odporúčací program → **F-27** (nový)
 - POS a zásoby pri rezervácii → **F-28** (nový, závisí od vertikály)
@@ -77,34 +84,74 @@ Online rezervácia 24/7 · embed alebo odkaz · viac zamestnancov · pripomienky
 ### Trendy 2025–2026 (sekundárne dôkazy, 🔬)
 AI asistenti v rezerváciách, hlasové rezervácie, rezervácie v messaging aplikáciách, predikcia neúčasti, dynamické ceny. Každý trend musí prejsť validáciou pred implementáciou.
 
-## 5. Body pre právnika
+## 5. Právne tvrdenia: stav a zdroje
 
-1. **eKasa:** ktoré tenant služby spadajú pod zákon 384/2025 Z. z. po novele 30/2026 Z. z. a aké výnimky platia (§ 3 ods. 2 písm. b). Má produkt vlastný certifikovaný adaptér, partnera, alebo len upozornenie? (LEG-1)
-2. **Faktúry a doklady SK/CZ:** limity zjednodušeného dokladu a eKasa dokladov (100 € / 1 000 € / 1 600 € / 400 € — konflikt), obsah dokladu, DPH prah CZ (dva prahy, nerezidenti, OSS).
-3. **GDPR:** rola platformy (procesor alebo spoločný správca) najmä pri agregácii dát naprieč tenantmi a pri trénovaní AI modelov. Retencia rezervačných dát. Lehota žiadostí dotknutých osôb (1 mesiac).
-4. **Zdravotné údaje** (čl. 9 GDPR): ak sa rozhodne pre zdravotnícku vertikálu, výslovný súhlas, DPA a hosting.
-5. **EAA:** či sa rezervačný tok tenanta považuje za službu v pôsobnosti, výnimka pre mikropodniky a zodpovednosť medzi widgetom platformy a webom tenanta.
-6. **Spotrebiteľské pravidlá:** odstúpenie 14 dní a výnimka pre služby na konkrétny termín, storno poplatky a zálohy, povinné predzmluvné informácie, zverejnenie dynamických cien.
-7. **EET 2.0:** potvrdiť vyhlásenie v Sbírce zákonů a účinnosť. Zatiaľ je to sledovanie rizika, nie povinnosť.
-   Rozsah: platby pri osobnom kontakte vrátane kariet a QR (podľa návrhu). Pre salón s kartovou platbou na mieste je to priamo relevantné.
-8. **e-Faktúra SK:** overiť znenie zákona a úlohu „Digitálny poštár“ z oficiálnych zdrojov, rozsah povinnosti pre neplatiteľov DPH a formát pre Peppol.
+Každé právne tvrdenie má URL zdroja, dátum prístupu a stav. Stav **VERIFIED** znamená, že zdroj tvrdenie potvrdzuje. Neznamená, že ide o právnu garanciu.
 
-## 6. Rozhodnutia vlastníka (doplnené do SOURCE_OF_TRUTH sekcia 7)
+| # | Tvrdenie | Stav | Zdroj (URL) | Dátum prístupu | Poznámka |
+|---|---|---|---|---|---|
+| 1 | EET 2.0: prezident podpísal zákon 17. 9. 2026 | VERIFIED | [fiscal-requirements](https://www.fiscal-requirements.com/news/6008), [expats.cz](https://www.expats.cz/czech-news/article/czechia-approves-return-of-eet-electronic-sales-tracking-to-resume-in-2027) | 2026-10-11 | Viaceré zdroje. Oficiálny text zo Sbírky zákonů nie je overený. |
+| 2 | EET 2.0: vyhlásenie 7. 10. 2026 ako 180/2026 Sb. | UNVERIFIED | overiť: [e-sbírka](https://www.e-sbirka.cz) | 2026-10-11 | Nenašlo sa v zdrojoch. Nepoužiť v produkte ani dokumentoch ako fakt. |
+| 3 | EET 2.0: hlavná účinnosť 1. 1. 2027 | VERIFIED (podľa návrhu) | [businessinfo.cz](https://www.businessinfo.cz/clanky/snemovna-schvalila-eet-2-0-moderni-evidence-trzeb-miri-do-senatu/), [expats.cz](https://www.expats.cz/czech-news/article/czechia-approves-return-of-eet-electronic-sales-tracking-to-resume-in-2027) | 2026-10-11 | Zdroje sa zhodujú. Potvrdiť po vyhlásení. |
+| 4 | EET 2.0: rozsah evidovaných platobných metód (osobný kontakt, karty, QR, poukazy, šeky, virtuálne aktíva), výnimky (napr. obrat pod 1 mil. Kč) | LEGAL/TAX REVIEW | [expats.cz](https://www.expats.cz/czech-news/article/czechia-approves-return-of-eet-electronic-sales-tracking-to-resume-in-2027), [fiscal-requirements](https://www.fiscal-requirements.com/news/6008) | 2026-10-11 | Zdroje sa zhodujú v hlavnom rozsahu, ale líšia sa v detailoch výnimiek. Určí právnik alebo daňový poradca. |
+| 5 | eKasa SK: účinnosť 1. 1. 2026, zákon 384/2025 Z. z. | VERIFIED | [podnikajte.sk](https://www.podnikajte.sk/ekasa/zmeny-v-evidencii-trzieb-od-2026), [FS podpora](https://podpora.financnasprava.sk/679547-Slu%C5%BEby-podliehaj%C3%BAce-povinnosti-evidencie-tr%C5%BEieb-v-pokladnici-eKasa-) | 2026-10-11 | Znenie po novele 30/2026 Z. z. treba overiť (UNVERIFIED). |
+| 6 | eKasa SK: služby podľa SK NACE, výnimky § 3 ods. 2 písm. b) | VERIFIED (sekundárne), výnimky LEGAL/TAX REVIEW | [Slov-Lex PDF](https://static.slov-lex.sk/pdf/SK/ZZ/2025/384/ZZ_2025_384_20260101.pdf) | 2026-10-11 | Presný rozsah výnimiek určí právnik. |
+| 7 | eKasa SK: limit dokladu 1 000 € (hotovosť) / 1 600 € (karta) vs. 400 € | UNVERIFIED (konflikt) | [podnikajte.sk](https://www.podnikajte.sk/ekasa/faktura-zaplatena-v-hotovosti-ekasa-limit) | 2026-10-11 | Číslo nekódovať do produktu. |
+| 8 | Zjednodušená faktúra do 100 € s DPH | VERIFIED (sekundárne) | [podnikajte.sk](https://www.podnikajte.sk/dan-z-pridanej-hodnoty/faktura-vs-zjednodusena-faktura) | 2026-10-11 | Bežný doklad, eKasa pravidlá oddelene. |
+| 9 | e-Faktúra SK: povinná od 1. 1. 2027 | VERIFIED | [podnikajte.sk](https://www.podnikajte.sk/dan-z-pridanej-hodnoty/efaktura-povinna-elektronicka-fakturacia-od-2027), [pravnenoviny.sk](https://pravnenoviny.sk/elektronicka-faktura-povinnost-prijimat/) | 2026-10-11 | Viac zdrojov. Primárny text overiť na portáli FS (sekcia eFaktúra). |
+| 10 | Digitálny poštár: certifikovaní poskytovatelia doručovacej služby, ktorých FS volá Digitálni poštári | VERIFIED (FS) | [TASR / teraz.sk](https://www.teraz.sk/ekonomika/fs-podnikatelia-si-uz-mozu-vybrat-d/967633-clanok.html), [podnikajte.sk](https://www.podnikajte.sk/zakonne-povinnosti-podnikatela/ako-si-vybrat-digitalneho-postara) | 2026-10-11 | Potvrdenie cez TASR, ktorý cituje FS. Portál FS som priamo nenačítal. |
+| 11 | e-Faktúra: povinnosť prijímať má každá právnická osoba a každý podnikateľ, ktorý je zdaniteľnou osobou | VERIFIED (FS, citované) | [pravnenoviny.sk](https://pravnenoviny.sk/elektronicka-faktura-povinnost-prijimat/), [TASR / teraz.sk](https://www.teraz.sk/ekonomika/fs-podnikatelia-si-uz-mozu-vybrat-d/967633-clanok.html) | 2026-10-11 | Neplatitelia DPH musia vedieť prijať. Podľa jedného zdroja oznamovacia povinnosť sa týka len platiteľov DPH. |
+| 12 | e-Faktúra: PDF alebo fotografia nie je e-Faktúra, vyžaduje sa štruktúrované XML | VERIFIED (sekundárne) | [pravnenoviny.sk](https://pravnenoviny.sk/elektronicka-faktura-povinnost-prijimat/), [podnikajte.sk](https://www.podnikajte.sk/dan-z-pridanej-hodnoty/efaktura-povinna-elektronicka-fakturacia-od-2027) | 2026-10-11 | Technickú špecifikáciu overiť z FS. |
+| 13 | e-Faktúra: EN 16931, UBL a Peppol ako architektúra | UNVERIFIED | — | 2026-10-11 | Pracovný predpoklad zo zdrojov. Nepovažovať za definitívnu architektúru, kým ju nepotvrdí záväzná technická špecifikácia. |
+| 14 | CZ DPH prahy 2 000 000 Kč a 2 536 500 Kč, kalendárny rok, nerezidenti bez prahu | VERIFIED (sekundárne) | [Avalara](https://www.avalara.com/vatlive/en/country-guides/europe/czech-republic/czech-vat-registration.html), [KPMG](https://kpmg.com/us/en/taxnewsflash/news/2025/03/czech-republic-vat-registration-guidance.html) | 2026-10-11 | Dni registrácie sa líšia. Overiť z MF ČR alebo FS. |
+| 15 | SK prah registrácie DPH 50 000 € / 62 500 € | UNVERIFIED | — (fact-check) | 2026-10-11 | Nepreverené v tejto kontrole. |
+| 16 | Storno: 14-dňové odstúpenie a výnimka pre služby na konkrétny termín | UNVERIFIED | [EUR-Lex, smernica 2011/83/EÚ](https://eur-lex.europa.eu/eli/dir/2011/83/oj) (neoverené) | 2026-10-11 | Právnik. |
+| 17 | GDPR: právny základ zmluvy (čl. 6 ods. 1 písm. b), zdravotné údaje (čl. 9), lehota žiadostí dotknutých osôb 1 mesiac | UNVERIFIED | [EUR-Lex, nariadenie 2016/679](https://eur-lex.europa.eu/eli/reg/2016/679/oj) (neoverené) | 2026-10-11 | Právnik. |
+| 18 | EAA: spotrebiteľské rezervačné služby v pôsobnosti od 28. 6. 2025, výnimka pre mikropodniky | UNVERIFIED | [EUR-Lex, smernica 2019/882](https://eur-lex.europa.eu/eli/dir/2019/882/oj) (neoverené) | 2026-10-11 | Právnik. |
+| 19 | Cancel button od 19. 6. 2026 | UNVERIFIED | — | 2026-10-11 | Overiť smernicu 2023/2673 a jej rozsah pre rezervácie. |
+
+### Body pre právnika (súhrn)
+
+1. **eKasa:** rozsah služieb (SK NACE), výnimky § 3 ods. 2 písm. b), znenie po novele 30/2026 Z. z. Má produkt vlastný certifikovaný adaptér, partnera, alebo len upozornenie? (LEG-1, F-20)
+2. **EET 2.0:** vyhlásenie a číslo zákona (riadok 2), rozsah platieb a výnimiek (riadok 4). (F-20)
+3. **e-Faktúra:** technická špecifikácia, úloha Digitálneho poštára v procese, prijímanie pre neplatiteľov DPH, architektúra (riadky 9–13). (FIS-1)
+4. **Účtovné doklady:** limity dokladov a DPH prahy (riadky 7, 8, 14, 15). (F-19, FIS-2)
+5. **GDPR:** rola platformy (správca alebo spracovateľ), agregácia naprieč tenantmi, tréning AI, profilovanie, retencia, zdravotné údaje (riadok 17). (LEG-2, OPS-10, OPS-11)
+6. **Storno, zálohy, no-show:** odstúpenie a výnimky, storno poplatky, predzmluvné informácie (riadky 16, 19). (LEG-3, F-11)
+7. **EAA:** pôsobnosť pre rezervačný tok tenanta a rozdelenie zodpovednosti medzi widgetom a webom (riadok 18). (F-21)
+
+## 6. Dodávateľ: SimplyBook.me
+
+| Tvrdenie | Stav | Zdroj (URL) | Dátum prístupu | Poznámka |
+|---|---|---|---|---|
+| Kanály: web, Facebook, Instagram, WhatsApp | VERIFIED | [marketingová stránka](https://simplybook.me/en/ai-voice-booking) | 2026-10-11 | Vendor vlastný zdroj. |
+| Kanál: Facebook Messenger | VERIFIED | [help wiki](https://help.simplybook.me/wiki/AI_Voice_Booking) | 2026-10-11 | Samostatný zdroj: help wiki (nie len marketing). |
+| Hlas ide cez OpenAI | VERIFIED | [marketingová stránka](https://simplybook.me/en/ai-voice-booking), [podmienky (summary)](https://simplybook.me/zh/terms-and-conditions) | 2026-10-11 | Podmienky sú v čínskej verzii, výsledok vyhľadávania je zhrnutie. |
+| Audio sa nikde neukladá (SimplyBook) | VERIFIED | [marketingová stránka](https://simplybook.me/en/ai-voice-booking), [CMOtech](https://cmotech.uk/story/simplybook-me-launches-ai-voice-tool-for-bookings) | 2026-10-11 | Vendor tvrdí, že nezaznamenáva ani neukladá hlas. Nezávislé potvrdenie len v tlači. |
+| OpenAI drží audio alebo údaje až 30 dní na abuse monitoring | UNVERIFIED | — | 2026-10-11 | OpenAI retenciu nebolo možné nájsť v zdrojoch. Overiť v DPA s OpenAI. |
+| Transkripcia a booking dáta: retencia 30 dní | UNVERIFIED | [zrkadlová doména](https://simplybook.kayanee.com/en/ai-voice-booking) (nezávislá, nie oficiálna) | 2026-10-11 | Jediný zdroj je zrkadlová doména. Oficiálna Privacy Policy nebola k dispozícii. |
+| Podmienky: nie sú určené pre osobitné kategórie údajov (zdravotné) | UNVERIFIED | [podmienky (summary)](https://simplybook.me/zh/terms-and-conditions) | 2026-10-11 | Zhrnutie čínskej verzie. Overiť v EN podmienkach. |
+| Platí sa kreditmi | VERIFIED | [help wiki](https://help.simplybook.me/wiki/AI_Voice_Booking) | 2026-10-11 | Bezplatné skúšobné kredity, ďalšie za poplatok. |
+
+**Privacy text pre produkt (len overené časti):** SimplyBook.me podľa svojich marketingových podmienok neukladá zvukový záznam hlasu. Hlas spracúva OpenAI. Retenciu u OpenAI a transkripcie treba potvrdiť z Privacy Policy SimplyBook.me a DPA s OpenAI, kým sa dá tvrdiť konkrétna lehota.
+
+## 7. Rozhodnutia vlastníka (doplnené do SOURCE_OF_TRUTH sekcia 7)
 
 1. Prvý vertical: beauty/barber, wellness/fitness, kliniky, remeslá, alebo všeobecné služby.
 2. Marketplace: áno (voliteľný, nízka provízia), alebo nie.
 3. eKasa: vlastný adaptér, partner, alebo len upozornenie tenantov.
-4. Zdravotné údaje: uchovávať, alebo len termín a kontakt.
-5. Platobný model: vlastné napojenie (Stripe a lokálne terminály), alebo partner (SumUp, GoPay, Comgate).
-6. Cieľový tenant: solo, 2–10 zamestnancov, viac lokalít, alebo franchise.
-7. Priorita: najnižšia cena, lokálna compliance, alebo prevádzková hĺbka.
-8. Self-hosted alebo on-prem variant: áno, alebo nie.
-9. Migračné zdroje na prvý deň.
-10. MVP kanály: Google, Instagram, WhatsApp, telefón.
+4. e-Faktúra: partner s Digitálnym poštárom, alebo vlastná kvalifikácia a infraštruktúra.
+5. Zdravotné údaje: uchovávať, alebo len termín a kontakt.
+6. Platobný model: vlastné napojenie (Stripe a lokálne terminály), alebo partner (SumUp, GoPay, Comgate).
+7. Cieľový tenant: solo, 2–10 zamestnancov, viac lokalít, alebo franchise.
+8. Priorita: najnižšia cena, lokálna compliance, alebo prevádzková hĺbka.
+9. Self-hosted alebo on-prem variant: áno, alebo nie.
+10. Migračné zdroje na prvý deň.
+11. MVP kanály: Google, Instagram, WhatsApp, telefón.
 
-## 7. Ďalší postup
+## 8. Ďalší postup
 
-1. **LEG-1** (právna analýza eKasa): najvyššia priorita pre SK tenantov, zákon platí od 1. 1. 2026.
-2. Overiť priamo na oficiálnych stránkach: Square Appointments, Booksy, Treatwell, Doctolib, Vagaro (SK/CZ dostupnosť) a cenníky lokálnych hráčov.
+1. **LEG-1** (právna analýza eKasa) a **FIS-1** (e-Faktúra, termín 1. 1. 2027): najvyššia priorita.
+2. Overiť priamo na oficiálnych stránkach: vyhlásenie EET 2.0 (e-sbírka, riadok 2), portál FS eFaktúra, Digitálny poštár, Square Appointments, Booksy, Treatwell, Doctolib, Vagaro, SimplyBook.me Privacy Policy a DPA s OpenAI.
 3. Validovať položky 🔬 krátkym prieskumom: rozhovory s 10 salónmi alebo klinikami v SK/CZ.
 4. Štvrťročne aktualizovať mapu konkurencie (ceny, AI funkcie, legislatíva).

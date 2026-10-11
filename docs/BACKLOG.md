@@ -51,7 +51,7 @@ Aktualizované: 2026-10-11.
 | LEG-1 | Právna analýza eKasa pre tenantov v SK: služby podľa SK NACE, výnimky § 3 ods. 2 písm. b), znenie po novele 30/2026 Z. z. Rozhodnutie: vlastný certifikovaný adaptér, partner, alebo len upozornenie | Písomné stanovisko právnika. Rozhodnutie vlastníka zapísané do SOURCE_OF_TRUTH.md sekcia 7 | M | ⛔ právna kontrola + rozhodnutie vlastníka |
 | LEG-2 | Právna analýza GDPR roly: správca alebo spracovateľ (SaaS vs. prevádzka tenanta), agregácia naprieč tenantmi, tréning AI, profilovanie a skóre neúčasti (F-14) | Písomné stanovisko. Rozhodnutie zapísané do docs/MARKET_RESEARCH.md, bod 5 | M | ⛔ právna kontrola + rozhodnutie vlastníka |
 | LEG-3 | Právna analýza storna, záloh a poplatkov za neúčasť (SK/CZ spotrebiteľské právo, odstúpenie, výnimka pre služby na termín, zverejnenie pred rezerváciou) | Písomné stanovisko a vzor podmienok, ktoré sa zobrazia pri checkoute (F-11) | M | ⛔ právna kontrola |
-| FIS-1 | e-Faktúra (SK, povinná od 1. 1. 2027 podľa zdrojov): štruktúrovaný XML (EN 16931 / UBL), prijímanie aj pre neplatiteľov DPH, doručenie cez Peppol cez certifikovaného poskytovateľa. Úloha „Digitálny poštár“ sa neoverila, overiť z Finančnej správy | Vygenerovaný XML prejde oficiálnou validáciou, odoslanie v testovacom prostredí Peppol, PDF nie je jediný výstup | L | ⛔ rozhodnutie (vlastný Peppol alebo partner) + právna kontrola |
+| FIS-1 | e-Faktúra (SK, povinná od 1. 1. 2027; VERIFIED podľa zdrojov, primárny text overiť na portáli FS). Povinnosť prijímať majú právnické osoby a podnikatelia zdaniteľné DPH. PDF ani fotografia nie je e-Faktúra, vyžaduje sa štruktúrované XML. Digitálny poštár: certifikovaní poskytovatelia, potvrdené cez TASR citujúci FS. UNVERIFIED: EN 16931 / UBL / Peppol ako architektúra, treba záväznú technickú špecifikáciu | Vygenerovaný XML prejde oficiálnou validáciou, odoslanie v testovacom prostredí, PDF nie je jediný výstup | L | ⛔ rozhodnutie vlastníka (partner s Digitálnym poštárom vs. vlastná kvalifikácia/infraštruktúra) + právna kontrola |
 | FIS-2 | Účtovný export pre účtovníka (CSV alebo XML): predaje, DPH, platby, zálohy, refundy za zvolené obdobie | Formát podľa vzoru od účtovníka, test súčtov voči DB | M | ⬜ právna kontrola |
 | QA-1 | E2E (Playwright) proti Vercel preview s testovacou DB | Testy `tests/e2e/integration/*` zelené | M | ⬜ |
 | QA-2 | CI na všetkých PR (base `main` aj `feat/*`) | PR do `main` spustí lint, typecheck, build, testy | S | ⬜ |
@@ -116,15 +116,15 @@ Každá položka je **hypotéza**. Pred implementáciou musí prejsť validácio
 |---|---|---|---|
 | F-15 🔬 | Embed widget pre web klienta (iframe alebo web component, téma podľa tenanta) | M | ⬜ |
 | F-16 🔬 | Odkaz pre Google Business, Instagram, Facebook a QR kód na prevádzke | S | ⬜ |
-| F-17 🔬 | Konverzačný asistent cez WhatsApp alebo Messenger (rozšírenie existujúceho AI asistenta). Konkurent SimplyBook.me to už má (overené), preto diferenciácia musí byť lokálna | L | ⬜ |
-| F-18 🔬 | Hlasový asistent pre zmeškané hovory. SimplyBook.me AI Voice Booking existuje (overené: hlas cez OpenAI, hlas sa neukladá, platené kredity). Overiť náklady, právo a tvrdenie o Instagrame | L | ⬜ |
+| F-17 🔬 | Konverzačný asistent cez WhatsApp a web (rozšírenie existujúceho AI asistenta). SimplyBook.me kanály WhatsApp a web VERIFIED (vlastný zdroj). Messenger je overený samostatne z help wiki, ale nie je v scope bez rozhodnutia. Diferenciácia musí byť lokálna | L | ⬜ |
+| F-18 🔬 | Hlasový asistent pre zmeškané hovory. SimplyBook.me AI Voice Booking existuje: VERIFIED dostupnosť, hlas ide cez OpenAI, audio sa nezaznamenáva (vendor tvrdenie). UNVERIFIED: retencia OpenAI až 30 dní (abuse monitoring) a retencia transkripcie a booking dát. Overiť náklady a právo | L | ⬜ |
 
 ### Compliance SK, CZ a EÚ (vyžaduje právnu kontrolu)
 
 | ID | Hypotéza | Vel. | Stav |
 |---|---|---|---|
 | F-19 | Automatické faktúry s DPH podľa SK a CZ. Prahy a obsah dokladu: docs/MARKET_RESEARCH.md, bod 2 | M | ⬜ právna kontrola |
-| F-20 | Pokladničná integrácia. SK: eKasa pre služby od 1. 1. 2026 (LEG-1). CZ: EET 2.0 schválené parlamentom 9. 9. 2026. Podpis a vyhlásenie v Zbierke zákonů nie sú potvrdené, zdroje sa líšia. Účinnosť podľa návrhu 1. 1. 2027, prípravné časti od 1. 11. 2026. Platí aj pre platby kartou a QR pri osobnom kontakte | L | ⛔ LEG-1 a rozhodnutie vlastníka |
+| F-20 | Pokladničná integrácia. SK: eKasa pre služby od 1. 1. 2026 (LEG-1). CZ EET 2.0: parlament schválil 9. 9. 2026 (VERIFIED), prezident podpísal 17. 9. 2026 (VERIFIED). Vyhlásenie ako 180/2026 Sb. 7. 10. 2026 je UNVERIFIED, overiť v Sbírce zákonů. Účinnosť 1. 1. 2027 VERIFIED podľa návrhu, prípravné časti od 1. 11. 2026. Rozsah platieb (karty, QR pri osobnom kontakte) je LEGAL/TAX REVIEW | L | ⛔ LEG-1, právna kontrola a rozhodnutie vlastníka |
 | F-21 | Prístupnosť podľa European Accessibility Act. Overiť, či sa vzťahuje na službu rezervácie | S | ⬜ právna kontrola |
 
 ### Doplnené z výskumu (2026-10-11)
@@ -162,7 +162,7 @@ Každá položka je **hypotéza**. Pred implementáciou musí prejsť validácio
 | Marketplace áno alebo nie | F-30 |
 | eKasa: vlastný adaptér, partner, alebo len upozornenie | LEG-1, F-20 |
 | Zdravotné údaje: uchovávať, alebo len termín a kontakt | F-29, OPS-8 |
-| e-Faktúra: vlastný Peppol a prijímanie, alebo partner | FIS-1 |
+| e-Faktúra: partner s Digitálnym poštárom vs. vlastná kvalifikácia/infraštruktúra | FIS-1 |
 | GDPR rola platformy (správca alebo spracovateľ) | LEG-2, OPS-10, OPS-11 |
 | Podmienky storna a záloh: znenie a zobrazenie pri checkoute | LEG-3, F-11, FUN-3 |
 
