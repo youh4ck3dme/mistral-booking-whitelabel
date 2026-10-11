@@ -5,6 +5,7 @@ import { aggregateExperimentStats, type ExperimentStats } from '@repo/ai';
 import { useNotifications } from '@repo/web/app/notifications-provider';
 import { useTenant } from '@repo/web/src/lib/tenant/TenantProvider';
 import { UsersTab } from './users-tab';
+import { StaffTab } from './staff-tab';
 import { createClient } from '@repo/web/src/utils/supabase/client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -44,7 +45,7 @@ export default function TenantAdminPage() {
   const [experimentStats, setExperimentStats] = useState<ExperimentStats[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'services' | 'bookings' | 'branding' | 'ai' | 'users'>('services');
+  const [activeTab, setActiveTab] = useState<'services' | 'bookings' | 'branding' | 'ai' | 'users' | 'staff'>('services');
 
   const brandingDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -275,6 +276,7 @@ export default function TenantAdminPage() {
           { id: 'branding', label: 'Branding' },
           { id: 'ai', label: 'AI Nastavenia' },
           { id: 'users', label: 'Používatelia' },
+          { id: 'staff', label: 'Personál' },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -546,6 +548,14 @@ export default function TenantAdminPage() {
 
       {activeTab === 'users' && (
         <UsersTab tenantId={tenant.tenant.id} supabase={supabase} />
+      )}
+
+      {activeTab === 'staff' && (
+        <StaffTab
+          tenantSlug={tenant.tenant.slug}
+          services={services.map(service => ({ id: service.id, name: service.name }))}
+          supabase={supabase}
+        />
       )}
     </div>
   );

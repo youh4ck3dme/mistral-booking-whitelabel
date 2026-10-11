@@ -1,7 +1,7 @@
 'use client';
 
 import type { Booking, Service } from '@repo/core';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { CalendarDay, CalendarMonth } from './calendar.utils';
 import {
   generateCalendarMonth,
@@ -63,6 +63,8 @@ export function AdminCalendar({
   const [isLoading, setIsLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
+  const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
+  const [staffOptions, setStaffOptions] = useState<{ id: string; display_name: string }[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [outcomeBusyId, setOutcomeBusyId] = useState<string | null>(null);
@@ -93,12 +95,29 @@ export function AdminCalendar({
     return bookingsByDate[selectedDate] || [];
   }, [selectedDate, bookingsByDate]);
 
-  // Filter bookings by service and status
+  // Staff list for the calendar filter. RLS limits it to the tenant.
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from('staff')
+      .select('id, display_name')
+      .order('display_name', { ascending: true })
+      .then(({ data, error }) => {
+        if (!cancelled && !error) setStaffOptions((data ?? []) as { id: string; display_name: string }[]);
+      });
+    return () => { cancelled = true; };
+  }, [supabase]);
+
+  // Filter bookings by service, staff and status
   const filteredBookings = useMemo(() => {
     let result = bookings;
     
     if (selectedServiceId) {
       result = result.filter(b => b.service_id === selectedServiceId);
+    }
+
+    if (selectedStaffId) {
+      result = result.filter(b => (b as Booking & { staff_id?: string }).staff_id === selectedStaffId);
     }
     
     if (selectedStatus) {
@@ -625,6 +644,18 @@ export function AdminCalendar({
             <span className="admin-bookings-list-count">
               {filteredBookings.length} rezervácií
             </span>
+            {staffOptions.length > 1 && (
+              <select
+                aria-label="Filter podľa pracovníka"
+                value={selectedStaffId ?? ''}
+                onChange={e => setSelectedStaffId(e.target.value || null)}
+              >
+                <option value="">Všetci pracovníci</option>
+                {staffOptions.map(member => (
+                  <option key={member.id} value={member.id}>{member.display_name}</option>
+                ))}
+              </select>
+            )}
             <button
               type="button"
               className="premium-button-secondary premium-button-small"

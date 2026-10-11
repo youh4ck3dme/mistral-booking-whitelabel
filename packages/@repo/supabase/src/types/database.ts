@@ -318,6 +318,57 @@ export interface Database {
         };
         Relationships: [];
       };
+      staff: {
+        Row: {
+          id: string
+          tenant_id: string
+          display_name: string
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id: string
+          display_name: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant_id?: string
+          display_name?: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      service_staff: {
+        Row: { tenant_id: string; service_id: string; staff_id: string }
+        Insert: { tenant_id: string; service_id: string; staff_id: string }
+        Update: { tenant_id?: string; service_id?: string; staff_id?: string }
+        Relationships: []
+      }
+      staff_working_hours: {
+        Row: { id: string; tenant_id: string; staff_id: string; weekday: number; start_time: string; end_time: string }
+        Insert: { id?: string; tenant_id: string; staff_id: string; weekday: number; start_time: string; end_time: string }
+        Update: { id?: string; tenant_id?: string; staff_id?: string; weekday?: number; start_time?: string; end_time?: string }
+        Relationships: []
+      }
+      staff_breaks: {
+        Row: { id: string; tenant_id: string; staff_id: string; weekday: number; start_time: string; end_time: string }
+        Insert: { id?: string; tenant_id: string; staff_id: string; weekday: number; start_time: string; end_time: string }
+        Update: { id?: string; tenant_id?: string; staff_id?: string; weekday?: number; start_time?: string; end_time?: string }
+        Relationships: []
+      }
+      staff_time_off: {
+        Row: { id: string; tenant_id: string; staff_id: string; starts_at: string; ends_at: string; reason: string | null }
+        Insert: { id?: string; tenant_id: string; staff_id: string; starts_at: string; ends_at: string; reason?: string | null }
+        Update: { id?: string; tenant_id?: string; staff_id?: string; starts_at?: string; ends_at?: string; reason?: string | null }
+        Relationships: []
+      }
     };
     Views: {
       [_ in never]: never;
