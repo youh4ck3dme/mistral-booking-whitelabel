@@ -1,299 +1,197 @@
--- Booking Concurrency Hardening Verification Tests
--- 
--- Run these tests AFTER applying migration 009_booking_concurrency_hardening.sql
--- to verify that the database-level protections work correctly.
+-- Booking engine verification (self-contained).
 --
--- Prerequisites:
---   - A tenant exists with id = '00000000-0000-0000-0000-000000000001'
---   - A service exists with id = '00000000-0000-0000-0000-000000000002' for that tenant
---   - A user exists with id = '00000000-0000-0000-0000-000000000003'
+-- Creates its own fixtures and runs inside a single transaction that is rolled
+-- back, so it can be run against a dev or staging database without leaving data.
+-- Every check raises an exception on failure. A clean run ends with the
+-- result row 'ALL BOOKING CHECKS PASSED'.
 --
--- If these don't exist, create them first with:
---   INSERT INTO tenants (id, name, slug) VALUES ('00000000-0000-0000-0000-000000000001', 'Test Tenant', 'test-tenant');
---   INSERT INTO services (id, tenant_id, name, duration, price, is_active) 
---     VALUES ('00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'Test Service', 60, 100.00, true);
+-- Requires migrations 001-013 and a Supabase-like auth schema (auth.users, auth.uid()).
+--
+-- Run:  psql -v ON_ERROR_STOP=1 -f supabase/tests/booking_concurrency_verification.sql
+
+\set ON_ERROR_STOP on
+BEGIN;
+SET LOCAL TIME ZONE 'UTC';
 
 -- ============================================
--- Setup: Clean up any existing test data
+-- Helpers (temporary, rolled back with the transaction)
 -- ============================================
-DELETE FROM bookings WHERE tenant_id = '00000000-0000-0000-0000-000000000001';
+CREATE FUNCTION pg_temp.as_user(p_uid uuid) RETURNS void LANGUAGE plpgsql AS $$
+BEGIN
+  PERFORM set_config('request.jwt.claim.sub', p_uid::text, true);
+  EXECUTE 'SET LOCAL ROLE authenticated';
+END $$;
 
--- ============================================
--- Test A: Overlap must fail
--- Insert active booking 10:00-11:00, then try 10:30-11:30
--- Expected: second insert fails with exclusion_violation
--- ============================================
--- Setup: Insert first booking
-INSERT INTO bookings (id, tenant_id, user_id, service_id, start_time, end_time, status)
-VALUES (
-  '10000000-0000-0000-0000-000000000001',
-  '00000000-0000-0000-0000-000000000001',
-  '00000000-0000-0000-0000-000000000003',
-  '00000000-0000-0000-0000-000000000002',
-  '2024-01-01 10:00:00+00',
-  '2024-01-01 11:00:00+00',
-  'confirmed'
-);
+CREATE FUNCTION pg_temp.as_owner() RETURNS void LANGUAGE plpgsql AS $$
+BEGIN
+  EXECUTE 'RESET ROLE';
+  PERFORM set_config('request.jwt.claim.sub', '', true);
+END $$;
 
--- Test: Try to insert overlapping booking
--- This should FAIL with exclusion_violation (23P01)
--- Uncomment to test: 
--- INSERT INTO bookings (id, tenant_id, user_id, service_id, start_time, end_time, status)
--- VALUES (
---   '20000000-0000-0000-0000-000000000001',
---   '00000000-0000-0000-0000-000000000001',
---   '00000000-0000-0000-0000-000000000003',
---   '00000000-0000-0000-0000-000000000002',
---   '2024-01-01 10:30:00+00',
---   '2024-01-01 11:30:00+00',
---   'confirmed'
--- );
+-- Passes only if p_sql fails with the given SQLSTATE and a matching message.
+CREATE FUNCTION pg_temp.expect_sqlstate(p_sql text, p_state text, p_msg_like text DEFAULT '%')
+RETURNS void LANGUAGE plpgsql AS $$
+DECLARE
+  v_state text;
+  v_msg text;
+BEGIN
+  BEGIN
+    EXECUTE p_sql;
+  EXCEPTION WHEN OTHERS THEN
+    GET STACKED DIAGNOSTICS v_state = RETURNED_SQLSTATE, v_msg = MESSAGE_TEXT;
+    IF v_state IS DISTINCT FROM p_state OR v_msg NOT LIKE p_msg_like THEN
+      RAISE EXCEPTION 'expected % (%), got % (%) for: %', p_state, p_msg_like, v_state, v_msg, p_sql;
+    END IF;
+    RETURN;
+  END;
+  RAISE EXCEPTION 'expected error % but statement succeeded: %', p_state, p_sql;
+END $$;
 
--- Verification query for Test A
-SELECT 
-  'Test A: Overlap must fail' AS test_name,
-  CASE WHEN COUNT(*) = 1 THEN true ELSE false END AS only_one_booking_exists,
-  COUNT(*) AS actual_count
-FROM bookings 
-WHERE tenant_id = '00000000-0000-0000-0000-000000000001'
-  AND service_id = '00000000-0000-0000-0000-000000000002'
-  AND status != 'cancelled';
--- Expected: only_one_booking_exists = true, actual_count = 1
+-- Passes only if p_sql affects zero rows (used for RLS-filtered writes).
+CREATE FUNCTION pg_temp.expect_no_rows(p_sql text) RETURNS void LANGUAGE plpgsql AS $$
+DECLARE
+  n bigint;
+BEGIN
+  EXECUTE p_sql;
+  GET DIAGNOSTICS n = ROW_COUNT;
+  IF n <> 0 THEN
+    RAISE EXCEPTION 'expected 0 rows affected, got %: %', n, p_sql;
+  END IF;
+END $$;
 
--- ============================================
--- Test B: Adjacent booking must pass
--- Insert booking 11:00-12:00 (adjacent to 10:00-11:00)
--- Expected: succeeds
--- ============================================
-INSERT INTO bookings (id, tenant_id, user_id, service_id, start_time, end_time, status)
-VALUES (
-  '30000000-0000-0000-0000-000000000001',
-  '00000000-0000-0000-0000-000000000001',
-  '00000000-0000-0000-0000-000000000003',
-  '00000000-0000-0000-0000-000000000002',
-  '2024-01-01 11:00:00+00',
-  '2024-01-01 12:00:00+00',
-  'confirmed'
-);
-
--- Verification query for Test B
-SELECT 
-  'Test B: Adjacent booking must pass' AS test_name,
-  CASE WHEN COUNT(*) = 2 THEN true ELSE false END AS two_bookings_exist,
-  COUNT(*) AS actual_count
-FROM bookings 
-WHERE tenant_id = '00000000-0000-0000-0000-000000000001'
-  AND service_id = '00000000-0000-0000-0000-000000000002'
-  AND status != 'cancelled';
--- Expected: two_bookings_exist = true, actual_count = 2
+CREATE FUNCTION pg_temp.assert_true(p_ok boolean, p_what text) RETURNS void LANGUAGE plpgsql AS $$
+BEGIN
+  IF NOT coalesce(p_ok, false) THEN
+    RAISE EXCEPTION 'assertion failed: %', p_what;
+  END IF;
+END $$;
 
 -- ============================================
--- Test C: Cancelled booking must not block
--- Cancel booking 10:00-11:00, then insert new booking at same time
--- Expected: succeeds
+-- Fixtures (owner role, bypasses RLS)
 -- ============================================
--- Cancel first booking
-UPDATE bookings 
-SET status = 'cancelled'
-WHERE id = '10000000-0000-0000-0000-000000000001';
+INSERT INTO auth.users (id, email) VALUES
+  ('a0000000-0000-0000-0000-000000000001', 'verify-user-1@example.test'),
+  ('a0000000-0000-0000-0000-000000000002', 'verify-user-2@example.test');
 
--- Insert new booking at same time slot
-INSERT INTO bookings (id, tenant_id, user_id, service_id, start_time, end_time, status)
-VALUES (
-  '40000000-0000-0000-0000-000000000001',
-  '00000000-0000-0000-0000-000000000001',
-  '00000000-0000-0000-0000-000000000003',
-  '00000000-0000-0000-0000-000000000002',
-  '2024-01-01 10:00:00+00',
-  '2024-01-01 11:00:00+00',
-  'confirmed'
-);
+INSERT INTO public.tenants (id, name, slug, locale) VALUES
+  ('b0000000-0000-0000-0000-000000000001', 'Verify Tenant', 'verify-tenant', 'sk');
 
--- Verification query for Test C
-SELECT 
-  'Test C: Cancelled booking must not block' AS test_name,
-  CASE WHEN COUNT(*) = 2 THEN true ELSE false END AS two_active_bookings_exist,
-  COUNT(*) AS actual_count
-FROM bookings 
-WHERE tenant_id = '00000000-0000-0000-0000-000000000001'
-  AND service_id = '00000000-0000-0000-0000-000000000002'
-  AND status != 'cancelled';
--- Expected: two_active_bookings_exist = true, actual_count = 2
--- (booking at 11:00-12:00 and new booking at 10:00-11:00)
+INSERT INTO public.services (id, tenant_id, name, duration, price, is_active) VALUES
+  ('c0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000001', 'Verify Service', 60, 10, true);
+
+INSERT INTO public.time_slots_config (id, tenant_id, start_time, end_time, is_active) VALUES
+  ('d0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000001', '09:00', '17:00', true);
 
 -- ============================================
--- Test D: Exact duplicate active booking must fail
--- Try to insert another booking at 11:00-12:00
--- Expected: fails with unique_violation (23505)
+-- 1. Booking via RPC, then overlap, adjacency, duplicate and cancel-reuse
 -- ============================================
--- This should FAIL:
--- INSERT INTO bookings (id, tenant_id, user_id, service_id, start_time, end_time, status)
--- VALUES (
---   '50000000-0000-0000-0000-000000000001',
---   '00000000-0000-0000-0000-000000000001',
---   '00000000-0000-0000-0000-000000000003',
---   '00000000-0000-0000-0000-000000000002',
---   '2024-01-01 11:00:00+00',
---   '2024-01-01 12:00:00+00',
---   'confirmed'
--- );
+SELECT pg_temp.as_user('a0000000-0000-0000-0000-000000000001');
+SELECT public.create_booking('b0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001',
+                             '2030-01-01 10:00:00+00', '2030-01-01 11:00:00+00') AS b1 \gset
 
--- Verification query for Test D
-SELECT 
-  'Test D: Exact duplicate active booking must fail' AS test_name,
-  CASE WHEN COUNT(*) = 2 THEN true ELSE false END AS still_only_two_active_bookings,
-  COUNT(*) AS actual_count
-FROM bookings 
-WHERE tenant_id = '00000000-0000-0000-0000-000000000001'
-  AND service_id = '00000000-0000-0000-0000-000000000002'
-  AND status != 'cancelled';
--- Expected: still_only_two_active_bookings = true, actual_count = 2
+-- Overlap must be rejected with exclusion_violation (23P01).
+SELECT pg_temp.as_user('a0000000-0000-0000-0000-000000000002');
+SELECT pg_temp.expect_sqlstate($q$SELECT public.create_booking('b0000000-0000-0000-0000-000000000001',
+  'c0000000-0000-0000-0000-000000000001', '2030-01-01 10:30:00+00', '2030-01-01 11:30:00+00')$q$,
+  '23P01', '%already booked%');
 
--- ============================================
--- Test E: Invalid status transitions must fail
--- ============================================
+-- Adjacent slot must be allowed.
+SELECT public.create_booking('b0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001',
+                             '2030-01-01 11:00:00+00', '2030-01-01 12:00:00+00') AS b2 \gset
 
--- Setup: Create a confirmed booking for transition tests
-INSERT INTO bookings (id, tenant_id, user_id, service_id, start_time, end_time, status)
-VALUES (
-  '60000000-0000-0000-0000-000000000001',
-  '00000000-0000-0000-0000-000000000001',
-  '00000000-0000-0000-0000-000000000003',
-  '00000000-0000-0000-0000-000000000002',
-  '2024-01-02 10:00:00+00',
-  '2024-01-02 11:00:00+00',
-  'confirmed'
-);
+-- Exact duplicate of an active slot must be rejected with the same deterministic code (23P01).
+SELECT pg_temp.expect_sqlstate($q$SELECT public.create_booking('b0000000-0000-0000-0000-000000000001',
+  'c0000000-0000-0000-0000-000000000001', '2030-01-01 11:00:00+00', '2030-01-01 12:00:00+00')$q$,
+  '23P01', '%already booked%');
 
--- Test E1: cancelled -> confirmed must fail
--- This should FAIL with the trigger exception
--- UPDATE bookings SET status = 'confirmed' WHERE id = '10000000-0000-0000-0000-000000000001';
-
--- Test E2: confirmed -> pending must fail
--- This should FAIL with the trigger exception
--- UPDATE bookings SET status = 'pending' WHERE id = '60000000-0000-0000-0000-000000000001';
-
--- Verification query for Test E
--- Check that the confirmed booking is still confirmed
-SELECT 
-  'Test E: Invalid status transitions must fail' AS test_name,
-  CASE WHEN status = 'confirmed' THEN true ELSE false END AS status_unchanged,
-  status AS actual_status
-FROM bookings 
-WHERE id = '60000000-0000-0000-0000-000000000001';
--- Expected: status_unchanged = true, actual_status = 'confirmed'
+-- Cancelled slot can be rebooked by another user.
+SELECT pg_temp.as_user('a0000000-0000-0000-0000-000000000001');
+SELECT public.cancel_booking(:'b1');
+SELECT pg_temp.as_user('a0000000-0000-0000-0000-000000000002');
+SELECT public.create_booking('b0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001',
+                             '2030-01-01 10:00:00+00', '2030-01-01 11:00:00+00') AS b3 \gset
 
 -- ============================================
--- Test F: Valid status transitions must pass
+-- 2. RLS: direct client writes
 -- ============================================
+-- A user cannot insert a booking on behalf of another user.
+SELECT pg_temp.expect_sqlstate($q$INSERT INTO public.bookings (tenant_id, user_id, service_id, start_time, end_time, status)
+  VALUES ('b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001',
+          'c0000000-0000-0000-0000-000000000001', '2030-02-01 10:00:00+00', '2030-02-01 11:00:00+00', 'confirmed')$q$,
+  '42501', '%row-level security%');
 
--- Test F1: pending -> confirmed must pass
-INSERT INTO bookings (id, tenant_id, user_id, service_id, start_time, end_time, status)
-VALUES (
-  '70000000-0000-0000-0000-000000000001',
-  '00000000-0000-0000-0000-000000000001',
-  '00000000-0000-0000-0000-000000000003',
-  '00000000-0000-0000-0000-000000000002',
-  '2024-01-03 10:00:00+00',
-  '2024-01-03 11:00:00+00',
-  'pending'
-);
-
-UPDATE bookings SET status = 'confirmed' WHERE id = '70000000-0000-0000-0000-000000000001';
-
--- Test F2: confirmed -> cancelled must pass
-UPDATE bookings SET status = 'cancelled' WHERE id = '70000000-0000-0000-0000-000000000001';
-
--- Verification query for Test F
-SELECT 
-  'Test F1: pending -> confirmed must pass' AS test_name,
-  CASE WHEN id = '70000000-0000-0000-0000-000000000001' THEN true ELSE false END AS booking_exists,
-  CASE WHEN status = 'cancelled' THEN true ELSE false END AS status_is_cancelled
-FROM bookings 
-WHERE id = '70000000-0000-0000-0000-000000000001';
--- Expected: booking_exists = true, status_is_cancelled = true
+-- A user cannot update bookings directly (only via RPC).
+SELECT pg_temp.expect_no_rows(format('UPDATE public.bookings SET status = %L WHERE id = %L', 'cancelled', :'b2'));
 
 -- ============================================
--- Cleanup
+-- 3. Owner-role checks: trigger, notifications, search_path, privileges
 -- ============================================
--- Uncomment to clean up test data
--- DELETE FROM bookings WHERE tenant_id = '00000000-0000-0000-0000-000000000001';
+SELECT pg_temp.as_owner();
 
--- ============================================
--- Summary Verification Query
--- Run this to see all test results at once
--- ============================================
-WITH test_results AS (
-  -- Test A: Only one overlapping booking should exist
-  SELECT 
-    'A: Overlap must fail' AS test_name,
-    CASE WHEN COUNT(*) = 1 THEN 'PASS' ELSE 'FAIL' END AS result,
-    COUNT(*) AS details
-  FROM bookings 
-  WHERE tenant_id = '00000000-0000-0000-0000-000000000001'
-    AND service_id = '00000000-0000-0000-0000-000000000002'
-    AND status != 'cancelled'
-    AND (
-      (start_time = '2024-01-01 10:00:00+00' AND end_time = '2024-01-01 11:00:00+00')
-      OR (start_time = '2024-01-01 10:30:00+00' AND end_time = '2024-01-01 11:30:00+00')
-    )
+-- Cancelled bookings cannot be reactivated (status transition trigger).
+SELECT pg_temp.expect_sqlstate(format('UPDATE public.bookings SET status = %L WHERE id = %L', 'confirmed', :'b1'),
+  'P0001', '%Cannot modify a cancelled booking%');
 
-  UNION ALL
+-- Confirmation notifications are queued by the booking trigger.
+SELECT pg_temp.assert_true(EXISTS (
+  SELECT 1 FROM public.notification_deliveries
+  WHERE booking_id = :'b2' AND notification_type = 'booking_confirmation'
+), 'confirmation notification queued for booking b2');
 
-  -- Test B: Two adjacent bookings should exist
-  SELECT 
-    'B: Adjacent booking must pass' AS test_name,
-    CASE WHEN COUNT(*) = 2 THEN 'PASS' ELSE 'FAIL' END AS result,
-    COUNT(*) AS details
-  FROM bookings 
-  WHERE tenant_id = '00000000-0000-0000-0000-000000000001'
-    AND service_id = '00000000-0000-0000-0000-000000000002'
-    AND status != 'cancelled'
+-- Privileges: internal routines are not client-callable; client RPCs are.
+DO $priv$
+DECLARE
+  r record;
+BEGIN
+  FOR r IN
+    SELECT * FROM (VALUES
+      ('public.claim_notification_deliveries(integer,uuid)', 'anon', false),
+      ('public.claim_notification_deliveries(integer,uuid)', 'authenticated', false),
+      ('public.queue_booking_notification(uuid,text,timestamp with time zone)', 'anon', false),
+      ('public.queue_booking_notification(uuid,text,timestamp with time zone)', 'authenticated', false),
+      ('public.schedule_booking_reminders(interval,interval)', 'anon', false),
+      ('public.schedule_booking_reminders(interval,interval)', 'authenticated', false),
+      ('public.send_reminders()', 'anon', false),
+      ('public.send_reminders()', 'authenticated', false),
+      ('public.send_booking_email(uuid)', 'anon', false),
+      ('public.send_booking_email(uuid)', 'authenticated', false),
+      ('public.create_booking(uuid,uuid,timestamp with time zone,timestamp with time zone)', 'anon', false),
+      ('public.create_booking(uuid,uuid,timestamp with time zone,timestamp with time zone)', 'authenticated', true),
+      ('public.cancel_booking(uuid)', 'anon', false),
+      ('public.cancel_booking(uuid)', 'authenticated', true),
+      ('public.get_booked_slots(uuid,uuid,timestamp with time zone,timestamp with time zone)', 'anon', true),
+      ('public.is_tenant_member(uuid)', 'anon', false),
+      ('public.is_tenant_member(uuid)', 'authenticated', true)
+    ) AS v(fn, role_name, expected)
+  LOOP
+    IF has_function_privilege(r.role_name, r.fn::regprocedure, 'EXECUTE') IS DISTINCT FROM r.expected THEN
+      RAISE EXCEPTION 'EXECUTE privilege mismatch: role=% fn=% expected=%', r.role_name, r.fn, r.expected;
+    END IF;
+  END LOOP;
+END $priv$;
 
-  UNION ALL
+-- Every SECURITY DEFINER / trigger / SQL function in public pins its search_path.
+DO $sp$
+DECLARE
+  n integer;
+BEGIN
+  SELECT count(*) INTO n
+  FROM pg_proc p
+  JOIN pg_namespace ns ON ns.oid = p.pronamespace
+  WHERE ns.nspname = 'public'
+    AND NOT EXISTS (SELECT 1 FROM pg_depend d WHERE d.objid = p.oid AND d.deptype = 'e')
+    AND NOT EXISTS (
+      SELECT 1 FROM unnest(coalesce(p.proconfig, '{}'::text[])) c WHERE c = 'search_path=""'
+    );
+  IF n > 0 THEN
+    RAISE EXCEPTION '% function(s) in public do not pin search_path to empty', n;
+  END IF;
+END $sp$;
 
-  -- Test C: Cancelled booking doesn't block
-  SELECT 
-    'C: Cancelled booking must not block' AS test_name,
-    CASE WHEN COUNT(*) = 2 THEN 'PASS' ELSE 'FAIL' END AS result,
-    COUNT(*) AS details
-  FROM bookings 
-  WHERE tenant_id = '00000000-0000-0000-0000-000000000001'
-    AND service_id = '00000000-0000-0000-0000-000000000002'
-    AND status != 'cancelled'
+-- Anonymous client cannot read notification recipients through the claim routine.
+SELECT pg_temp.assert_true(NOT has_function_privilege('anon',
+  'public.claim_notification_deliveries(integer,uuid)'::regprocedure, 'EXECUTE'),
+  'anon cannot call claim_notification_deliveries');
 
-  UNION ALL
-
-  -- Test D: Exact duplicate fails
-  SELECT 
-    'D: Exact duplicate active booking must fail' AS test_name,
-    CASE WHEN COUNT(*) = 2 THEN 'PASS' ELSE 'FAIL' END AS result,
-    COUNT(*) AS details
-  FROM bookings 
-  WHERE tenant_id = '00000000-0000-0000-0000-000000000001'
-    AND service_id = '00000000-0000-0000-0000-000000000002'
-    AND start_time = '2024-01-01 11:00:00+00'
-    AND end_time = '2024-01-01 12:00:00+00'
-    AND status != 'cancelled'
-
-  UNION ALL
-
-  -- Test E: Invalid transitions
-  SELECT 
-    'E: Invalid status transitions must fail' AS test_name,
-    CASE WHEN status = 'confirmed' THEN 'PASS' ELSE 'FAIL' END AS result,
-    1 AS details
-  FROM bookings 
-  WHERE id = '60000000-0000-0000-0000-000000000001'
-
-  UNION ALL
-
-  -- Test F: Valid transitions
-  SELECT 
-    'F: Valid status transitions must pass' AS test_name,
-    CASE WHEN status = 'cancelled' THEN 'PASS' ELSE 'FAIL' END AS result,
-    1 AS details
-  FROM bookings 
-  WHERE id = '70000000-0000-0000-0000-000000000001'
-)
-SELECT * FROM test_results;
+SELECT 'ALL BOOKING CHECKS PASSED' AS result;
+ROLLBACK;
