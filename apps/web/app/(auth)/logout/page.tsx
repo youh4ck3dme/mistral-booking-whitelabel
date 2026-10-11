@@ -1,12 +1,12 @@
 'use client';
 
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@repo/web/src/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import { hasPublicSupabaseEnv } from '@repo/web/src/lib/app-url';
 import { useEffect, useState } from 'react';
 
 export default function LogoutPage() {
-  const [supabase] = useState(() => (hasPublicSupabaseEnv() ? createClientComponentClient() : null));
+  const [supabase] = useState(() => (hasPublicSupabaseEnv() ? createClient() : null));
   const router = useRouter();
 
   useEffect(() => {

@@ -8,18 +8,21 @@ export interface Database {
           id: string;
           name: string;
           slug: string;
+          locale: string;
           created_at: string;
         };
         Insert: {
           id?: string;
           name: string;
           slug: string;
+          locale?: string;
           created_at?: string;
         };
         Update: {
           id?: string;
           name?: string;
           slug?: string;
+          locale?: string;
           created_at?: string;
         };
         Relationships: [];
@@ -83,7 +86,7 @@ export interface Database {
           service_id: string;
           start_time: string;
           end_time: string;
-          status: 'confirmed' | 'cancelled' | 'pending';
+          status: 'confirmed' | 'cancelled' | 'pending' | 'completed' | 'no_show';
         };
         Insert: {
           id?: string;
@@ -92,7 +95,7 @@ export interface Database {
           service_id: string;
           start_time: string;
           end_time: string;
-          status?: 'confirmed' | 'cancelled' | 'pending';
+          status?: 'confirmed' | 'cancelled' | 'pending' | 'completed' | 'no_show';
         };
         Update: {
           id?: string;
@@ -101,7 +104,7 @@ export interface Database {
           service_id?: string;
           start_time?: string;
           end_time?: string;
-          status?: 'confirmed' | 'cancelled' | 'pending';
+          status?: 'confirmed' | 'cancelled' | 'pending' | 'completed' | 'no_show';
         };
         Relationships: [];
       };
@@ -276,6 +279,27 @@ export interface Database {
         };
         Relationships: [];
       };
+      ai_conversions: {
+        Row: {
+          id: string;
+          impression_id: string | null;
+          user_id: string;
+          converted_at: string;
+        };
+        Insert: {
+          id?: string;
+          impression_id?: string | null;
+          user_id: string;
+          converted_at?: string;
+        };
+        Update: {
+          id?: string;
+          impression_id?: string | null;
+          user_id?: string;
+          converted_at?: string;
+        };
+        Relationships: [];
+      };
       platform_admins: {
         Row: {
           id: string;
@@ -342,7 +366,7 @@ export interface Database {
       };
       };
     Enums: {
-      booking_status: 'confirmed' | 'cancelled' | 'pending';
+      booking_status: 'confirmed' | 'cancelled' | 'pending' | 'completed' | 'no_show';
       user_role: 'admin' | 'staff' | 'client';
     };
     CompositeTypes: {

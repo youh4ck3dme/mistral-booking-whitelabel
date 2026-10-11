@@ -4,6 +4,9 @@ import React from 'react';
 import { getServerSession } from '@repo/web/src/lib/auth/server-session';
 import { isPlatformAdmin } from '@repo/web/src/lib/auth/platform-admin';
 
+// Session- and tenant-dependent: must render per request, never prerender at build time.
+export const dynamic = 'force-dynamic';
+
 export default async function PlatformLayout({
   children,
 }: {

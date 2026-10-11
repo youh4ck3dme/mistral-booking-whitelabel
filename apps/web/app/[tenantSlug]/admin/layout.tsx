@@ -1,3 +1,4 @@
+import { resolveTenantAdminAccess } from '@repo/web/src/lib/auth/admin-access';
 import { getServerSession } from '@repo/web/src/lib/auth/server-session';
 import { getServerTenantContext } from '@repo/web/src/lib/tenant/server-tenant-context';
 import Link from 'next/link';
@@ -20,6 +21,16 @@ export default async function AdminLayout({
 
   if (!tenantContext) {
     redirect('/404');
+  }
+
+  // Enforce the admin role on the server, before any admin content renders.
+  const access = resolveTenantAdminAccess({
+    hasSession: Boolean(session?.user),
+    userRole: tenantContext.userRole,
+  });
+
+  if (!access.allowed) {
+    redirect(access.redirectTo);
   }
 
   const primaryColor = tenantContext.branding?.primary_color || '#3B82F6';

@@ -4,6 +4,7 @@ import { getServerTenantContext } from '@repo/web/src/lib/tenant/server-tenant-c
 import { createServiceRoleClient } from '@repo/web/src/lib/supabase/service-role';
 import { redirect } from 'next/navigation';
 import BookingPageClient from './booking-page-client';
+import BookingAssistantWidget from './booking-assistant-widget';
 
 export default async function BookingPage({
   params,
@@ -36,9 +37,12 @@ export default async function BookingPage({
       : { start: '08:00:00', end: '18:00:00' };
 
   return (
-    <BookingPageClient
-      initialServices={initialServices}
-      operatingHours={operatingHours}
-    />
+    <>
+      <BookingPageClient
+        initialServices={initialServices}
+        operatingHours={operatingHours}
+      />
+      <BookingAssistantWidget />
+    </>
   );
 }

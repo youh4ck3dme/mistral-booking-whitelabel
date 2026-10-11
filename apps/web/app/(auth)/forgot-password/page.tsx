@@ -1,6 +1,6 @@
 'use client';
 
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@repo/web/src/utils/supabase/client';
 import Link from 'next/link';
 import { getClientAppUrl, getAppUrlWithPath, hasPublicSupabaseEnv } from '@repo/web/src/lib/app-url';
 import { useNotifications } from '@repo/web/app/notifications-provider';
@@ -8,7 +8,7 @@ import type { FormEvent } from 'react';
 import { useState } from 'react';
 
 export default function ForgotPasswordPage() {
-  const [supabase] = useState(() => (hasPublicSupabaseEnv() ? createClientComponentClient() : null));
+  const [supabase] = useState(() => (hasPublicSupabaseEnv() ? createClient() : null));
   const { notifyError, notifySuccess } = useNotifications();
 
   const [email, setEmail] = useState('');

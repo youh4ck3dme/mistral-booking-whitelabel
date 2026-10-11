@@ -1,6 +1,6 @@
 'use client';
 
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@repo/web/src/utils/supabase/client';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { hasPublicSupabaseEnv } from '@repo/web/src/lib/app-url';
@@ -10,7 +10,7 @@ import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
 
 export default function ResetPasswordPage() {
-  const [supabase] = useState(() => (hasPublicSupabaseEnv() ? createClientComponentClient() : null));
+  const [supabase] = useState(() => (hasPublicSupabaseEnv() ? createClient() : null));
   const router = useRouter();
   const searchParams = useSearchParams();
   const { notifyError, notifySuccess } = useNotifications();

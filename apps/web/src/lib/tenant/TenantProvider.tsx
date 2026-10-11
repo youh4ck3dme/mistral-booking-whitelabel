@@ -1,6 +1,6 @@
 'use client';
 
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@repo/web/src/utils/supabase/client';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { TenantContext as TenantContextValue } from './tenant.service';
 import { usePathname } from 'next/navigation';
@@ -20,7 +20,7 @@ export const TenantProvider: React.FC<TenantProviderProps> = ({
   children,
   initialContext,
 }) => {
-  const [supabase] = useState(() => createClientComponentClient());
+  const [supabase] = useState(() => createClient());
   const [context, setContext] = useState<TenantContextState>({
     ...initialContext,
     isRoleResolved: Boolean(initialContext.userRole),

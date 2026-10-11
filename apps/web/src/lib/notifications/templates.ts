@@ -64,51 +64,61 @@ function renderShell({
   return { html, text };
 }
 
+export type NotificationCopyOverride = {
+  headline: string;
+  message: string;
+};
+
 export function renderNotificationEmail(
-  context: NotificationContext
+  context: NotificationContext,
+  overrideCopy?: NotificationCopyOverride
 ): NotificationEmailPayload {
   switch (context.delivery.notification_type) {
     case 'booking_confirmation': {
       const subject = `Potvrdenie rezervácie • ${getBrandName(context)}`;
-      const message = `Vaša rezervácia bola potvrdená. V klientskom portáli nájdete aktuálny stav, detaily termínu aj ďalšie kroky.`;
       const shell = renderShell({
         context,
         eyebrow: 'Booking confirmation',
-        headline: 'Rezervácia je potvrdená.',
-        message,
+        headline: overrideCopy?.headline ?? 'Rezervácia je potvrdená.',
+        message:
+          overrideCopy?.message ??
+          `Vaša rezervácia bola potvrdená. V klientskom portáli nájdete aktuálny stav, detaily termínu aj ďalšie kroky.`,
       });
       return { ...shell, subject, to: context.recipientEmail };
     }
     case 'booking_reminder': {
       const subject = `Pripomienka rezervácie • ${getBrandName(context)}`;
-      const message = `Pripomíname vám blížiaci sa termín. Ak potrebujete zmenu alebo zrušenie, urobte ju čo najskôr v klientskom portáli.`;
       const shell = renderShell({
         context,
         eyebrow: 'Booking reminder',
-        headline: 'Pripomíname váš termín.',
-        message,
+        headline: overrideCopy?.headline ?? 'Pripomíname váš termín.',
+        message:
+          overrideCopy?.message ??
+          `Pripomíname vám blížiaci sa termín. Ak potrebujete zmenu alebo zrušenie, urobte ju čo najskôr v klientskom portáli.`,
       });
       return { ...shell, subject, to: context.recipientEmail };
     }
     case 'booking_cancellation': {
       const subject = `Rezervácia bola zrušená • ${getBrandName(context)}`;
-      const message = `Vaša rezervácia bola zrušená. Nový termín si môžete vybrať okamžite cez booking flow alebo klientský portál.`;
       const shell = renderShell({
         context,
         eyebrow: 'Booking cancellation',
-        headline: 'Rezervácia bola zrušená.',
-        message,
+        headline: overrideCopy?.headline ?? 'Rezervácia bola zrušená.',
+        message:
+          overrideCopy?.message ??
+          `Vaša rezervácia bola zrušená. Nový termín si môžete vybrať okamžite cez booking flow alebo klientský portál.`,
       });
       return { ...shell, subject, to: context.recipientEmail };
     }
     case 'booking_update': {
       const subject = `Rezervácia bola aktualizovaná • ${getBrandName(context)}`;
-      const message = `Detaily vašej rezervácie sa zmenili. Prosím, skontrolujte si nový termín a aktuálne detaily v klientskom portáli.`;
       const shell = renderShell({
         context,
         eyebrow: 'Booking update',
-        headline: 'Rezervácia bola aktualizovaná.',
-        message,
+        headline: overrideCopy?.headline ?? 'Rezervácia bola aktualizovaná.',
+        message:
+          overrideCopy?.message ??
+          `Detaily vašej rezervácie sa zmenili. Prosím, skontrolujte si nový termín a aktuálne detaily v klientskom portáli.`,
       });
       return { ...shell, subject, to: context.recipientEmail };
     }

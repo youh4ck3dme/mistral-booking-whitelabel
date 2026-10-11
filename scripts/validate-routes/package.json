@@ -1,0 +1,30 @@
+{
+  "name": "@nexify/validate-routes",
+  "version": "1.0.0",
+  "description": "Script pro validaci všech odkazů a rout v NEXIFY aplikaci",
+  "main": "validate-routes.js",
+  "bin": {
+    "validate-routes": "./validate-routes.js"
+  },
+  "scripts": {
+    "start": "node validate-routes.js",
+    "validate": "node validate-routes.js"
+  },
+  "keywords": [
+    "nexify",
+    "route",
+    "validator",
+    "link",
+    "check",
+    "nextjs"
+  ],
+  "author": "NEXIFY TECH CENTER",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "glob": "^10.3.10"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

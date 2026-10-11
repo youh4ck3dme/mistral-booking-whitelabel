@@ -2,6 +2,7 @@ export interface Tenant {
   id: string;
   name: string;
   slug: string;
+  locale: string;
   created_at: string;
 }
 
@@ -29,7 +30,7 @@ export interface Booking {
   service_id: string;
   start_time: string;
   end_time: string;
-  status: 'confirmed' | 'cancelled' | 'pending';
+  status: 'confirmed' | 'cancelled' | 'pending' | 'completed' | 'no_show';
 }
 
 export interface TimeSlotConfig {

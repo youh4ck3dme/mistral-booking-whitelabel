@@ -3,6 +3,8 @@ import path from 'node:path';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  // tsconfig keeps `jsx: preserve` for Next.js; tests that import .tsx layouts need JSX compiled.
+  oxc: { jsx: { runtime: 'automatic' } },
   resolve: {
     alias: {
       '@repo/ai': path.resolve(__dirname, '../../packages/@repo/ai/src'),

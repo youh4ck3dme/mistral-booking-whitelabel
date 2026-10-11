@@ -1,17 +1,36 @@
 'use client';
 
 import type { Booking, Service, TenantBranding } from '@repo/core';
+import { aggregateExperimentStats, type ExperimentStats } from '@repo/ai';
 import { useNotifications } from '@repo/web/app/notifications-provider';
 import { useTenant } from '@repo/web/src/lib/tenant/TenantProvider';
 import { UsersTab } from './users-tab';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@repo/web/src/utils/supabase/client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { CSSProperties } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, lazy, Suspense } from 'react';
+import dynamic from 'next/dynamic';
+
+// Dynamically import AdminCalendar to avoid SSR issues with client-side only features
+const DynamicAdminCalendar = dynamic(
+  () => import('@repo/web/src/lib/booking/AdminCalendar').then((mod) => mod.AdminCalendar),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="premium-inline-actions">
+        <div className="premium-spinner" />
+        <span className="premium-copy">Načítavam kalendár...</span>
+      </div>
+    ),
+  }
+);
+
+// Import styles for server-side rendering
+import { adminCalendarStyles } from '@repo/web/src/lib/booking/AdminCalendar';
 
 export default function TenantAdminPage() {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const router = useRouter();
   const tenant = useTenant();
   const { notifyError, notifyInfo, notifySuccess } = useNotifications();
@@ -22,6 +41,7 @@ export default function TenantAdminPage() {
   };
   const [bookings, setBookings] = useState<BookingWithService[]>([]);
   const [branding, setBranding] = useState<TenantBranding | null>(null);
+  const [experimentStats, setExperimentStats] = useState<ExperimentStats[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'services' | 'bookings' | 'branding' | 'ai' | 'users' | 'leads'>('services');
@@ -69,6 +89,30 @@ export default function TenantAdminPage() {
             .eq('tenant_id', tenant.tenant.id)
             .single();
           setBranding(data || null);
+        } else if (activeTab === 'ai') {
+          const { data: experiments } = await supabase
+            .from('ai_experiments')
+            .select('id,name,description')
+            .eq('tenant_id', tenant.tenant.id)
+            .order('created_at', { ascending: false });
+
+          const experimentIds = (experiments ?? []).map((e) => e.id);
+
+          const { data: impressions } =
+            experimentIds.length > 0
+              ? await supabase.from('ai_impressions').select('id,experiment_id').in('experiment_id', experimentIds)
+              : { data: [] };
+
+          const impressionIds = (impressions ?? []).map((i) => i.id);
+
+          const { data: conversions } =
+            impressionIds.length > 0
+              ? await supabase.from('ai_conversions').select('impression_id').in('impression_id', impressionIds)
+              : { data: [] };
+
+          setExperimentStats(
+            aggregateExperimentStats(experiments ?? [], impressions ?? [], conversions ?? [])
+          );
         }
       } catch {
         setError('Nepodarilo sa načítať dáta');
@@ -335,42 +379,17 @@ export default function TenantAdminPage() {
               <p className="premium-empty-copy">Keď zákazníci začnú rezervovať, objavia sa tu.</p>
             </div>
           ) : (
-            <div className="premium-table-wrap">
-              <table className="premium-table">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Služba</th>
-                    <th>Používateľ</th>
-                    <th>Dátum a čas</th>
-                    <th>Stav</th>
-                    <th>Akcie</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bookings.map((booking) => (
-                    <tr key={booking.id}>
-                      <td><strong>{booking.id.slice(0, 8)}...</strong></td>
-                      <td><strong>{(booking as BookingWithService).service?.name ?? booking.service_id.slice(0, 8)}</strong></td>
-                      <td><span className="premium-muted">{booking.user_id.slice(0, 8)}…</span></td>
-                      <td>{formatDateTime(booking.start_time)} - {formatDateTime(booking.end_time)}</td>
-                      <td>
-                        <span className={badgeClass(booking.status)}>{formatStatus(booking.status)}</span>
-                      </td>
-                      <td>
-                        <button
-                          type="button"
-                          className="premium-button-secondary"
-                          onClick={() => notifyInfo('Rezervácia', `Služba: ${(booking as BookingWithService).service?.name ?? '—'} | ${formatDateTime(booking.start_time)}`)}
-                        >
-                          Zobraziť
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <>
+              <style jsx global>{`
+                ${(typeof window !== 'undefined' && document.getElementById('admin-calendar-styles')) ? '' : adminCalendarStyles}
+              `}</style>
+              <DynamicAdminCalendar
+                tenantId={tenant.tenant.id}
+                services={services}
+                bookings={bookings as BookingWithService[]}
+                primaryColor={primaryColor}
+              />
+            </>
           )}
         </section>
       )}
@@ -486,26 +505,42 @@ export default function TenantAdminPage() {
           <div className="premium-card premium-stack">
             <h3 className="premium-card-title">AI Experimenty</h3>
             <p className="premium-card-copy">
-              Tu môžeš spravovať A/B testy pre optimalizáciu konverzie.
+              A/B testy pre optimalizáciu konverzie — dáta z ai_experiments/ai_impressions/ai_conversions.
             </p>
-            <div className="premium-table-wrap">
-              <table className="premium-table">
-                <thead>
-                  <tr>
-                    <th>Názov</th>
-                    <th>Popis</th>
-                    <th>Akcie</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><strong>Service Recommendation A/B Test</strong></td>
-                    <td>Test different recommendation algorithms</td>
-                    <td><button type="button" className="premium-button-secondary">Zobraziť</button></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            {experimentStats.length === 0 ? (
+              <div className="premium-empty">
+                <span className="premium-kicker">Fallback state</span>
+                <h3 className="premium-card-title">Žiadne experimenty</h3>
+                <p className="premium-empty-copy">
+                  Zatiaľ nebol pre tento tenant vytvorený žiadny AI experiment.
+                </p>
+              </div>
+            ) : (
+              <div className="premium-table-wrap">
+                <table className="premium-table">
+                  <thead>
+                    <tr>
+                      <th>Názov</th>
+                      <th>Popis</th>
+                      <th>Zobrazenia</th>
+                      <th>Konverzie</th>
+                      <th>Konverzný pomer</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {experimentStats.map((experiment) => (
+                      <tr key={experiment.id}>
+                        <td><strong>{experiment.name}</strong></td>
+                        <td>{experiment.description || '—'}</td>
+                        <td>{experiment.impressions}</td>
+                        <td>{experiment.conversions}</td>
+                        <td>{(experiment.conversionRate * 100).toFixed(1)}%</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </section>
       )}

@@ -4,7 +4,7 @@ import { useNotifications } from '@repo/web/app/notifications-provider';
 import { storeFlashToast } from '@repo/web/src/lib/notifications/client';
 import type { Service } from '@repo/core';
 import { useTenant } from '@repo/web/src/lib/tenant/TenantProvider';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@repo/web/src/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import type { CSSProperties, FormEvent } from 'react';
 import { useEffect, useState } from 'react';
@@ -14,7 +14,7 @@ export default function EditServicePage({
 }: {
   params: { tenantSlug: string; serviceId: string };
 }) {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const router = useRouter();
   const tenant = useTenant();
   const { notifyError } = useNotifications();

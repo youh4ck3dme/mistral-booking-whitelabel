@@ -1,7 +1,7 @@
 'use client';
 
 import type { Tenant, TenantBranding } from '@repo/core';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@repo/web/src/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import type { CSSProperties, FormEvent } from 'react';
 import { useEffect, useState } from 'react';
@@ -11,7 +11,7 @@ export default function EditTenantPage({
 }: {
   params: { tenantId: string };
 }) {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const router = useRouter();
 
   const [tenant, setTenant] = useState<Tenant | null>(null);
