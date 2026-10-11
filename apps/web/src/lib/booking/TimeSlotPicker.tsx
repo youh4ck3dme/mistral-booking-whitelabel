@@ -37,6 +37,8 @@ interface TimeSlotPickerProps {
   showNextAvailable?: boolean;
   /** Max slots to show (for mobile) */
   maxSlots?: number;
+  /** Server-computed free slots. When given, replaces the locally generated grid. */
+  slots?: TimeSlotType[];
 }
 
 // ============================================================================
@@ -60,15 +62,19 @@ export function TimeSlotPicker({
   disablePastSlots = true,
   showNextAvailable = true,
   maxSlots,
+  slots,
 }: TimeSlotPickerProps) {
   // Generate time slots for the selected date
   const allSlots: TimeSlotType[] = useMemo(() => {
+    if (slots) {
+      return slots;
+    }
     return generateTimeSlotsForDate(
       selectedDate,
       serviceDuration,
       operatingHours
     );
-  }, [selectedDate, serviceDuration, operatingHours]);
+  }, [slots, selectedDate, serviceDuration, operatingHours]);
 
   // Mark booked slots as unavailable
   const slotsWithAvailability: TimeSlotType[] = useMemo(() => {

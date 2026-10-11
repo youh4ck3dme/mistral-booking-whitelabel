@@ -6,6 +6,7 @@ import { dispatchBookingNotificationsRequest, storeFlashToast } from '@repo/web/
 import { useNotifications } from '@repo/web/app/notifications-provider';
 import { useTenant } from '@repo/web/src/lib/tenant/TenantProvider';
 import { Calendar, TimeSlotPicker, calendarStyles, timeSlotPickerStyles } from '@repo/web/src/lib/booking';
+import type { TimeSlot } from '@repo/web/src/lib/booking/calendar.utils';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { CSSProperties, FormEvent } from 'react';
@@ -16,6 +17,23 @@ type BookingDraft = {
   selectedDate: string;
   selectedTime: string;
 };
+
+type ApiSlot = { staffId: string; startTime: string; endTime: string };
+type AvailabilityState = {
+  timezone: string;
+  staff: { id: string; name: string }[];
+  days: Record<string, ApiSlot[]>;
+} | null;
+
+// Browser-local HH:MM for a server timestamp. The picker and the label use the same clock.
+function toLocalHHMM(iso: string) {
+  const d = new Date(iso);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+function formatLocalDate(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
 
 export default function BookingPageClient({
   initialServices,
@@ -40,8 +58,9 @@ export default function BookingPageClient({
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [emailStatus, setEmailStatus] = useState<'sent' | 'pending'>('pending');
   const [manageUrl, setManageUrl] = useState<string | null>(null);
-  const [bookedSlotsByDate, setBookedSlotsByDate] = useState<Record<string, { start_time: string; end_time: string }[]>>({});
+  const [availability, setAvailability] = useState<AvailabilityState>(null);
   const [isFetchingSlots, setIsFetchingSlots] = useState(false);
+  const [staffChoice, setStaffChoice] = useState<string>('any');
 
   const primaryColor = tenant.branding?.primary_color || '#3B82F6';
   const bookingDraftStorageKey = `bookingDraft:${tenant.tenant.slug}`;
@@ -73,53 +92,63 @@ export default function BookingPageClient({
     }
   };
 
-  // Fetch booked slots for the selected service and date range
-  const fetchBookedSlots = useCallback(async (date: string) => {
-    if (!selectedService || !date) {
-      setBookedSlotsByDate({});
-      return;
-    }
-
+  // Free slots come from the server (staff schedules, breaks, time off, buffers, bookings).
+  const fetchAvailability = useCallback(async (serviceId: string) => {
     try {
       setIsFetchingSlots(true);
-      
-      // Fetch for a range around the selected date (7 days before and after)
-      const dateObj = new Date(date);
-      const startRange = new Date(dateObj);
-      startRange.setDate(startRange.getDate() - 7);
-      startRange.setHours(0, 0, 0, 0);
-      
-      const endRange = new Date(dateObj);
-      endRange.setDate(endRange.getDate() + 7);
-      endRange.setHours(23, 59, 59, 999);
-
-      const { data, error: fetchError } = await supabase.rpc('get_booked_slots', {
-        p_tenant_id: tenant.tenant.id,
-        p_service_id: selectedService.id,
-        p_start_range: startRange.toISOString(),
-        p_end_range: endRange.toISOString(),
+      const today = new Date();
+      const horizon = new Date(today);
+      horizon.setDate(horizon.getDate() + 30);
+      const params = new URLSearchParams({
+        tenantSlug: tenant.tenant.slug,
+        serviceId,
+        from: formatLocalDate(today),
+        to: formatLocalDate(horizon),
       });
-
-      if (fetchError) throw fetchError;
-      
-      // Group booked slots by date (YYYY-MM-DD)
-      const grouped: Record<string, { start_time: string; end_time: string }[]> = {};
-      (data || []).forEach((slot: { start_time: string; end_time: string }) => {
-        const dateKey = new Date(slot.start_time).toISOString().split('T')[0];
-        if (!grouped[dateKey]) {
-          grouped[dateKey] = [];
-        }
-        grouped[dateKey].push(slot);
-      });
-      
-      setBookedSlotsByDate(grouped);
+      const res = await fetch(`/api/booking-availability?${params.toString()}`);
+      if (!res.ok) throw new Error(`availability ${res.status}`);
+      setAvailability((await res.json()) as AvailabilityState);
     } catch (err: any) {
-      console.error('Failed to fetch booked slots:', err);
-      notifyError('Chyba', 'Nepodarilo sa načítať obsadené termíny.');
+      console.error('Failed to load availability:', err);
+      setAvailability(null);
+      notifyError('Chyba', 'Nepodarilo sa načítať dostupné termíny.');
     } finally {
       setIsFetchingSlots(false);
     }
-  }, [selectedService, tenant.tenant.id, supabase, notifyError]);
+  }, [tenant.tenant.slug, notifyError]);
+
+  const selectedServiceId = selectedService?.id ?? null;
+  useEffect(() => {
+    setStaffChoice('any');
+    if (selectedServiceId) {
+      fetchAvailability(selectedServiceId);
+    } else {
+      setAvailability(null);
+    }
+  }, [selectedServiceId, fetchAvailability]);
+
+  // Slots for the chosen day, filtered by staff choice, shaped for the picker in browser-local time.
+  const daySlots = useMemo(() => {
+    if (!availability || !selectedDate) return [];
+    return (availability.days[selectedDate] ?? []).filter(
+      slot => staffChoice === 'any' || slot.staffId === staffChoice
+    );
+  }, [availability, selectedDate, staffChoice]);
+
+  const pickerSlots: TimeSlot[] = useMemo(() => {
+    const seen = new Set<string>();
+    const out: TimeSlot[] = [];
+    for (const slot of daySlots) {
+      const startTime = toLocalHHMM(slot.startTime);
+      const endTime = toLocalHHMM(slot.endTime);
+      const key = `${startTime}-${endTime}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        out.push({ startTime, endTime, isAvailable: true, isPast: false });
+      }
+    }
+    return out;
+  }, [daySlots]);
 
   // Handle service selection
   const handleServiceSelect = useCallback((service: Service) => {
@@ -127,7 +156,6 @@ export default function BookingPageClient({
     setSelectedDate(null);
     setSelectedTime(null);
     setError(null);
-    setBookedSlotsByDate({});
   }, []);
 
   // Handle date selection from calendar
@@ -135,12 +163,7 @@ export default function BookingPageClient({
     setSelectedDate(date);
     setSelectedTime(null);
     setError(null);
-    
-    // Fetch booked slots for this date
-    if (selectedService) {
-      fetchBookedSlots(date);
-    }
-  }, [selectedService, fetchBookedSlots]);
+  }, []);
 
   // Handle time slot selection
   const handleTimeSelect = useCallback((slot: { startTime: string; endTime: string; display: string }) => {
@@ -185,8 +208,6 @@ export default function BookingPageClient({
       
       if (persistedDraft.selectedDate) {
         setSelectedDate(persistedDraft.selectedDate);
-        // Fetch booked slots for this date
-        fetchBookedSlots(persistedDraft.selectedDate);
       }
       
       setSelectedTime(persistedDraft.selectedTime || null);
@@ -194,16 +215,7 @@ export default function BookingPageClient({
     } catch {
       window.sessionStorage.removeItem(bookingDraftStorageKey);
     }
-  }, [bookingDraftStorageKey, services, fetchBookedSlots]);
-
-  // Fetch booked slots when service changes
-  useEffect(() => {
-    if (selectedService && selectedDate) {
-      fetchBookedSlots(selectedDate);
-    } else {
-      setBookedSlotsByDate({});
-    }
-  }, [selectedService, selectedDate, fetchBookedSlots]);
+  }, [bookingDraftStorageKey, services]);
 
   // Save draft to sessionStorage
   useEffect(() => {
@@ -225,28 +237,13 @@ export default function BookingPageClient({
     window.sessionStorage.setItem(bookingDraftStorageKey, JSON.stringify(draft));
   }, [bookingDraftStorageKey, selectedDate, selectedService, selectedTime]);
 
-  // Clear selected time if it's no longer in the available slots
+  // Clear a restored or stale selection when the server no longer offers it.
   useEffect(() => {
-    if (!selectedDate || !selectedService || !selectedTime) return;
-    
-    // Check if the selected time is still valid
-    const [startTime, endTime] = selectedTime.split('-');
-    const dateObj = new Date(selectedDate);
-    const slotStart = new Date(`${selectedDate}T${startTime}:00`);
-    const slotEnd = new Date(`${selectedDate}T${endTime}:00`);
-    
-    const isBooked = (bookedSlotsByDate[selectedDate] || []).some(booked => {
-      const bookedStart = new Date(booked.start_time);
-      const bookedEnd = new Date(booked.end_time);
-      return slotStart.getTime() < bookedEnd.getTime() && bookedStart.getTime() < slotEnd.getTime();
-    });
-    
-    const isPast = new Date() > slotStart;
-    
-    if (isBooked || isPast) {
+    if (!selectedDate || !selectedService || !selectedTime || !availability) return;
+    if (!pickerSlots.some(slot => `${slot.startTime}-${slot.endTime}` === selectedTime)) {
       setSelectedTime(null);
     }
-  }, [selectedDate, selectedService, selectedTime, bookedSlotsByDate]);
+  }, [selectedDate, selectedService, selectedTime, availability, pickerSlots]);
 
   // Format date for display
   const formatDate = useCallback((dateString: string) =>
@@ -271,15 +268,16 @@ export default function BookingPageClient({
       setIsLoading(true);
       setError(null);
 
-      const [startTime, endTime] = selectedTime.split('-');
-      const [startHour, startMinute] = startTime.split(':');
-      const [endHour, endMinute] = endTime.split(':');
-
-      const startDate = new Date(selectedDate);
-      startDate.setHours(parseInt(startHour, 10), parseInt(startMinute, 10));
-
-      const endDate = new Date(selectedDate);
-      endDate.setHours(parseInt(endHour, 10), parseInt(endMinute, 10));
+      // The slot must still be offered. Times come from the server, not from the browser.
+      const chosen = daySlots.find(
+        slot => `${toLocalHHMM(slot.startTime)}-${toLocalHHMM(slot.endTime)}` === selectedTime
+      );
+      if (!chosen) {
+        setError('Vybraný termín už nie je dostupný. Vyberte prosím iný.');
+        notifyError('Termín nie je dostupný', 'Vyberte prosím iný čas.');
+        setSelectedTime(null);
+        return;
+      }
 
       const {
         data: { user },
@@ -296,13 +294,14 @@ export default function BookingPageClient({
         return;
       }
 
-      // Call create_booking RPC - DO NOT use direct insert
-      // RPC uses auth.uid() internally - never trust client-supplied user_id
-      const { data: booking, error: bookingError } = await supabase.rpc('create_booking', {
+      // RPC uses auth.uid() internally - never trust client-supplied user_id.
+      // null staff means the server picks the first free staff member.
+      const { data: booking, error: bookingError } = await supabase.rpc('create_booking_with_staff', {
         p_tenant_id: tenant.tenant.id,
         p_service_id: selectedService.id,
-        p_start_time: startDate.toISOString(),
-        p_end_time: endDate.toISOString(),
+        p_start_time: chosen.startTime,
+        p_end_time: chosen.endTime,
+        p_staff_id: staffChoice === 'any' ? null : staffChoice,
       });
 
       if (bookingError) throw bookingError;
@@ -512,7 +511,7 @@ export default function BookingPageClient({
                 onDateSelect={handleDateSelect}
                 operatingHours={operatingHours}
                 serviceDuration={selectedService.duration}
-                bookedSlotsByDate={bookedSlotsByDate}
+                bookedSlotsByDate={{}}
                 primaryColor={primaryColor}
                 disablePastDates={true}
                 maxFutureDays={60}
@@ -539,11 +538,35 @@ export default function BookingPageClient({
           ) : (
             <>
               <style jsx global>{timeSlotPickerStyles}</style>
+              {availability && availability.staff.length > 1 && (
+                <div className="premium-inline-actions" role="group" aria-label="Pracovník">
+                  <button
+                    type="button"
+                    className={staffChoice === 'any' ? 'premium-button' : 'premium-button-secondary'}
+                    onClick={() => { setStaffChoice('any'); setSelectedTime(null); }}
+                  >
+                    Ktokoľvek voľný
+                  </button>
+                  {availability.staff.map(member => (
+                    <button
+                      key={member.id}
+                      type="button"
+                      className={staffChoice === member.id ? 'premium-button' : 'premium-button-secondary'}
+                      onClick={() => { setStaffChoice(member.id); setSelectedTime(null); }}
+                    >
+                      {member.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {pickerSlots.length === 0 && (
+                <p className="premium-copy">Pre tento deň nie sú voľné termíny. Vyberte iný dátum.</p>
+              )}
               <TimeSlotPicker
                 selectedDate={selectedDate}
                 serviceDuration={selectedService.duration}
                 operatingHours={operatingHours}
-                bookedSlots={bookedSlotsByDate[selectedDate] || []}
+                slots={pickerSlots}
                 selectedTime={selectedTime}
                 onTimeSelect={handleTimeSelect}
                 primaryColor={primaryColor}
