@@ -1,0 +1,23 @@
+{
+  "name": "eslint-plugin-nexify-routes",
+  "version": "1.0.0",
+  "description": "ESLint plugin pro detekci odkazů na neexistující routy v NEXIFY aplikaci",
+  "main": "index.js",
+  "keywords": [
+    "eslint",
+    "eslint-plugin",
+    "nexify",
+    "route",
+    "validator",
+    "nextjs"
+  ],
+  "author": "NEXIFY TECH CENTER",
+  "license": "MIT",
+  "dependencies": {},
+  "peerDependencies": {
+    "eslint": ">=8.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

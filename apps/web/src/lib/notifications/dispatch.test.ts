@@ -16,8 +16,8 @@ const providerMocks = vi.hoisted(() => ({
   sendTransactionalEmail: vi.fn(),
 }));
 
-const templateMocks = vi.hoisted(() => ({
-  renderNotificationEmail: vi.fn(),
+const aiContentMocks = vi.hoisted(() => ({
+  renderNotificationEmailWithAI: vi.fn(),
 }));
 
 vi.mock('./repository', async () => {
@@ -36,8 +36,8 @@ vi.mock('./provider', () => ({
   sendTransactionalEmail: providerMocks.sendTransactionalEmail,
 }));
 
-vi.mock('./templates', () => ({
-  renderNotificationEmail: templateMocks.renderNotificationEmail,
+vi.mock('./ai-content', () => ({
+  renderNotificationEmailWithAI: aiContentMocks.renderNotificationEmailWithAI,
 }));
 
 function createDelivery(
@@ -91,6 +91,7 @@ function createContext(delivery: NotificationDelivery): NotificationContext {
     id: delivery.tenant_id,
     name: 'Demo Clinic',
     slug: 'demo-clinic',
+    locale: 'sk',
     created_at: '2026-05-10T00:00:00.000Z',
   };
 
@@ -138,12 +139,14 @@ describe('processPendingNotificationDeliveries', () => {
     repositoryMocks.getNotificationContext.mockImplementation((delivery: NotificationDelivery) =>
       Promise.resolve(createContext(delivery))
     );
-    templateMocks.renderNotificationEmail.mockImplementation((context: NotificationContext) => ({
-      to: context.recipientEmail,
-      subject: `Subject ${context.delivery.id}`,
-      html: '<p>Hello</p>',
-      text: 'Hello',
-    }));
+    aiContentMocks.renderNotificationEmailWithAI.mockImplementation((context: NotificationContext) =>
+      Promise.resolve({
+        to: context.recipientEmail,
+        subject: `Subject ${context.delivery.id}`,
+        html: '<p>Hello</p>',
+        text: 'Hello',
+      })
+    );
     providerMocks.sendTransactionalEmail.mockResolvedValue({ id: 'provider-message-id' });
 
     const result = await processPendingNotificationDeliveries({ limit: 10 });
@@ -162,7 +165,7 @@ describe('processPendingNotificationDeliveries', () => {
 
     repositoryMocks.claimPendingNotificationDeliveries.mockResolvedValue([delivery]);
     repositoryMocks.getNotificationContext.mockResolvedValue(createContext(delivery));
-    templateMocks.renderNotificationEmail.mockReturnValue({
+    aiContentMocks.renderNotificationEmailWithAI.mockResolvedValue({
       to: delivery.recipient_email,
       subject: 'Failure case',
       html: '<p>Hello</p>',

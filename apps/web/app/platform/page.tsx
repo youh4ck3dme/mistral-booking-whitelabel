@@ -9,7 +9,7 @@ export default async function PlatformAdminPage() {
 
   const { data, error } = await supabase
     .from('tenants')
-    .select('id, name, slug, created_at')
+    .select('id, name, slug, locale, created_at')
     .order('created_at', { ascending: false });
 
   const tenants: Tenant[] = data ?? [];

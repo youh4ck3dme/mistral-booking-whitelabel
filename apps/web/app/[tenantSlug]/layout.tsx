@@ -6,6 +6,9 @@ import { redirect } from 'next/navigation';
 import React from 'react';
 import type { CSSProperties } from 'react';
 
+// Session- and tenant-dependent: must render per request, never prerender at build time.
+export const dynamic = 'force-dynamic';
+
 export default async function TenantLayout({
   children,
   params,

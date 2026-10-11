@@ -3,6 +3,9 @@ import { redirect } from 'next/navigation';
 import React from 'react';
 import { getServerSession } from '@repo/web/src/lib/auth/server-session';
 
+// Session- and tenant-dependent: must render per request, never prerender at build time.
+export const dynamic = 'force-dynamic';
+
 export default async function AuthLayout({
   children,
 }: {

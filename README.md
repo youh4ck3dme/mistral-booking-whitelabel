@@ -8,12 +8,14 @@
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - [Node.js](https://nodejs.org/) >= 18.0.0
 - [pnpm](https://pnpm.io/) (recommended)
 - [Supabase CLI](https://supabase.com/docs/guides/cli)
 - [Vercel CLI](https://vercel.com/docs/cli) (for deployment)
 
 ### 1. Clone & Install
+
 ```bash
 # Clone the repository
 git clone https://github.com/youh4ck3dme/mistral-booking-whitelabel.git
@@ -28,13 +30,16 @@ pnpm run db:seed
 ```
 
 ### 2. Environment Variables
+
 Create a `.env.local` file in `apps/web`:
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL=YOUR_SUPABASE_PROJECT_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
 ```
 
 ### 3. Run Development Server
+
 ```bash
 pnpm dev
 ```
@@ -83,6 +88,7 @@ mistral-booking-whitelabel/
 | Multi-Tenancy | Single DB + `tenant_id` + RLS isolation | ✅ Implemented |
 | White-Label | Custom branding, domains, and theming per tenant | ✅ Implemented |
 | Booking System | Secure RPC-based booking with time slot validation | ✅ Implemented |
+| **Clickable Calendar** | Interactive calendar with time slot picker for reservations | ✅ Implemented |
 | AI CRO | Recommendations, upsell bundles, A/B testing | ✅ Implemented |
 | Admin Dashboards | Tenant and platform-level admin panels | ✅ Implemented |
 
@@ -91,17 +97,22 @@ mistral-booking-whitelabel/
 ## 🔧 Configuration
 
 ### Supabase
+
 1. [Create a new Supabase project](https://supabase.com/dashboard).
 2. Run migrations:
+
    ```bash
    pnpm db:push
    ```
+
 3. Seed initial data:
+
    ```bash
    pnpm db:seed
    ```
 
 ### Vercel
+
 1. Link your repository to [Vercel](https://vercel.com).
 2. Set environment variables:
    - `NEXT_PUBLIC_SUPABASE_URL`
@@ -113,6 +124,7 @@ mistral-booking-whitelabel/
 ## 🧪 Testing
 
 ### Run Tests
+
 ```bash
 # Unit tests
 pnpm test
@@ -125,19 +137,24 @@ pnpm lint
 ```
 
 ### Test Coverage
-- Unit tests: Core booking logic, RLS policies, AI fallback
+
+- Unit tests: Core booking logic, RLS policies, AI fallback, **calendar utilities (51 tests)**
 - Integration tests: FE/BE slot parity, tenant isolation
-- E2E tests: Full booking flow for 2+ tenants
+- E2E tests: Full booking flow for 2+ tenants, **calendar interaction tests**
 
 ---
 
 ## 📄 Documentation
+
 - [Architecture Overview](docs/ARCHITECTURE.md)
 - [Deployment Guide](docs/DEPLOYMENT.md)
+- [Clickable Booking Calendar Implementation](CALENDAR_IMPLEMENTATION_REPORT.md)
+- [Calendar QA Checklist](apps/web/src/lib/booking/CALENDAR_QA_CHECKLIST.md)
 
 ---
 
 ## 🤝 Contributing
+
 1. Fork the repository.
 2. Create a feature branch (`git checkout -b feat/your-feature`).
 3. Commit your changes (`git commit -m 'feat: add your feature'`).
@@ -147,11 +164,13 @@ pnpm lint
 ---
 
 ## 📜 License
+
 This project is private. Do not distribute without permission.
 
 ---
 
 ## 🔗 Links
+
 - [Supabase Dashboard](https://supabase.com/dashboard)
 - [Vercel Dashboard](https://vercel.com)
 - [Turborepo Docs](https://turbo.build/repo)
