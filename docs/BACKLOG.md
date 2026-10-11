@@ -10,11 +10,10 @@ Aktualizované: 2026-10-11.
 
 ## Ďalšie kroky (v tomto poradí)
 
-1. **BLD-1** oprava buildu na `main` (blokuje deploy z `main`).
-2. **SEC-3** kontrola roly v admin layoute na serveri.
-3. **SEC-5** validácia a členstvo v `/api/chat`.
-4. **QA-2 + QA-4** CI na všetkých PR a SQL test v CI.
-5. **DB-014** least-privilege granty (po schválení návrhu).
+1. **BLD-1**: zmerge draft PR #5 po review (oprava buildu `main`, typy pre `sales_leads`).
+2. **SEC-5** validácia a členstvo v `/api/chat`.
+3. **QA-2 + QA-4** CI na všetkých PR a SQL test v CI.
+4. **DB-014** least-privilege granty (po schválení návrhu).
 
 ---
 
@@ -26,9 +25,9 @@ Aktualizované: 2026-10-11.
 | SEC-2 | `getSession()` → `getUser()` pre všetky serverové rozhodnutia o auth | Reprodukcia 200 → 401 pri neplatnom JWT, regresné testy | M | ✅ `144b1f3` |
 | SEC-9 | Natvrdo zapísané testovacie heslo v repozitári | Heslo sa generuje za behu, `.env.example` má placeholder | S | ✅ `dc106c5` |
 | DB-013 | Hardening bookingov: anon únik e-mailov, IDOR pri INSERT, SQLSTATE 23P01, search_path, redundantné indexy | `ALL BOOKING CHECKS PASSED` na čistej DB s migráciami 001–013 | M | ✅ `92eec0e` |
-| BLD-1 | `main` sa nebuildí: 21 TS chýb v `src/lib/leads/lead.service.server.ts` | `tsc` aj `next build` na `main` prejdú. Najprv overiť, či PR #4 chybu opraví pri merge | S | ⬜ |
+| BLD-1 | `main` sa nebuildí: 25 TS chýb v `src/lib/leads/lead.service.*.ts` (chýbajú typy tabuliek `sales_leads`, `sales_messages`, `sales_offers` z migrácie 010). Overené: merge PR #4 chybu **neopraví** | `tsc`, lint, testy a `next build` na `main` prejdú. Oprava: PR #5 (draft) | S | 🟡 PR #5 čaká na review |
 | PR-1 | Lint a GitGuardian na PR #4 | Lint zelený. GitGuardian: buď nález vyriešený, alebo označený ako false positive | S | ⛔ GitGuardian: rozhodnutie vlastníka |
-| SEC-3 | Kontrola roly v `admin/layout.tsx` na serveri (nie len v klientskom `page.tsx`) | Ne-admin a anonym dostane redirect pred renderom, test | S | ⬜ |
+| SEC-3 | Kontrola roly v `admin/layout.tsx` na serveri (nie len v klientskom `page.tsx`) | Ne-admin a anonym dostane redirect pred renderom. Testy pravidla aj layoutu, mutation check | S | ✅ (PR #4) |
 | SEC-4 | Supabase advisors na staging DB po aplikácii 001–013 | 0 kritických hlásení. Výsledok v popise PR | S | ⬜ |
 | SEC-5 | `/api/chat`: zod validácia `messages`, limit dĺžky, overenie členstva v `tenantId` | Neplatný vstup 400, nečlen 403, testy | S | ⬜ |
 | SEC-6 | Rate limit na `/api/chat`, `/api/notifications/*`, login a reset hesla | Nad limit 429, limit konfigurovateľný cez env | M | ⬜ |
