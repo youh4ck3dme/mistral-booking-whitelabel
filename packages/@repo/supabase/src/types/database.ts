@@ -86,7 +86,7 @@ export interface Database {
           service_id: string;
           start_time: string;
           end_time: string;
-          status: 'confirmed' | 'cancelled' | 'pending';
+          status: 'confirmed' | 'cancelled' | 'pending' | 'completed' | 'no_show';
         };
         Insert: {
           id?: string;
@@ -95,7 +95,7 @@ export interface Database {
           service_id: string;
           start_time: string;
           end_time: string;
-          status?: 'confirmed' | 'cancelled' | 'pending';
+          status?: 'confirmed' | 'cancelled' | 'pending' | 'completed' | 'no_show';
         };
         Update: {
           id?: string;
@@ -104,7 +104,7 @@ export interface Database {
           service_id?: string;
           start_time?: string;
           end_time?: string;
-          status?: 'confirmed' | 'cancelled' | 'pending';
+          status?: 'confirmed' | 'cancelled' | 'pending' | 'completed' | 'no_show';
         };
         Relationships: [];
       };
@@ -366,7 +366,7 @@ export interface Database {
       };
       };
     Enums: {
-      booking_status: 'confirmed' | 'cancelled' | 'pending';
+      booking_status: 'confirmed' | 'cancelled' | 'pending' | 'completed' | 'no_show';
       user_role: 'admin' | 'staff' | 'client';
     };
     CompositeTypes: {
