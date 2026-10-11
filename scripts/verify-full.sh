@@ -19,7 +19,8 @@ export PLAYWRIGHT_BASE_URL="http://127.0.0.1:3000"
 export PLAYWRIGHT_EMAIL="${PLAYWRIGHT_EMAIL:-playwright-admin@example.com}"
 # Random per run unless provided; bootstrap-local-auth.mjs creates the user with it.
 export PLAYWRIGHT_PASSWORD="${PLAYWRIGHT_PASSWORD:-$(openssl rand -hex 16)}"
-export NOTIFICATION_CRON_SECRET="${NOTIFICATION_CRON_SECRET:-local-notification-cron-secret}"
+# Random per run unless provided; the dispatch and reminder routes read the same value.
+export NOTIFICATION_CRON_SECRET="${NOTIFICATION_CRON_SECRET:-$(openssl rand -hex 16)}"
 
 wait_for_auth() {
   for _ in {1..60}; do
