@@ -223,6 +223,20 @@ export function AdminCalendar({
     }
   }, [refreshBookings, notifyError, notifySuccess]);
 
+  // Issue (or rotate) a management link for a booking. The previous link stops working.
+  const handleManageLink = useCallback(async (bookingId: string) => {
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}/manage-link`, { method: 'POST' });
+      const data = (await res.json().catch(() => ({}))) as { manageUrl?: string; error?: string };
+      if (!res.ok || !data.manageUrl) {
+        throw new Error(data.error || 'Odkaz sa nepodarilo vytvoriť.');
+      }
+      window.prompt('Odkaz na správu rezervácie. Predchádzajúci odkaz prestáva platiť.', data.manageUrl);
+    } catch (err: any) {
+      notifyError('Chyba', err.message || 'Odkaz sa nepodarilo vytvoriť.');
+    }
+  }, [notifyError]);
+
   // Accounting export of the bookings this admin can already see (CSV, not an e-Faktúra)
   const handleExportCsv = useCallback(() => {
     const csv = toAccountingCsv(bookings);
@@ -415,6 +429,15 @@ export function AdminCalendar({
               </button>
             </>
           )}
+          {booking.status === 'confirmed' && (
+            <button
+              type="button"
+              className="premium-button-secondary premium-button-small"
+              onClick={() => handleManageLink(booking.id)}
+            >
+              Odkaz na správu
+            </button>
+          )}
           {booking.status !== 'cancelled' && booking.status !== 'completed' && booking.status !== 'no_show' && (
             <button
               type="button"
@@ -431,7 +454,7 @@ export function AdminCalendar({
         </td>
       </tr>
     );
-  }, [formatTime, formatStatus, getStatusColor, handleCancelBooking, handleSetOutcome, cancellingId, outcomeBusyId, isLoading]);
+  }, [formatTime, formatStatus, getStatusColor, handleCancelBooking, handleSetOutcome, handleManageLink, cancellingId, outcomeBusyId, isLoading]);
 
   return (
     <div className="admin-booking-calendar" style={{ '--primary-color': primaryColor } as CSSProperties}>

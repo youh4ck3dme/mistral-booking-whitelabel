@@ -39,6 +39,7 @@ export default function BookingPageClient({
   const [success, setSuccess] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [emailStatus, setEmailStatus] = useState<'sent' | 'pending'>('pending');
+  const [manageUrl, setManageUrl] = useState<string | null>(null);
   const [bookedSlotsByDate, setBookedSlotsByDate] = useState<Record<string, { start_time: string; end_time: string }[]>>({});
   const [isFetchingSlots, setIsFetchingSlots] = useState(false);
 
@@ -308,6 +309,16 @@ export default function BookingPageClient({
 
       setSuccess(true);
       setBookingId(booking as string);
+      // Management link for changing or cancelling this booking. Failure here must not undo the booking.
+      try {
+        const linkRes = await fetch(`/api/bookings/${booking}/manage-link`, { method: 'POST' });
+        if (linkRes.ok) {
+          const linkData = (await linkRes.json()) as { manageUrl?: string };
+          setManageUrl(linkData.manageUrl ?? null);
+        }
+      } catch {
+        setManageUrl(null);
+      }
       setSelectedService(null);
       setSelectedDate(null);
       setSelectedTime(null);
@@ -383,6 +394,11 @@ export default function BookingPageClient({
               ? 'Potvrdzovací email bol odoslaný na vašu emailovú adresu.'
               : 'Email notifikácia je pripravená na odoslanie po dokončení server-side dispatchu.'}
           </p>
+          {manageUrl && (
+            <p>
+              Zmena termínu alebo storno: <a href={manageUrl}>Spravovať rezerváciu</a>. Odkaz je osobný, uschovajte ho.
+            </p>
+          )}
         </div>
         <div className="premium-actions">
           <button
