@@ -24,7 +24,9 @@ Legenda: ✅ potvrdené v tejto kontrole · 🟡 čiastočne alebo len sekundár
 | SK zjednodušená faktúra do 100 € | 🟡 | Platí pre bežné zjednodušené doklady so sumou s DPH do 100 €. | [podnikajte.sk](https://www.podnikajte.sk/dan-z-pridanej-hodnoty/faktura-vs-zjednodusena-faktura) |
 | SK eKasa doklady: 400 € (fact-check) | ❌ konflikt | Zdroje uvádzajú 1 000 € (hotovosť) a 1 600 € (karta alebo iný náhrada hotovosti). Jeden český sprievodca uvádza 400 €. **Číslo nekódovať do produktu, kým ho nepotvrdí právnik.** | [podnikajte.sk](https://www.podnikajte.sk/ekasa/faktura-zaplatena-v-hotovosti-ekasa-limit), [Eurofiscalis](https://www.eurofiscalis.com/cs/facturer-client-slovaquie/) |
 | SK eKasa od 1. 1. 2026 | ✅ | Zákon 384/2025 Z. z., schválený 3. 12. 2025, účinný 1. 1. 2026, nahrádza 289/2008 Z. z. Vzťahuje sa na služby podľa SK NACE, s výnimkami v § 3 ods. 2 písm. b). Zoznam výnimiek z prílohy staršieho zákona v novom znení chýba. Novela 30/2026 Z. z. → **znenie overiť**. | [podnikajte.sk](https://www.podnikajte.sk/ekasa/zmeny-v-evidencii-trzieb-od-2026), [FS – služby podliehajúce eKase](https://podpora.financnasprava.sk/679547-Slu%C5%BEby-podliehaj%C3%BAce-povinnosti-evidencie-tr%C5%BEieb-v-pokladnici-eKasa-), [Slov-Lex PDF](https://static.slov-lex.sk/pdf/SK/ZZ/2025/384/ZZ_2025_384_20260101.pdf) |
-| CZ EET 2.0 „čaká na podpis“ | ❌ zastarané | Podľa sledovačov: schválené 9. 9. 2026 (prehlasovanie senátu), podpis prezidentom 17. 9. 2026, účinnosť 1. 1. 2027 podľa návrhu. Vyhlásenie v Sbírce zákonů **nie je potvrdené**. Jeden zdroj tvrdí opak, rozpor nie je vyriešený. | [LookupTax](https://lookuptax.com/tax-changes/czech-republic/eet-2-chamber-overrides-senate-2026), [epravo.cz](https://www.epravo.cz/top/aktualne/eet-20-je-na-svete-od-ledna-2027-budou-podnikatele-evidovat-i-platby-kartou-a-qr-kodem-121639.html) |
+| CZ EET 2.0 „podpísaný a vyhlásený“ | ❌ nepotvrdené | Parlament schválil 9. 9. 2026. Zdroje sa líšia v podpise (17. 9. vs. ešte čaká). Vyhlásenie v Zbierke zákonů nepotvrdené, ministerstvo plánovalo koniec októbra alebo november 2026. Účinnosť 1. 1. 2027, prípravné časti od 1. 11. 2026. Rozsah: platby pri osobnom kontakte vrátane kariet a QR. | [LookupTax](https://lookuptax.com/tax-changes/czech-republic/eet-2-chamber-overrides-senate-2026), [epravo.cz](https://www.epravo.cz/top/aktualne/eet-20-je-na-svete-od-ledna-2027-budou-podnikatele-evidovat-i-platby-kartou-a-qr-kodem-121639.html) |
+| SK e-Faktúra od 1. 1. 2027 | 🟡 viac sekundárnych zdrojov | Štruktúrovaný XML (EN 16931 / UBL), prijímať musia aj neplatitelia DPH, PDF e-mailom nestačí, doručenie cez Peppol. „Digitálny poštár“ sa v zdrojoch nenašiel, treba overiť z Finančnej správy. | [podnikajte.sk](https://www.podnikajte.sk/dan-z-pridanej-hodnoty/efaktura-povinna-elektronicka-fakturacia-od-2027), [pravnenoviny.sk](https://pravnenoviny.sk/elektronicka-faktura-povinnost-prijimat/) |
+| SimplyBook.me: AI hlasová rezervácia | ✅ help wiki, ❓ Instagram | Web widget, Messenger a WhatsApp. Hlas ide cez OpenAI a neukladá sa, platí sa kreditmi. Instagram je len v marketingu. | [SimplyBook.me](https://simplybook.me/en/ai-voice-booking), [help wiki](https://help.simplybook.me/wiki/AI_Voice_Booking) |
 | Cal.com cloud je closed source | 🟡 | Hlavný kód už nie je verejný. Open-source časť je `calcom/cal.diy` pod MIT (predtým AGPL 3.0). Dátum: april 2026 (It's FOSS). | [Cal.com blog](https://cal.com/blog/cal-diy-open-source-to-closed-source), [It's FOSS](https://itsfoss.com/news/cal-com-goes-proprietary.md) |
 | Square Appointments nie je v CZ/SK | ❓ pravdepodobne áno | Komunita Square uvádza len US, Kanadu, Japonsko, Austráliu a UK (nedatovaná odpoveď). Nepotvrdené na oficiálnej podpore. | community.squareup.com (nedatované) |
 | Booksy nie je v CZ/SK | ❓ | Help center nebol dostupný. Nepotvrdené. | — |
@@ -49,6 +51,8 @@ Legenda: ✅ potvrdené v tejto kontrole · 🟡 čiastočne alebo len sekundár
 | Planity, Salonkee (EÚ) | ❓ | Doplnené fact-checkom. Nepreverené. |
 | Fresha | 🟡 | Fact-check uvádza živé CZ listingy. Tu nepreverené. |
 | Calendly, Acuity, Cal.com, SimplyBook.me, Setmore | ❓ v SK/CZ | Globálne nástroje. Lokálna podpora nie je overená. |
+| Reservatic, Notado, MojaRezervácia, iSport System (SK/CZ) | ❓ | Uvedené v kritike reportu, nepreverené. Zaradiť do ďalšieho prieskumu. |
+| Microsoft Bookings, Google Appointment Schedules, WordPress Amelia | ❓ | Lacné alternatívy z kritiky reportu. Nepreverené: cena, lokálna prítomnosť, funkcie. | — |
 | Square, Booksy, Treatwell, Vagaro, Doctolib, Jane | ❓ | Viď tabuľku bodov vyššie. |
 
 **Záver:** Lokálni hráči (Bookio, Salona, Reservio, Anolla, Reenio, Reservanto) sú hlavná konkurencia v SK/CZ. Ich cenové údaje a funkcie treba overiť priamo na stránkach pred rozhodnutím o cenníku.
@@ -82,6 +86,8 @@ AI asistenti v rezerváciách, hlasové rezervácie, rezervácie v messaging apl
 5. **EAA:** či sa rezervačný tok tenanta považuje za službu v pôsobnosti, výnimka pre mikropodniky a zodpovednosť medzi widgetom platformy a webom tenanta.
 6. **Spotrebiteľské pravidlá:** odstúpenie 14 dní a výnimka pre služby na konkrétny termín, storno poplatky a zálohy, povinné predzmluvné informácie, zverejnenie dynamických cien.
 7. **EET 2.0:** potvrdiť vyhlásenie v Sbírce zákonů a účinnosť. Zatiaľ je to sledovanie rizika, nie povinnosť.
+   Rozsah: platby pri osobnom kontakte vrátane kariet a QR (podľa návrhu). Pre salón s kartovou platbou na mieste je to priamo relevantné.
+8. **e-Faktúra SK:** overiť znenie zákona a úlohu „Digitálny poštár“ z oficiálnych zdrojov, rozsah povinnosti pre neplatiteľov DPH a formát pre Peppol.
 
 ## 6. Rozhodnutia vlastníka (doplnené do SOURCE_OF_TRUTH sekcia 7)
 

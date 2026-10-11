@@ -41,7 +41,7 @@ Aktualizované: 2026-10-11.
 |---|---|---|---|---|
 | FUN-1 | `/terms` a obchodné podmienky, oprava odkazu v signup | Odkaz nevedie na 404, stránka v locale tenanta | S | ⬜ |
 | FUN-2 | Odstrániť `href="#"` v `compute-landing.tsx` | Žiadny `#` odkaz v buildu | S | ⬜ |
-| FUN-3 | Platby (brána, záloha pri rezervácii) | Checkout, webhook, refund, idempotencia | L | ⛔ rozhodnutie vlastníka |
+| FUN-3 | Platby: brána (napr. GoPay, Comgate, SumUp alebo Stripe, výber podľa rozhodnutia), záloha pri rezervácii, refund | Checkout, webhook, refund, idempotencia, doklad podľa FIS-1 a F-19 | L | ⛔ rozhodnutie vlastníka |
 | FUN-4 | Custom domény tenantov | Host routing v middleware, overenie DNS, SSL | L | ⛔ rozhodnutie vlastníka |
 | FUN-5 | Presun rezervácie (reschedule) | Atomický RPC `reschedule_booking`, EXCLUDE chráni konflikt, test | M | ⬜ |
 | FUN-6 | Export `.ics` a potvrdzovací e-mail | Súbor sa importuje do Google a Apple kalendára, časová zóna správna | S | ⬜ |
@@ -49,6 +49,10 @@ Aktualizované: 2026-10-11.
 | FUN-8 | Varovanie „deopted into client-side rendering“ na `/reset-password` | Build bez varovania | S | ✅ vyriešené pri SEC-1 |
 | FUN-9 | Hosťovská rezervácia cez magic link (bez hesla) | Rezervácia za ≤ 3 kroky, potvrdenie e-mailom, test | M | ⬜ |
 | LEG-1 | Právna analýza eKasa pre tenantov v SK: služby podľa SK NACE, výnimky § 3 ods. 2 písm. b), znenie po novele 30/2026 Z. z. Rozhodnutie: vlastný certifikovaný adaptér, partner, alebo len upozornenie | Písomné stanovisko právnika. Rozhodnutie vlastníka zapísané do SOURCE_OF_TRUTH.md sekcia 7 | M | ⛔ právna kontrola + rozhodnutie vlastníka |
+| LEG-2 | Právna analýza GDPR roly: správca alebo spracovateľ (SaaS vs. prevádzka tenanta), agregácia naprieč tenantmi, tréning AI, profilovanie a skóre neúčasti (F-14) | Písomné stanovisko. Rozhodnutie zapísané do docs/MARKET_RESEARCH.md, bod 5 | M | ⛔ právna kontrola + rozhodnutie vlastníka |
+| LEG-3 | Právna analýza storna, záloh a poplatkov za neúčasť (SK/CZ spotrebiteľské právo, odstúpenie, výnimka pre služby na termín, zverejnenie pred rezerváciou) | Písomné stanovisko a vzor podmienok, ktoré sa zobrazia pri checkoute (F-11) | M | ⛔ právna kontrola |
+| FIS-1 | e-Faktúra (SK, povinná od 1. 1. 2027 podľa zdrojov): štruktúrovaný XML (EN 16931 / UBL), prijímanie aj pre neplatiteľov DPH, doručenie cez Peppol cez certifikovaného poskytovateľa. Úloha „Digitálny poštár“ sa neoverila, overiť z Finančnej správy | Vygenerovaný XML prejde oficiálnou validáciou, odoslanie v testovacom prostredí Peppol, PDF nie je jediný výstup | L | ⛔ rozhodnutie (vlastný Peppol alebo partner) + právna kontrola |
+| FIS-2 | Účtovný export pre účtovníka (CSV alebo XML): predaje, DPH, platby, zálohy, refundy za zvolené obdobie | Formát podľa vzoru od účtovníka, test súčtov voči DB | M | ⬜ právna kontrola |
 | QA-1 | E2E (Playwright) proti Vercel preview s testovacou DB | Testy `tests/e2e/integration/*` zelené | M | ⬜ |
 | QA-2 | CI na všetkých PR (base `main` aj `feat/*`) | PR do `main` spustí lint, typecheck, build, testy | S | ⬜ |
 | QA-3 | Typecheck v CI a turbo pipeline | CI padne pri type chybe | S | ⬜ |
@@ -70,6 +74,8 @@ Aktualizované: 2026-10-11.
 | OPS-7 | GDPR: self-service export údajov a vymazanie účtu | Export JSON, vymazanie s anonymizáciou bookingov | M | ⬜ |
 | OPS-8 | GDPR: záznam súhlasov (consent log) | Verzia textu, čas, účel, test | S | ⬜ |
 | OPS-9 | Bezplatný export dát tenanta (CSV alebo JSON) kedykoľvek, bez poplatku | Export: rezervácie, klienti, služby. Test, že export obsahuje všetky tabuľky tenanta | M | ⬜ |
+| OPS-10 | Register subdodávateľov a DPA (Supabase, Vercel, Resend, Mistral, platobná brána, SMS) a posúdenie prenosov mimo EÚ | Tabuľka s DPA, krajinou a prenosovým mechanizmom, schválená pred pilotom | S | ⬜ |
+| OPS-11 | Retenčné politiky podľa kategórie údajov (rezervácie, klienti, logy, súhlasy, faktúry) s automatickým mazaním alebo anonymizáciou | Politika schválená právnikom, úloha mazania, test na vzorke dát | M | ⬜ čaká na LEG-2 |
 
 ## P3: diferenciátory
 
@@ -99,7 +105,7 @@ Každá položka je **hypotéza**. Pred implementáciou musí prejsť validácio
 
 | ID | Hypotéza | Vel. | Stav |
 |---|---|---|---|
-| F-11 🔬 | Konfigurovateľné storno pravidlá a poplatok za neúčasť, s jasným upozornením pri rezervácii | M | ⬜ |
+| F-11 🔬 | Konfigurovateľné storno pravidlá a poplatok za neúčasť, s jasným upozornením pri rezervácii. Verzované podmienky s dôkazom prijatia (OPS-8) | M | ⬜ čaká na LEG-3 |
 | F-12 🔬 | Pripomienky e-mailom a SMS (WhatsApp podľa preferencie), opt-in, odkaz na presun | M | ⬜ |
 | F-13 🔬 | Žiadosť o recenziu po návšteve a vernostné body | M | ⬜ |
 | F-14 🔬 | Predpoveď neúčasti na základe vysvetliteľných signálov. Bez automatického rozhodnutia bez človeka. GDPR posúdenie | L | ⬜ |
@@ -110,15 +116,15 @@ Každá položka je **hypotéza**. Pred implementáciou musí prejsť validácio
 |---|---|---|---|
 | F-15 🔬 | Embed widget pre web klienta (iframe alebo web component, téma podľa tenanta) | M | ⬜ |
 | F-16 🔬 | Odkaz pre Google Business, Instagram, Facebook a QR kód na prevádzke | S | ⬜ |
-| F-17 🔬 | Konverzačný asistent cez WhatsApp alebo Messenger (rozšírenie existujúceho AI asistenta) | L | ⬜ |
-| F-18 🔬 | Hlasový asistent pre zmeškané hovory. Overiť náklady a právne podmienky | L | ⬜ |
+| F-17 🔬 | Konverzačný asistent cez WhatsApp alebo Messenger (rozšírenie existujúceho AI asistenta). Konkurent SimplyBook.me to už má (overené), preto diferenciácia musí byť lokálna | L | ⬜ |
+| F-18 🔬 | Hlasový asistent pre zmeškané hovory. SimplyBook.me AI Voice Booking existuje (overené: hlas cez OpenAI, hlas sa neukladá, platené kredity). Overiť náklady, právo a tvrdenie o Instagrame | L | ⬜ |
 
 ### Compliance SK, CZ a EÚ (vyžaduje právnu kontrolu)
 
 | ID | Hypotéza | Vel. | Stav |
 |---|---|---|---|
 | F-19 | Automatické faktúry s DPH podľa SK a CZ. Prahy a obsah dokladu: docs/MARKET_RESEARCH.md, bod 2 | M | ⬜ právna kontrola |
-| F-20 | Pokladničná integrácia. SK: eKasa pre služby od 1. 1. 2026 (podľa LEG-1). CZ: EET 2.0 schválené 9/2026, účinnosť podľa návrhu 1. 1. 2027 (sledovať, nie je potvrdené vyhlásenie v Sbírce zákonů) | L | ⛔ LEG-1 a rozhodnutie vlastníka |
+| F-20 | Pokladničná integrácia. SK: eKasa pre služby od 1. 1. 2026 (LEG-1). CZ: EET 2.0 schválené parlamentom 9. 9. 2026. Podpis a vyhlásenie v Zbierke zákonů nie sú potvrdené, zdroje sa líšia. Účinnosť podľa návrhu 1. 1. 2027, prípravné časti od 1. 11. 2026. Platí aj pre platby kartou a QR pri osobnom kontakte | L | ⛔ LEG-1 a rozhodnutie vlastníka |
 | F-21 | Prístupnosť podľa European Accessibility Act. Overiť, či sa vzťahuje na službu rezervácie | S | ⬜ právna kontrola |
 
 ### Doplnené z výskumu (2026-10-11)
@@ -156,6 +162,9 @@ Každá položka je **hypotéza**. Pred implementáciou musí prejsť validácio
 | Marketplace áno alebo nie | F-30 |
 | eKasa: vlastný adaptér, partner, alebo len upozornenie | LEG-1, F-20 |
 | Zdravotné údaje: uchovávať, alebo len termín a kontakt | F-29, OPS-8 |
+| e-Faktúra: vlastný Peppol a prijímanie, alebo partner | FIS-1 |
+| GDPR rola platformy (správca alebo spracovateľ) | LEG-2, OPS-10, OPS-11 |
+| Podmienky storna a záloh: znenie a zobrazenie pri checkoute | LEG-3, F-11, FUN-3 |
 
 ---
 

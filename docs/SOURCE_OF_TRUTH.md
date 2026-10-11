@@ -95,6 +95,7 @@ Codex ani iný agent sa ich nesmie zmocniť. Pri narazení sa najprv spýtaj.
 - Vertikála prvého vydania (beauty/barber, wellness, kliniky, remeslá) a či bude zdravotnícky režim.
 - Marketplace: áno (voliteľný, nízka provízia), alebo nie.
 - Stratégia eKasa: vlastný certifikovaný adaptér, partner, alebo len upozornenie tenantov.
+- e-Faktúra (SK, od 1. 1. 2027 podľa zdrojov): vlastný Peppol a prijímanie, alebo partner.
 - Právne texty (VOP, GDPR, zásady ochrany súkromia). Agent smie navrhnúť, schváliť ich môže len právnik.
 - Správanie pri prekročení limitov (napr. pri no-show poplatku).
 
