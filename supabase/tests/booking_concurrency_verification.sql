@@ -193,5 +193,55 @@ SELECT pg_temp.assert_true(NOT has_function_privilege('anon',
   'public.claim_notification_deliveries(integer,uuid)'::regprocedure, 'EXECUTE'),
   'anon cannot call claim_notification_deliveries');
 
+-- ============================================
+-- 4. Booking outcomes (migration 014): completed / no_show via set_booking_outcome
+-- ============================================
+SELECT pg_temp.as_owner();
+INSERT INTO public.tenant_users (tenant_id, user_id, role) VALUES
+  ('b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 'admin'),
+  ('b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000002', 'client');
+
+-- Past confirmed booking (outcome allowed) and a past pending booking (outcome forbidden).
+INSERT INTO public.bookings (id, tenant_id, user_id, service_id, start_time, end_time, status) VALUES
+  ('e0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000002',
+   'c0000000-0000-0000-0000-000000000001', '2020-01-01 10:00:00+00', '2020-01-01 11:00:00+00', 'confirmed'),
+  ('e0000000-0000-0000-0000-000000000002', 'b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000002',
+   'c0000000-0000-0000-0000-000000000001', '2020-01-02 10:00:00+00', '2020-01-02 11:00:00+00', 'pending');
+
+-- Client (non-staff) cannot set an outcome.
+SELECT pg_temp.as_user('a0000000-0000-0000-0000-000000000002');
+SELECT pg_temp.expect_sqlstate($q$SELECT public.set_booking_outcome('e0000000-0000-0000-0000-000000000001', 'completed')$q$,
+  '42501', '%Not authorized%');
+
+-- Admin marks a past confirmed booking as completed.
+SELECT pg_temp.as_user('a0000000-0000-0000-0000-000000000001');
+SELECT public.set_booking_outcome('e0000000-0000-0000-0000-000000000001', 'completed');
+SELECT pg_temp.as_owner();
+SELECT pg_temp.assert_true((SELECT status = 'completed' FROM public.bookings
+  WHERE id = 'e0000000-0000-0000-0000-000000000001'), 'admin outcome persisted as completed');
+
+-- Invalid outcome value is rejected.
+SELECT pg_temp.as_user('a0000000-0000-0000-0000-000000000001');
+SELECT pg_temp.expect_sqlstate($q$SELECT public.set_booking_outcome('e0000000-0000-0000-0000-000000000002', 'cancelled')$q$,
+  '23514', '%Invalid outcome%');
+
+-- Outcome cannot be set before the appointment has started.
+SELECT pg_temp.expect_sqlstate(format('SELECT public.set_booking_outcome(%L, %L)', :'b2', 'no_show'),
+  'P0001', '%not started%');
+
+-- Pending past booking cannot jump to a final outcome through the RPC either.
+SELECT pg_temp.expect_sqlstate($q$SELECT public.set_booking_outcome('e0000000-0000-0000-0000-000000000002', 'no_show')$q$,
+  'P0001', '%Only a confirmed booking%');
+
+-- Finalized bookings cannot be changed by the owner-role path (trigger).
+SELECT pg_temp.as_owner();
+SELECT pg_temp.expect_sqlstate($q$UPDATE public.bookings SET status = 'confirmed' WHERE id = 'e0000000-0000-0000-0000-000000000001'$q$,
+  'P0001', '%Cannot modify a finalized booking%');
+
+-- Anonymous client cannot execute the outcome RPC.
+SELECT pg_temp.assert_true(NOT has_function_privilege('anon',
+  'public.set_booking_outcome(uuid,text)'::regprocedure, 'EXECUTE'),
+  'anon cannot call set_booking_outcome');
+
 SELECT 'ALL BOOKING CHECKS PASSED' AS result;
 ROLLBACK;
