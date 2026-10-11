@@ -127,7 +127,7 @@ export interface Database {
           recipient_email: string;
           scheduled_for: string;
           sent_at: string | null;
-          status: 'pending' | 'processing' | 'sent' | 'failed';
+          status: 'pending' | 'processing' | 'sent' | 'failed' | 'cancelled';
           subject: string | null;
           tenant_id: string;
           updated_at: string;
@@ -151,7 +151,7 @@ export interface Database {
           recipient_email: string;
           scheduled_for?: string;
           sent_at?: string | null;
-          status?: 'pending' | 'processing' | 'sent' | 'failed';
+          status?: 'pending' | 'processing' | 'sent' | 'failed' | 'cancelled';
           subject?: string | null;
           tenant_id: string;
           updated_at?: string;
@@ -175,7 +175,7 @@ export interface Database {
           recipient_email?: string;
           scheduled_for?: string;
           sent_at?: string | null;
-          status?: 'pending' | 'processing' | 'sent' | 'failed';
+          status?: 'pending' | 'processing' | 'sent' | 'failed' | 'cancelled';
           subject?: string | null;
           tenant_id?: string;
           updated_at?: string;
@@ -410,10 +410,16 @@ export interface Database {
       };
       schedule_booking_reminders: {
         Args: {
-          p_reminder_lead_time?: unknown;
           p_schedule_window?: unknown;
         };
         Returns: number;
+      };
+      record_notification_failure: {
+        Args: {
+          p_delivery_id: string;
+          p_error: string;
+        };
+        Returns: string;
       };
       };
     Enums: {

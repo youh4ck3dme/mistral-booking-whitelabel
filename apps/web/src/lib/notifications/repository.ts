@@ -48,18 +48,34 @@ export async function markNotificationDeliverySent(
   }
 }
 
-export async function markNotificationDeliveryFailed(deliveryId: string, errorMessage: string) {
+/**
+ * Records a failed attempt. The database schedules a retry with backoff, or marks the
+ * row failed after the last attempt. Returns the resulting status.
+ */
+export async function recordNotificationFailure(deliveryId: string, errorMessage: string) {
+  const supabase = createServiceRoleClient({ requireServiceRole: true });
+  const { data, error } = await supabase.rpc('record_notification_failure', {
+    p_delivery_id: deliveryId,
+    p_error: errorMessage,
+  });
+
+  if (error) {
+    throw new Error(`Failed to record failure for notification delivery ${deliveryId}: ${error.message}`);
+  }
+
+  return data as string | null;
+}
+
+export async function cancelNotificationDelivery(deliveryId: string, reason: string) {
   const supabase = createServiceRoleClient({ requireServiceRole: true });
   const { error } = await supabase
     .from('notification_deliveries')
-    .update({
-      error_message: errorMessage,
-      status: 'failed',
-    })
-    .eq('id', deliveryId);
+    .update({ error_message: reason, status: 'cancelled' })
+    .eq('id', deliveryId)
+    .eq('status', 'processing');
 
   if (error) {
-    throw new Error(`Failed to mark notification delivery ${deliveryId} as failed: ${error.message}`);
+    throw new Error(`Failed to cancel notification delivery ${deliveryId}: ${error.message}`);
   }
 }
 

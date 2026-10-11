@@ -6,13 +6,15 @@ import { processPendingNotificationDeliveries } from './dispatch';
 import type { NotificationContext, NotificationDelivery } from './types';
 
 const repositoryMocks = vi.hoisted(() => ({
+  cancelNotificationDelivery: vi.fn(),
   claimPendingNotificationDeliveries: vi.fn(),
   getNotificationContext: vi.fn(),
-  markNotificationDeliveryFailed: vi.fn(),
   markNotificationDeliverySent: vi.fn(),
+  recordNotificationFailure: vi.fn(),
 }));
 
 const providerMocks = vi.hoisted(() => ({
+  isNotificationProviderConfigured: vi.fn(),
   sendTransactionalEmail: vi.fn(),
 }));
 
@@ -25,14 +27,16 @@ vi.mock('./repository', async () => {
 
   return {
     ...actual,
+    cancelNotificationDelivery: repositoryMocks.cancelNotificationDelivery,
     claimPendingNotificationDeliveries: repositoryMocks.claimPendingNotificationDeliveries,
     getNotificationContext: repositoryMocks.getNotificationContext,
-    markNotificationDeliveryFailed: repositoryMocks.markNotificationDeliveryFailed,
     markNotificationDeliverySent: repositoryMocks.markNotificationDeliverySent,
+    recordNotificationFailure: repositoryMocks.recordNotificationFailure,
   };
 });
 
 vi.mock('./provider', () => ({
+  isNotificationProviderConfigured: providerMocks.isNotificationProviderConfigured,
   sendTransactionalEmail: providerMocks.sendTransactionalEmail,
 }));
 
@@ -116,6 +120,7 @@ function createContext(delivery: NotificationDelivery): NotificationContext {
 describe('processPendingNotificationDeliveries', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    providerMocks.isNotificationProviderConfigured.mockReturnValue(true);
   });
 
   it('dedupes deliveries by idempotency key before sending', async () => {
@@ -180,9 +185,70 @@ describe('processPendingNotificationDeliveries', () => {
       processed: 1,
       sent: 0,
     });
-    expect(repositoryMocks.markNotificationDeliveryFailed).toHaveBeenCalledWith(
+    expect(repositoryMocks.recordNotificationFailure).toHaveBeenCalledWith(
       delivery.id,
       'Provider unavailable'
     );
+    expect(repositoryMocks.markNotificationDeliverySent).not.toHaveBeenCalled();
+  });
+
+  it('claims nothing and sends nothing when the provider is not configured', async () => {
+    providerMocks.isNotificationProviderConfigured.mockReturnValue(false);
+
+    const result = await processPendingNotificationDeliveries({ limit: 5 });
+
+    expect(result).toEqual({ failed: 0, processed: 0, sent: 0, skipped: 'provider_disabled' });
+    expect(repositoryMocks.claimPendingNotificationDeliveries).not.toHaveBeenCalled();
+    expect(providerMocks.sendTransactionalEmail).not.toHaveBeenCalled();
+    expect(repositoryMocks.recordNotificationFailure).not.toHaveBeenCalled();
+  });
+
+  it('cancels a reminder whose booking is no longer confirmed instead of sending it', async () => {
+    const reminder = createDelivery({
+      id: 'reminder-1',
+      idempotency_key: 'booking-1:booking_reminder:202606090800',
+      notification_type: 'booking_reminder',
+    });
+    repositoryMocks.claimPendingNotificationDeliveries.mockResolvedValue([reminder]);
+    const context = createContext(reminder);
+    repositoryMocks.getNotificationContext.mockResolvedValue({
+      ...context,
+      booking: { ...context.booking, status: 'cancelled' },
+    });
+
+    const result = await processPendingNotificationDeliveries({ limit: 5 });
+
+    expect(result).toEqual({ failed: 0, processed: 1, sent: 0 });
+    expect(repositoryMocks.cancelNotificationDelivery).toHaveBeenCalledWith(
+      'reminder-1',
+      'booking is no longer confirmed'
+    );
+    expect(providerMocks.sendTransactionalEmail).not.toHaveBeenCalled();
+  });
+
+  it('sends a due reminder once when the worker runs twice (second claim is empty)', async () => {
+    const reminder = createDelivery({
+      id: 'reminder-2',
+      idempotency_key: 'booking-1:booking_reminder:202606090900',
+      notification_type: 'booking_reminder',
+    });
+    repositoryMocks.claimPendingNotificationDeliveries
+      .mockResolvedValueOnce([reminder])
+      .mockResolvedValueOnce([]);
+    repositoryMocks.getNotificationContext.mockResolvedValue(createContext(reminder));
+    aiContentMocks.renderNotificationEmailWithAI.mockResolvedValue({
+      to: reminder.recipient_email,
+      subject: 'Reminder',
+      html: '<p>Reminder</p>',
+      text: 'Reminder',
+    });
+    providerMocks.sendTransactionalEmail.mockResolvedValue({ id: 'provider-1' });
+
+    const first = await processPendingNotificationDeliveries({ limit: 5 });
+    const second = await processPendingNotificationDeliveries({ limit: 5 });
+
+    expect(first.sent).toBe(1);
+    expect(second).toEqual({ failed: 0, processed: 0, sent: 0 });
+    expect(providerMocks.sendTransactionalEmail).toHaveBeenCalledTimes(1);
   });
 });

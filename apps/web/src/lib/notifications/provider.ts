@@ -4,6 +4,11 @@ type ProviderResponse = {
   id: string | null;
 };
 
+/** False when credentials are missing. Callers must not claim or send anything in that state. */
+export function isNotificationProviderConfigured(): boolean {
+  return Boolean(process.env.RESEND_API_KEY && process.env.NOTIFICATION_FROM_EMAIL);
+}
+
 export async function sendTransactionalEmail(
   payload: NotificationEmailPayload
 ): Promise<ProviderResponse> {

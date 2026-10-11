@@ -25,6 +25,8 @@ export type NotificationEmailPayload = {
 
 export type NotificationDispatchResult = {
   failed: number;
+  /** Set when the run did nothing because the provider is not configured. */
+  skipped?: 'provider_disabled';
   processed: number;
   sent: number;
 };

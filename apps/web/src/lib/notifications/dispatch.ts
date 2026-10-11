@@ -1,20 +1,31 @@
 import {
+  cancelNotificationDelivery,
   claimPendingNotificationDeliveries,
   dedupeDeliveries,
   getNotificationContext,
-  markNotificationDeliveryFailed,
   markNotificationDeliverySent,
+  recordNotificationFailure,
 } from './repository';
-import { sendTransactionalEmail } from './provider';
+import { isNotificationProviderConfigured, sendTransactionalEmail } from './provider';
 import { renderNotificationEmailWithAI } from './ai-content';
 import type { NotificationDelivery, NotificationDispatchResult } from './types';
 
-async function processDelivery(delivery: NotificationDelivery) {
+type DeliveryOutcome = 'sent' | 'cancelled';
+
+async function processDelivery(delivery: NotificationDelivery): Promise<DeliveryOutcome> {
   const context = await getNotificationContext(delivery);
+
+  // A reminder for a booking that was cancelled or moved after claiming must not go out.
+  if (delivery.notification_type === 'booking_reminder' && context.booking.status !== 'confirmed') {
+    await cancelNotificationDelivery(delivery.id, 'booking is no longer confirmed');
+    return 'cancelled';
+  }
+
   const emailPayload = await renderNotificationEmailWithAI(context);
   const providerResponse = await sendTransactionalEmail(emailPayload);
 
   await markNotificationDeliverySent(delivery.id, providerResponse.id, emailPayload.subject);
+  return 'sent';
 }
 
 export async function processPendingNotificationDeliveries({
@@ -24,6 +35,11 @@ export async function processPendingNotificationDeliveries({
   bookingId?: string;
   limit?: number;
 } = {}): Promise<NotificationDispatchResult> {
+  // Without credentials nothing is claimed, so pending rows stay pending and no attempt is used up.
+  if (!isNotificationProviderConfigured()) {
+    return { failed: 0, processed: 0, sent: 0, skipped: 'provider_disabled' };
+  }
+
   const deliveries = dedupeDeliveries(
     await claimPendingNotificationDeliveries({
       bookingId,
@@ -36,12 +52,14 @@ export async function processPendingNotificationDeliveries({
 
   for (const delivery of deliveries) {
     try {
-      await processDelivery(delivery);
-      sent += 1;
+      const outcome = await processDelivery(delivery);
+      if (outcome === 'sent') {
+        sent += 1;
+      }
     } catch (error) {
       failed += 1;
       const message = error instanceof Error ? error.message : 'Unknown notification delivery failure';
-      await markNotificationDeliveryFailed(delivery.id, message);
+      await recordNotificationFailure(delivery.id, message);
     }
   }
 

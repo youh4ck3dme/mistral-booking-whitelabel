@@ -1,16 +1,12 @@
 import { NextResponse } from 'next/server';
 
+import { isCronRequestAuthorized } from '@repo/web/src/lib/notifications/cron-auth';
 import { runReminderDispatchCycle } from '@repo/web/src/lib/notifications/reminders';
+
+export const dynamic = 'force-dynamic';
 
 function getCronSecret() {
   return process.env.NOTIFICATION_CRON_SECRET;
-}
-
-function isAuthorized(request: Request, secret: string) {
-  const authorization = request.headers.get('authorization');
-  const headerSecret = request.headers.get('x-notification-secret');
-
-  return authorization === `Bearer ${secret}` || headerSecret === secret;
 }
 
 export async function POST(request: Request) {
@@ -23,7 +19,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!isAuthorized(request, secret)) {
+  if (!isCronRequestAuthorized(request.headers, secret)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
