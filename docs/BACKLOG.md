@@ -39,6 +39,9 @@ Aktualizované: 2026-10-11.
 
 | ID | Úloha | Akceptácia | Vel. | Stav |
 |---|---|---|---|---|
+| BK-1 | Stav rezervácie Dokončená / Nedostavil sa: migrácia 014, RPC `set_booking_outcome` (len personál tenanta, až po začiatku, bez priameho UPDATE), API, tlačidlá v admin kalendári | Migrácia 014 na čistej DB, SQL overenie, unit testy trasy a pravidiel. UI nebolo E2E overené v prehliadači | M | ✅ `1b02763`, `7fcfbac`, `09a070b` |
+| BK-2 | Dashboard z reálnych riadkov: dnes, dokončené, nedostavenie sa, tržby z dokončených, najžiadanejšie služby | Výpočet v čistej funkcii s testami. Žiadne placeholder čísla | S | ✅ `09a070b` |
+| BK-3 | CSV export rezervácií zo zobrazeného zoznamu (BOM, bodkočiarka, ochrana proti vzorcom). Nie je e-Faktúra | Test escapovania a hlavičky. Export klientov a služieb je v OPS-9 | S | 🟡 `09a070b`, len rezervácie |
 | FUN-1 | `/terms` a obchodné podmienky, oprava odkazu v signup | Odkaz nevedie na 404, stránka v locale tenanta | S | ⬜ |
 | FUN-2 | Odstrániť `href="#"` v `compute-landing.tsx` | Žiadny `#` odkaz v buildu | S | ⬜ |
 | FUN-3 | Platby: brána (napr. GoPay, Comgate, SumUp alebo Stripe, výber podľa rozhodnutia), záloha pri rezervácii, refund | Checkout, webhook, refund, idempotencia, doklad podľa FIS-1 a F-19 | L | ⛔ rozhodnutie vlastníka |
