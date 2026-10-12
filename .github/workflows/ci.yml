@@ -108,6 +108,9 @@ jobs:
           echo "--> Test 5: reminder_pipeline_verification.sql"
           psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f supabase/tests/reminder_pipeline_verification.sql
 
+          echo "--> Test 6: least_privilege_verification.sql"
+          psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -f supabase/tests/least_privilege_verification.sql
+
           echo "VŠETKY SQL MIGRÁCIE A CONCURRENCY TESTY PREŠLI ÚSPEŠNE!"
 
       - name: Krok 6 - Produkčný build

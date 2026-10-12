@@ -33,7 +33,7 @@ Aktualizované: 2026-10-11.
 | SEC-6 | Rate limit na `/api/chat`, `/api/notifications/*`, login a reset hesla | Nad limit 429, limit konfigurovateľný cez env | M | ✅ Sliding window RateLimiter v `src/lib/security/rate-limit.ts`, ochrana v middleware aj API trasách, testy |
 | SEC-7 | Porovnanie `NOTIFICATION_CRON_SECRET` v konštantnom čase | `timingSafeEqual`, test s chybným tajomstvom | S | ✅ |
 | SEC-8 | Security headers: CSP, HSTS, X-Frame-Options, Referrer-Policy | Skener bez F, CSP nerozbije Next.js | S | ✅ |
-| DB-014 | Least-privilege: odobrať `GRANT ALL` na tabuľky pre `anon`/`authenticated` (migrácia 011), nahradiť explicitnými grantmi | Verejné stránky fungujú, SQL test pre každú rolu, RLS zostáva | M | ⬜ návrh, čaká na schválenie |
+| DB-014 | Least-privilege: odobrať `GRANT ALL` na tabuľky pre `anon`/`authenticated` (migrácia 011), nahradiť explicitnými grantmi | Verejné stránky fungujú, SQL test pre každú rolu, RLS zostáva | M | ✅ Migrácia 019, SQL test `least_privilege_verification.sql`, odobratý TRUNCATE a interné RPC |
 
 ## P1: pred prvým zákazníkom
 
