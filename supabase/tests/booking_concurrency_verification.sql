@@ -88,6 +88,9 @@ SELECT 'b0000000-0000-0000-0000-000000000001', st.id, d.wd, '09:00', '17:00'
 FROM public.staff st CROSS JOIN generate_series(1, 7) AS d(wd)
 WHERE st.tenant_id = 'b0000000-0000-0000-0000-000000000001';
 
+SELECT st.id AS default_staff_id FROM public.staff st
+WHERE st.tenant_id = 'b0000000-0000-0000-0000-000000000001' LIMIT 1 \gset
+
 -- ============================================
 -- 1. Booking via RPC, then overlap, adjacency, duplicate and cancel-reuse
 -- ============================================
@@ -121,10 +124,10 @@ SELECT public.create_booking('b0000000-0000-0000-0000-000000000001', 'c0000000-0
 -- 2. RLS: direct client writes
 -- ============================================
 -- A user cannot insert a booking on behalf of another user.
-SELECT pg_temp.expect_sqlstate($q$INSERT INTO public.bookings (tenant_id, user_id, service_id, staff_id, start_time, end_time, status)
+SELECT pg_temp.expect_sqlstate(format($q$INSERT INTO public.bookings (tenant_id, user_id, service_id, staff_id, start_time, end_time, status)
   VALUES ('b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001',
-          'c0000000-0000-0000-0000-000000000001', (SELECT id FROM public.staff WHERE tenant_id = 'b0000000-0000-0000-0000-000000000001'),
-          '2030-02-01 10:00:00+00', '2030-02-01 11:00:00+00', 'confirmed')$q$,
+          'c0000000-0000-0000-0000-000000000001', %L,
+          '2030-02-01 10:00:00+00', '2030-02-01 11:00:00+00', 'confirmed')$q$, :'default_staff_id'),
   '42501', '%row-level security%');
 
 -- A user cannot update bookings directly (only via RPC).
