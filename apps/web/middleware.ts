@@ -1,5 +1,12 @@
 import { updateSession } from '@repo/web/src/utils/supabase/middleware';
 import { checkRequestRateLimit } from '@repo/web/src/lib/security/rate-limit';
+import {
+  extractTenantSlug,
+  getRewrittenPath,
+  applySecurityHeaders,
+  isStaticAsset,
+  isSystemApiRoute,
+} from '@repo/web/src/lib/routing/subdomain';
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
@@ -9,20 +16,8 @@ import { NextResponse, type NextRequest } from 'next/server';
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  throw new Error(
-    'Missing Supabase configuration. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env.local file. ' +
-    'Get these values from your Supabase project: https://app.supabase.com/project/_/settings/api'
-  );
-}
-
 // ---------------------------------------------------------------------------
-// Tenant slug → tenant row cache
-// ---------------------------------------------------------------------------
-// Edge/Node processes are long-lived on Vercel; a module-level Map survives
-// across requests on the same instance. TTL prevents stale-tenant data from
-// sitting forever. Unknown slugs are also cached (null) to avoid hammering
-// the DB on 404 routes.
+// Tenant slug -> tenant row cache (5 min TTL)
 // ---------------------------------------------------------------------------
 type CachedTenant = { id: string; slug: string; name: string } | null;
 
@@ -32,7 +27,7 @@ interface TenantCacheEntry {
 }
 
 const tenantCache = new Map<string, TenantCacheEntry>();
-const TENANT_CACHE_TTL_MS = 5 * 60 * 1_000; // 5 minutes
+const TENANT_CACHE_TTL_MS = 5 * 60 * 1_000;
 
 function getCachedTenant(slug: string): CachedTenant | undefined {
   const entry = tenantCache.get(slug);
@@ -48,77 +43,129 @@ function setCachedTenant(slug: string, tenant: CachedTenant): void {
   tenantCache.set(slug, { tenant, expiresAt: Date.now() + TENANT_CACHE_TTL_MS });
 }
 
+async function lookupTenant(slug: string): Promise<CachedTenant> {
+  const cached = getCachedTenant(slug);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const lookupKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? SUPABASE_ANON_KEY;
+  if (!SUPABASE_URL || !lookupKey) {
+    return null;
+  }
+
+  try {
+    const client = createServerClient(SUPABASE_URL, lookupKey, {
+      cookies: {
+        getAll() {
+          return [];
+        },
+        setAll() {},
+      },
+    });
+
+    const { data } = await client
+      .from('tenants')
+      .select('id, slug, name')
+      .eq('slug', slug)
+      .maybeSingle();
+
+    const tenant = data ?? null;
+    setCachedTenant(slug, tenant);
+    return tenant;
+  } catch (err) {
+    console.error('[middleware] Failed to lookup tenant:', err);
+    return null;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Route classification
 // ---------------------------------------------------------------------------
 const AUTH_ROUTES = new Set(['/login', '/signup', '/forgot-password', '/reset-password']);
-const PUBLIC_ROUTES = new Set(['/', '/404', '/login', '/signup', '/forgot-password', '/reset-password', '/privacy', '/terms']);
-const API_PREFIX = '/api';
-
-// /platform is no longer in the skip list — it needs its own auth check below.
-const ALWAYS_PUBLIC_PREFIXES = [API_PREFIX];
+const PUBLIC_MARKETING_ROUTES = new Set([
+  '/',
+  '/404',
+  '/500',
+  '/login',
+  '/signup',
+  '/forgot-password',
+  '/reset-password',
+  '/privacy',
+  '/terms',
+]);
 
 // ---------------------------------------------------------------------------
-// Middleware
+// Middleware Implementation
 // ---------------------------------------------------------------------------
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || '';
 
-  // Pass static assets and Next.js internals through immediately.
-  if (pathname.includes('.')) {
+  // 1. Pass static assets and Next.js internals through immediately
+  if (isStaticAsset(pathname)) {
     return NextResponse.next();
   }
 
-  // Rate limit authentication endpoints (brute-force prevention)
+  // 2. CORS Preflight requests for API routes and embed widgets
+  if (req.method === 'OPTIONS') {
+    const preflight = new NextResponse(null, { status: 204 });
+    return applySecurityHeaders(preflight, req);
+  }
+
+  // 3. System API routes (/api/cron/*, /api/auth/*) bypass tenant routing
+  if (isSystemApiRoute(pathname)) {
+    return applySecurityHeaders(NextResponse.next(), req);
+  }
+
+  // 4. Rate limit authentication endpoints (brute-force defense)
   if (AUTH_ROUTES.has(pathname)) {
     const rateLimitGuard = checkRequestRateLimit(req, 'auth');
     if (!rateLimitGuard.allowed) {
-      return rateLimitGuard.response;
+      return applySecurityHeaders(rateLimitGuard.response, req);
     }
   }
 
-  // Always-public prefixes (API routes handle their own auth).
-  if (ALWAYS_PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
-    return NextResponse.next();
+  // 5. General API routes (/api/*)
+  if (pathname.startsWith('/api/')) {
+    const tenantSlug = extractTenantSlug(host);
+    const requestHeaders = new Headers(req.headers);
+    if (tenantSlug) {
+      requestHeaders.set('x-tenant-slug', tenantSlug);
+      requestHeaders.set('x-forwarded-host', host);
+    }
+    return applySecurityHeaders(
+      NextResponse.next({ request: { headers: requestHeaders } }),
+      req
+    );
   }
 
-  // -------------------------------------------------------------------------
-  // /platform — platform-level super-admin guard
-  // -------------------------------------------------------------------------
-  // The route is NOT in the public list, so we reach here.
-  // We verify the session and then check the platform_admins table via a
-  // service-role client (bypasses RLS). If the check fails, redirect to /login
-  // (unauthenticated) or /404 (authenticated but not a platform admin).
-  // -------------------------------------------------------------------------
+  // 6. Platform-level super-admin guard (/platform, /platform/*)
   if (pathname === '/platform' || pathname.startsWith('/platform/')) {
     const res = NextResponse.next();
-    
-    // Použijeme updateSession z utils
     const supabase = updateSession(req, res);
-    
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.redirect(new URL('/login', req.url));
+      return applySecurityHeaders(NextResponse.redirect(new URL('/login', req.url)), req);
     }
 
-    // Check platform_admins table with service-role key.
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
     if (!SUPABASE_URL || !serviceKey) {
-      // Cannot verify → deny access to be safe.
       console.error('[middleware] Missing env vars for platform admin check');
-      return NextResponse.redirect(new URL('/404', req.url));
+      return applySecurityHeaders(NextResponse.redirect(new URL('/404', req.url)), req);
     }
 
     try {
       const adminClient = createServerClient(SUPABASE_URL, serviceKey, {
         cookies: {
-          getAll() { return req.cookies.getAll() },
-          setAll() {}
-        }
+          getAll() {
+            return req.cookies.getAll();
+          },
+          setAll() {},
+        },
       });
 
       const { data: platformAdmin } = await adminClient
@@ -128,93 +175,103 @@ export async function middleware(req: NextRequest) {
         .maybeSingle();
 
       if (!platformAdmin) {
-        // Authenticated but not a platform admin → 404
-        return NextResponse.redirect(new URL('/404', req.url));
+        return applySecurityHeaders(NextResponse.redirect(new URL('/404', req.url)), req);
       }
     } catch (e) {
       console.error('[middleware] Failed to verify platform admin:', e);
-      return NextResponse.redirect(new URL('/500', req.url));
+      return applySecurityHeaders(NextResponse.redirect(new URL('/500', req.url)), req);
     }
 
-    // Inject platform-admin context header for downstream Server Components.
     const headers = new Headers(res.headers);
     headers.set('x-platform-admin', 'true');
     headers.set('x-platform-user-id', user.id);
 
-    return NextResponse.next({ request: { headers } });
+    return applySecurityHeaders(NextResponse.next({ request: { headers } }), req);
   }
 
-  // -------------------------------------------------------------------------
-  // Public routes — no tenant resolution needed
-  // -------------------------------------------------------------------------
-  if (PUBLIC_ROUTES.has(pathname)) {
-    return NextResponse.next();
+  // 7. Multi-Tenant Subdomain Routing
+  const tenantSlugFromHost = extractTenantSlug(host);
+
+  if (tenantSlugFromHost) {
+    const tenant = await lookupTenant(tenantSlugFromHost);
+    if (!tenant) {
+      return applySecurityHeaders(NextResponse.rewrite(new URL('/404', req.url)), req);
+    }
+
+    // Refresh Supabase session
+    const res = NextResponse.next();
+    const supabase = updateSession(req, res);
+    await supabase.auth.getUser();
+
+    // Context headers for downstream Server Components
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set('x-tenant-id', tenant.id);
+    requestHeaders.set('x-tenant-slug', tenant.slug);
+    requestHeaders.set('x-tenant-name', tenant.name);
+    requestHeaders.set('x-forwarded-host', host);
+
+    // Compute internal rewrite target (e.g. /book -> /barber-district/book)
+    const targetPath = getRewrittenPath(tenant.slug, pathname);
+    const rewriteUrl = new URL(targetPath, req.url);
+
+    const response = NextResponse.rewrite(rewriteUrl, {
+      request: { headers: requestHeaders },
+    });
+
+    // Copy refreshed Supabase cookies
+    res.cookies.getAll().forEach((cookie) => {
+      response.cookies.set(cookie.name, cookie.value, cookie);
+    });
+
+    return applySecurityHeaders(response, req);
   }
 
-  // -------------------------------------------------------------------------
-  // Tenant routes — /[tenantSlug]/...
-  // -------------------------------------------------------------------------
-  const tenantSlug = pathname.split('/').filter(Boolean)[0];
-
-  if (!tenantSlug) {
-    return NextResponse.redirect(new URL('/', req.url));
+  // 8. Main Domain Routing (e.g. nexify.sk, localhost:3000, *.vercel.app root)
+  if (PUBLIC_MARKETING_ROUTES.has(pathname)) {
+    return applySecurityHeaders(NextResponse.next(), req);
   }
 
-  // Refresh Supabase session cookies.
+  // Direct path-based tenant route (e.g. /barber-district/book)
+  const pathSlug = pathname.split('/').filter(Boolean)[0];
+  if (!pathSlug) {
+    return applySecurityHeaders(NextResponse.redirect(new URL('/', req.url)), req);
+  }
+
+  const tenant = await lookupTenant(pathSlug);
+  if (!tenant) {
+    return applySecurityHeaders(NextResponse.rewrite(new URL('/404', req.url)), req);
+  }
+
   const res = NextResponse.next();
   const supabase = updateSession(req, res);
-  // Validates the JWT with Supabase Auth and refreshes session cookies.
   await supabase.auth.getUser();
 
-  // ---- Tenant lookup with cache ----
-  let tenant = getCachedTenant(tenantSlug);
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set('x-tenant-id', tenant.id);
+  requestHeaders.set('x-tenant-slug', tenant.slug);
+  requestHeaders.set('x-tenant-name', tenant.name);
+  requestHeaders.set('x-forwarded-host', host);
 
-  if (tenant === undefined) {
-    // Cache miss → hit the DB.
-    const tenantLookupKey =
-      process.env.SUPABASE_SERVICE_ROLE_KEY ?? SUPABASE_ANON_KEY;
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
 
-    if (!SUPABASE_URL || !tenantLookupKey) {
-      return NextResponse.redirect(new URL('/404', req.url));
-    }
+  res.cookies.getAll().forEach((cookie) => {
+    response.cookies.set(cookie.name, cookie.value, cookie);
+  });
 
-    try {
-      const tenantLookupClient = createServerClient(SUPABASE_URL, tenantLookupKey, {
-        cookies: {
-          getAll() { return req.cookies.getAll() },
-          setAll() {}
-        }
-      });
-
-      const { data } = await tenantLookupClient
-        .from('tenants')
-        .select('id, slug, name')
-        .eq('slug', tenantSlug)
-        .maybeSingle();
-
-      // Cache result — including null (unknown slug) to avoid repeated DB hits.
-      tenant = data ?? null;
-      setCachedTenant(tenantSlug, tenant);
-    } catch (e) {
-      console.error('[middleware] Failed to lookup tenant:', e);
-      // Return 500 error instead of failing hard
-      return NextResponse.redirect(new URL('/500', req.url));
-    }
-  }
-
-  if (!tenant) {
-    return NextResponse.redirect(new URL('/404', req.url));
-  }
-
-  // Inject tenant context headers for downstream Server Components and layouts.
-  const headers = new Headers(res.headers);
-  headers.set('x-tenant-id', tenant.id);
-  headers.set('x-tenant-slug', tenant.slug);
-  headers.set('x-tenant-name', tenant.name);
-
-  return NextResponse.next({ request: { headers } });
+  return applySecurityHeaders(response, req);
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|$).*)'],
+  matcher: [
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico, sitemap.xml, robots.txt
+     * - static asset extensions (.svg, .png, .jpg, .jpeg, .gif, .webp, .ico)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+  ],
 };
