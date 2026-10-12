@@ -13,9 +13,9 @@ export default async function AuthLayout({
 }) {
   const session = await getServerSession();
 
-  // If user is already logged in, redirect to demo-clinic
+  // If user is already logged in, redirect to home page or portal
   if (session) {
-    redirect('/demo-clinic');
+    redirect('/');
   }
 
   return (

@@ -62,12 +62,12 @@ INSERT INTO public.tenants (id, name, slug, locale) VALUES
 INSERT INTO public.services (id, tenant_id, name, duration, price, is_active) VALUES
   ('93000000-0000-0000-0000-000000000001', '92000000-0000-0000-0000-000000000001', 'LP Service', 30, 25.00, true);
 
--- ============================================
--- 1. Test Anon Role Table Permissions
--- ============================================
-PERFORM pg_temp.as_anon();
 
--- Anon can read public catalog
+-- ============================================
+-- 1. anon: public catalog readable, no writes, no internal/auth-only RPC
+-- ============================================
+SELECT pg_temp.as_anon();
+
 DO $$
 DECLARE
   v_count int;
@@ -79,56 +79,75 @@ BEGIN
   PERFORM pg_temp.assert_true(v_count = 1, 'anon should be able to select from services');
 END $$;
 
--- Anon CANNOT TRUNCATE public tables (Must raise 42501)
-PERFORM pg_temp.expect_sqlstate(
-  'TRUNCATE public.services',
-  '42501',
-  '%permission denied%'
-);
+SELECT pg_temp.expect_sqlstate('TRUNCATE public.services', '42501', '%permission denied%');
 
--- Anon CANNOT INSERT directly into services
-PERFORM pg_temp.expect_sqlstate(
+SELECT pg_temp.expect_sqlstate(
   'INSERT INTO public.services (tenant_id, name, duration, price) VALUES (''92000000-0000-0000-0000-000000000001'', ''Hacked'', 30, 0)',
-  '42501',
-  '%permission denied%'
-);
+  '42501', '%permission denied%');
 
--- Anon CANNOT call internal outbox RPC (Must raise 42501)
-PERFORM pg_temp.expect_sqlstate(
-  'SELECT public.claim_notification_deliveries(p_worker_id := ''evil'', p_batch_size := 10)',
-  '42501',
-  '%permission denied%'
-);
+SELECT pg_temp.expect_sqlstate(
+  'UPDATE public.services SET price = 0', '42501', '%permission denied%');
 
--- ============================================
--- 2. Test Authenticated Role Table Permissions
--- ============================================
-PERFORM pg_temp.as_user('91000000-0000-0000-0000-000000000001');
+SELECT pg_temp.expect_sqlstate(
+  'SELECT public.claim_notification_deliveries(p_limit := 10)', '42501', '%permission denied%');
 
--- Authenticated CANNOT TRUNCATE tables (Must raise 42501)
-PERFORM pg_temp.expect_sqlstate(
-  'TRUNCATE public.bookings',
-  '42501',
-  '%permission denied%'
-);
+SELECT pg_temp.expect_sqlstate(
+  'SELECT public.schedule_booking_reminders()', '42501', '%permission denied%');
 
-PERFORM pg_temp.expect_sqlstate(
-  'TRUNCATE public.tenants',
-  '42501',
-  '%permission denied%'
-);
+SELECT pg_temp.expect_sqlstate(
+  'SELECT public.create_booking_with_staff(''92000000-0000-0000-0000-000000000001''::uuid, ''93000000-0000-0000-0000-000000000001''::uuid, now(), now() + interval ''30 minutes'', NULL)',
+  '42501', '%permission denied%');
 
--- Authenticated CANNOT call internal outbox worker RPC
-PERFORM pg_temp.expect_sqlstate(
-  'SELECT public.claim_notification_deliveries(p_worker_id := ''evil-user'', p_batch_size := 10)',
-  '42501',
-  '%permission denied%'
-);
+-- anon keeps the public booking surface: EXECUTE must not be denied (any other outcome is fine)
+DO $$
+BEGIN
+  BEGIN
+    PERFORM public.get_booking_by_manage_token('nonexistent', 'lp-tenant');
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLSTATE = '42501' AND SQLERRM LIKE '%permission denied for function%' THEN
+      RAISE EXCEPTION 'anon lost EXECUTE on get_booking_by_manage_token: %', SQLERRM;
+    END IF;
+  END;
+END $$;
 
 -- ============================================
--- 3. Reset Role & Conclude Verification
+-- 2. authenticated: RLS helpers still callable, booking RPC callable,
+--    TRUNCATE and internal RPC denied
 -- ============================================
-PERFORM pg_temp.as_owner();
+SELECT pg_temp.as_user('91000000-0000-0000-0000-000000000001');
+
+SELECT pg_temp.expect_sqlstate('TRUNCATE public.bookings', '42501', '%permission denied%');
+SELECT pg_temp.expect_sqlstate('TRUNCATE public.tenants', '42501', '%permission denied%');
+
+SELECT pg_temp.expect_sqlstate(
+  'SELECT public.claim_notification_deliveries(p_limit := 10)', '42501', '%permission denied%');
+SELECT pg_temp.expect_sqlstate(
+  'SELECT public.schedule_booking_reminders()', '42501', '%permission denied%');
+
+-- Regression: policies call is_tenant_member / is_tenant_admin_or_staff / is_tenant_admin
+-- with the caller's privileges. These queries must not raise permission denied.
+DO $$
+DECLARE
+  v_count int;
+BEGIN
+  SELECT count(*) INTO v_count FROM public.tenant_users;
+  SELECT count(*) INTO v_count FROM public.bookings;
+  SELECT count(*) INTO v_count FROM public.staff;
+  SELECT count(*) INTO v_count FROM public.staff_working_hours;
+  PERFORM public.is_tenant_member('92000000-0000-0000-0000-000000000001');
+  PERFORM public.is_tenant_admin_or_staff('92000000-0000-0000-0000-000000000001');
+  PERFORM public.is_tenant_admin('92000000-0000-0000-0000-000000000001');
+END $$;
+
+-- authenticated passes the EXECUTE check; the function then rejects the empty range (23514)
+SELECT pg_temp.expect_sqlstate(
+  'SELECT public.create_booking_with_staff(''92000000-0000-0000-0000-000000000001''::uuid, ''93000000-0000-0000-0000-000000000001''::uuid, now(), now(), NULL)',
+  '23514', 'Invalid time range%');
+
+-- ============================================
+-- 3. Reset role and conclude
+-- ============================================
+SELECT pg_temp.as_owner();
 
 DO $$
 BEGIN

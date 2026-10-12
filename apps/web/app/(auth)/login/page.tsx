@@ -48,7 +48,7 @@ export default function LoginPage() {
           description: 'Účet je pripravený a môžete pokračovať v booking flow.',
           variant: 'success',
         });
-        router.push('/demo-clinic');
+        router.push('/');
       }
     } catch (loginError: any) {
       const message = loginError.message || 'Nepodarilo sa prihlásiť';
