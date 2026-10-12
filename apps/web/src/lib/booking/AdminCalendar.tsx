@@ -29,9 +29,12 @@ import {
 
 interface AdminCalendarProps {
   tenantId: string;
+  tenantSlug?: string;
+  tenantName?: string;
   services: Service[];
   bookings: Booking[];
   primaryColor?: string;
+  onOpenExport?: () => void;
 }
 
 interface BookingWithService extends Booking {
@@ -50,9 +53,12 @@ const DEFAULT_PRIMARY_COLOR = '#3B82F6';
 
 export function AdminCalendar({
   tenantId,
+  tenantSlug,
+  tenantName,
   services,
   bookings: initialBookings,
   primaryColor = DEFAULT_PRIMARY_COLOR,
+  onOpenExport,
 }: AdminCalendarProps) {
   const supabase = createClient();
   const { notifyError, notifySuccess, notifyInfo } = useNotifications();
@@ -269,6 +275,10 @@ export function AdminCalendar({
 
   // Accounting export of the bookings this admin can already see (CSV, not an e-Faktúra)
   const handleExportCsv = useCallback(() => {
+    if (onOpenExport) {
+      onOpenExport();
+      return;
+    }
     const csv = toAccountingCsv(bookings);
     const blob = new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -279,7 +289,7 @@ export function AdminCalendar({
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
-  }, [bookings]);
+  }, [bookings, onOpenExport]);
 
   // Get booking count for a date
   const getBookingCountForDate = useCallback((date: string): number => {
@@ -567,10 +577,10 @@ export function AdminCalendar({
             type="button"
             className="premium-button-secondary premium-button-small"
             onClick={handleExportCsv}
-            disabled={bookings.length === 0}
-            title="Bezpečný export termínov do CSV (UTF-8 BOM, bodkočiarka, sanitizácia vzorcov)"
+            disabled={bookings.length === 0 && !onOpenExport}
+            title="Bezplatný export dát tenanta — CSV & JSON (OPS-9 / BK-3)"
           >
-            Exportovať CSV
+            Export dát
           </button>
         </div>
 

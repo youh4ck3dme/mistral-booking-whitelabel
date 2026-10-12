@@ -8,6 +8,7 @@ import { UsersTab } from './users-tab';
 import { StaffTab } from './staff-tab';
 import { RemindersCard } from './reminders-card';
 import { OnboardingChecklist } from './onboarding-checklist';
+import { ExportModal } from './export-modal';
 import { createClient } from '@repo/web/src/utils/supabase/client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -48,6 +49,7 @@ export default function TenantAdminPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'services' | 'bookings' | 'branding' | 'ai' | 'users' | 'staff'>('services');
+  const [isExportOpen, setIsExportOpen] = useState(false);
   const [onboardingMeta, setOnboardingMeta] = useState<{
     servicesCount: number;
     hasStaff: boolean;
@@ -303,18 +305,28 @@ export default function TenantAdminPage() {
             <span className="premium-section-label">Workspace</span>
             <h1 className="premium-section-title">Tenant admin</h1>
           </div>
-          <div className="premium-kpi-grid">
-            <div className="premium-stat">
-              <span className="premium-stat-value">{services.length}</span>
-              <span className="premium-stat-label">services</span>
-            </div>
-            <div className="premium-stat">
-              <span className="premium-stat-value">{bookings.length}</span>
-              <span className="premium-stat-label">bookings</span>
-            </div>
-            <div className="premium-stat">
-              <span className="premium-stat-value">{tenant.userRole || 'admin'}</span>
-              <span className="premium-stat-label">access role</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              className="premium-button-secondary"
+              onClick={() => setIsExportOpen(true)}
+              title="Bezplatný export dát tenanta — CSV & JSON (OPS-9 / BK-3)"
+            >
+              Export dát
+            </button>
+            <div className="premium-kpi-grid">
+              <div className="premium-stat">
+                <span className="premium-stat-value">{services.length}</span>
+                <span className="premium-stat-label">services</span>
+              </div>
+              <div className="premium-stat">
+                <span className="premium-stat-value">{bookings.length}</span>
+                <span className="premium-stat-label">bookings</span>
+              </div>
+              <div className="premium-stat">
+                <span className="premium-stat-value">{tenant.userRole || 'admin'}</span>
+                <span className="premium-stat-label">access role</span>
+              </div>
             </div>
           </div>
         </div>
@@ -451,9 +463,12 @@ export default function TenantAdminPage() {
               `}</style>
               <DynamicAdminCalendar
                 tenantId={tenant.tenant.id}
+                tenantSlug={tenant.tenant.slug}
+                tenantName={tenant.tenant.name}
                 services={services}
                 bookings={bookings as BookingWithService[]}
                 primaryColor={primaryColor}
+                onOpenExport={() => setIsExportOpen(true)}
               />
             </>
           )}
@@ -622,6 +637,14 @@ export default function TenantAdminPage() {
           supabase={supabase}
         />
       )}
+
+      <ExportModal
+        isOpen={isExportOpen}
+        onClose={() => setIsExportOpen(false)}
+        tenantSlug={tenant.tenant.slug}
+        tenantId={tenant.tenant.id}
+        tenantName={tenant.tenant.name}
+      />
     </div>
   );
 }

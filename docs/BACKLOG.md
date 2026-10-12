@@ -44,7 +44,7 @@ Aktualizované: 2026-10-11.
 | BK-6 | Spoľahlivé pripomienky: nastavenie tenanta, outbox, idempotentný kľúč, retry s backoffom a konečným stavom, lease obnova, zrušenie pri zmene, disabled provider bez odoslania, chránený cron | Migrácia 017, SQL suite reminder, testy worker a cron autorizácie, admin karta | M | 🟡 `20bc858`, `cc9c435`, `3c3b8aa`. Chýba: skutočný provider (bez kľúča sa neodosiela), SMS/WhatsApp |
 | BK-1 | Stav rezervácie Dokončená / Nedostavil sa: migrácia 014, RPC `set_booking_outcome` (len personál tenanta, až po začiatku, bez priameho UPDATE), API, tlačidlá v admin kalendári | Migrácia 014 na čistej DB, SQL overenie, unit testy trasy a pravidiel. UI nebolo E2E overené v prehliadači | M | ✅ `1b02763`, `7fcfbac`, `09a070b` |
 | BK-2 | Dashboard z reálnych riadkov: dnes, dokončené, nedostavenie sa, tržby z dokončených, najžiadanejšie služby | Výpočet v čistej funkcii s testami. Žiadne placeholder čísla | S | ✅ `09a070b` |
-| BK-3 | CSV export rezervácií zo zobrazeného zoznamu (BOM, bodkočiarka, ochrana proti vzorcom). Nie je e-Faktúra | Test escapovania a hlavičky. Export klientov a služieb je v OPS-9 | S | 🟡 `09a070b`, len rezervácie |
+| BK-3 | CSV export rezervácií zo zobrazeného zoznamu (BOM, bodkočiarka, ochrana proti vzorcom). Nie je e-Faktúra | Test escapovania a hlavičky. Export klientov a služieb je v OPS-9 | S | ✅ Hotové: bezpečný CSV export s UTF-8 BOM, ochranou pred vzorcami a integráciou v AdminCalendar |
 | FUN-1 | `/terms` a obchodné podmienky, oprava odkazu v signup | Odkaz nevedie na 404, stránka v locale tenanta | S | ✅ |
 | FUN-2 | Odstrániť `href="#"` v `compute-landing.tsx` | Žiadny `#` odkaz v buildu | S | ✅ |
 | FUN-3 | Platby: brána (napr. GoPay, Comgate, SumUp alebo Stripe, výber podľa rozhodnutia), záloha pri rezervácii, refund | Checkout, webhook, refund, idempotencia, doklad podľa FIS-1 a F-19 | L | ⛔ rozhodnutie vlastníka |
@@ -79,7 +79,7 @@ Aktualizované: 2026-10-11.
 | OPS-6 | Duplicitný `@playwright/test` v koreňovom `package.json` | Lockfile a package.json konzistentné | S | ✅ |
 | OPS-7 | GDPR: self-service export údajov a vymazanie účtu | Export JSON, vymazanie s anonymizáciou bookingov | M | ⬜ |
 | OPS-8 | GDPR: záznam súhlasov (consent log) | Verzia textu, čas, účel, test | S | ⬜ |
-| OPS-9 | Bezplatný export dát tenanta (CSV alebo JSON) kedykoľvek, bez poplatku | Export: rezervácie, klienti, služby. Test, že export obsahuje všetky tabuľky tenanta | M | ⬜ |
+| OPS-9 | Bezplatný export dát tenanta (CSV alebo JSON) kedykoľvek, bez poplatku | Export: rezervácie, klienti, služby. Test, že export obsahuje všetky tabuľky tenanta | M | ✅ Hotové: modul tenant-export.ts (18 unit testov), ochrana CSV injection, UTF-8 BOM, ExportModal v tenanstkej administrácii |
 | OPS-10 | Register subdodávateľov a DPA (Supabase, Vercel, Resend, Mistral, platobná brána, SMS) a posúdenie prenosov mimo EÚ | Tabuľka s DPA, krajinou a prenosovým mechanizmom, schválená pred pilotom | S | ⬜ |
 | OPS-11 | Retenčné politiky podľa kategórie údajov (rezervácie, klienti, logy, súhlasy, faktúry) s automatickým mazaním alebo anonymizáciou | Politika schválená právnikom, úloha mazania, test na vzorke dát | M | ⬜ čaká na LEG-2 |
 
