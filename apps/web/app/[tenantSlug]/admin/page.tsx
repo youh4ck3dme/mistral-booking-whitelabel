@@ -7,6 +7,7 @@ import { useTenant } from '@repo/web/src/lib/tenant/TenantProvider';
 import { UsersTab } from './users-tab';
 import { StaffTab } from './staff-tab';
 import { RemindersCard } from './reminders-card';
+import { OnboardingChecklist } from './onboarding-checklist';
 import { createClient } from '@repo/web/src/utils/supabase/client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -47,6 +48,19 @@ export default function TenantAdminPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'services' | 'bookings' | 'branding' | 'ai' | 'users' | 'staff'>('services');
+  const [onboardingMeta, setOnboardingMeta] = useState<{
+    servicesCount: number;
+    hasStaff: boolean;
+    hasWorkingHours: boolean;
+    hasBranding: boolean;
+    bookingsCount: number;
+  }>({
+    servicesCount: 0,
+    hasStaff: false,
+    hasWorkingHours: false,
+    hasBranding: false,
+    bookingsCount: 0,
+  });
 
   const brandingDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -61,6 +75,42 @@ export default function TenantAdminPage() {
       router.push(`/${tenant.tenant.slug}`);
     }
   }, [router, tenant]);
+
+  useEffect(() => {
+    if (!tenant?.tenant?.id || !tenant.isRoleResolved || tenant.userRole !== 'admin') return;
+
+    const fetchOnboardingMeta = async () => {
+      try {
+        const [servicesRes, staffRes, workingHoursRes, brandingRes, bookingsRes] = await Promise.all([
+          supabase.from('services').select('id', { count: 'exact', head: true }).eq('tenant_id', tenant.tenant.id),
+          supabase.from('staff').select('id', { count: 'exact', head: true }).eq('tenant_id', tenant.tenant.id),
+          supabase.from('staff_working_hours').select('id', { count: 'exact', head: true }).eq('tenant_id', tenant.tenant.id),
+          supabase.from('tenant_branding').select('logo_url, primary_color').eq('tenant_id', tenant.tenant.id).maybeSingle(),
+          supabase.from('bookings').select('id', { count: 'exact', head: true }).eq('tenant_id', tenant.tenant.id),
+        ]);
+
+        const servicesCount = servicesRes.count ?? 0;
+        const hasStaff = (staffRes.count ?? 0) > 0;
+        const hasWorkingHours = (workingHoursRes.count ?? 0) > 0;
+        const hasBranding = Boolean(
+          brandingRes.data && (brandingRes.data.logo_url || (brandingRes.data.primary_color && brandingRes.data.primary_color !== '#3B82F6'))
+        );
+        const bookingsCount = bookingsRes.count ?? 0;
+
+        setOnboardingMeta({
+          servicesCount,
+          hasStaff,
+          hasWorkingHours,
+          hasBranding,
+          bookingsCount,
+        });
+      } catch {
+        // Non-blocking for admin dashboard
+      }
+    };
+
+    fetchOnboardingMeta();
+  }, [supabase, tenant?.isRoleResolved, tenant?.tenant?.id, tenant?.userRole]);
 
   useEffect(() => {
     if (!tenant?.tenant?.id || !tenant.isRoleResolved || tenant.userRole !== 'admin') return;
@@ -269,6 +319,19 @@ export default function TenantAdminPage() {
           </div>
         </div>
       </section>
+
+      {/* Onboarding Checklist for new tenants */}
+      <OnboardingChecklist
+        tenantSlug={tenant.tenant.slug}
+        tenantId={tenant.tenant.id}
+        tenantName={tenant.tenant.name}
+        servicesCount={onboardingMeta.servicesCount || services.length}
+        hasStaff={onboardingMeta.hasStaff}
+        hasWorkingHours={onboardingMeta.hasWorkingHours}
+        hasBranding={onboardingMeta.hasBranding}
+        bookingsCount={onboardingMeta.bookingsCount || bookings.length}
+        onNavigateTab={(tab) => setActiveTab(tab)}
+      />
 
       <div className="premium-tab-list" role="tablist" aria-label="Admin tabs">
         {[
