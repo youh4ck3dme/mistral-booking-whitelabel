@@ -297,17 +297,17 @@ const footerColumns = [
   {
     title: 'Company',
     links: [
-      { label: 'About', href: '#' },
-      { label: 'Blog', href: '#' },
-      { label: 'Careers', href: '#', badge: 'Hiring' },
-      { label: 'Contact', href: '#' },
+      { label: 'About', href: '#how-it-works' },
+      { label: 'Blog', href: '#features' },
+      { label: 'Careers', href: '#pricing', badge: 'Hiring' },
+      { label: 'Contact', href: '/signup' },
     ],
   },
   {
     title: 'Legal',
     links: [
-      { label: 'Privacy', href: '#' },
-      { label: 'Terms', href: '#' },
+      { label: 'Privacy', href: '/privacy' },
+      { label: 'Terms', href: '/terms' },
       { label: 'Security', href: '#security' },
     ],
   },
@@ -445,7 +445,7 @@ export default function ComputeLandingPage() {
     <main className={styles.page}>
       <header className={styles.header}>
         <nav className={styles.navShell}>
-          <a className={styles.logo} href="#">
+          <a className={styles.logo} href="/">
             <span className={styles.logoWord}>COMPUTE</span>
             <span className={styles.logoMark}>TM</span>
           </a>
@@ -867,7 +867,7 @@ export default function ComputeLandingPage() {
                 <span className={styles.integrationSmall}>Real-time sync</span>
               </div>
             </div>
-            <a href="#" className={styles.inlineArrow}>
+            <a href="#integrations" className={styles.inlineArrow}>
               View all integrations
             </a>
           </div>
@@ -1151,7 +1151,7 @@ export default function ComputeLandingPage() {
                 ),
               )}
             </div>
-            <a href="#" className={styles.textLink}>
+            <a href="#pricing" className={styles.textLink}>
               Compare all features
             </a>
           </div>
@@ -1211,7 +1211,7 @@ export default function ComputeLandingPage() {
         <div className={styles.container}>
           <div className={styles.footerTop}>
             <div className={styles.footerBrand}>
-              <a className={styles.logo} href="#">
+              <a className={styles.logo} href="/">
                 <span className={styles.logoWord}>COMPUTE</span>
                 <span className={styles.logoMark}>TM</span>
               </a>
@@ -1220,9 +1220,19 @@ export default function ComputeLandingPage() {
                 intelligent workers.
               </p>
               <div className={styles.footerSocials}>
-                {['Twitter', 'GitHub', 'LinkedIn'].map((item) => (
-                  <a key={item} href="#" className={styles.footerSocial}>
-                    {item}
+                {[
+                  { name: 'Twitter', href: 'https://x.com' },
+                  { name: 'GitHub', href: 'https://github.com' },
+                  { name: 'LinkedIn', href: 'https://linkedin.com' },
+                ].map((item) => (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.footerSocial}
+                  >
+                    {item.name}
                     <ArrowUpRightIcon className={styles.socialArrow} />
                   </a>
                 ))}

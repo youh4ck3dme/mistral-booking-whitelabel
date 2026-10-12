@@ -1,89 +1,62 @@
 import type { Metadata } from 'next';
 
-import { createServerClient } from '@repo/supabase';
-import type { Tenant, TenantBranding } from '@repo/core';
-import {
-  type VerticalKey,
-  verticalRouteList,
-} from '@repo/web/src/lib/booking/vertical-routing';
-
-import BookingLandingPage, { type FeaturedServiceCard } from './booking-landing';
+import { LandingHeader } from '@repo/web/components/landing/LandingHeader';
+import { HeroSection } from '@repo/web/components/landing/HeroSection';
+import { SocialProofStrip } from '@repo/web/components/landing/SocialProofStrip';
+import { ProblemSolution } from '@repo/web/components/landing/ProblemSolution';
+import { FeatureShowcase } from '@repo/web/components/landing/FeatureShowcase';
+import { AiWhiteLabelHighlight } from '@repo/web/components/landing/AiWhiteLabelHighlight';
+import { EnterpriseReliability } from '@repo/web/components/landing/EnterpriseReliability';
+import { PricingWithRoiCalculator } from '@repo/web/components/landing/PricingWithRoiCalculator';
+import { FaqSection } from '@repo/web/components/landing/FaqSection';
+import { FinalCtaSection } from '@repo/web/components/landing/FinalCtaSection';
+import { LandingFooter } from '@repo/web/components/landing/LandingFooter';
 
 export const metadata: Metadata = {
-  title: 'Book Your Perfect Service | NEXIFY TECH CENTER',
+  title: 'NEXIFY Booking — Prémiová White-Label Rezervačná Platforma',
   description:
-    'Premium multi-tenant booking experience for clinics, wellness studios, beauty brands, fitness operators, and service-led teams.',
+    'B2B SaaS rezervačný systém pre prémiové salóny, kliniky a štúdiá. 100% white-label, nulový double-booking, AI asistent a 0% provízie z vašich tržieb.',
+  openGraph: {
+    title: 'NEXIFY Booking — Prémiová White-Label Rezervačná Platforma',
+    description:
+      'Chráňte svoju značku s moderným rezervačným systémom. Nulový double-booking a 0% provízia.',
+    type: 'website',
+  },
 };
 
-export const dynamic = 'force-dynamic';
-
-async function getLandingData(): Promise<{
-  featuredServices: FeaturedServiceCard[];
-  tenants: Tenant[];
-  branding: TenantBranding[];
-}> {
-  const supabase = createServerClient();
-  const serviceIds = verticalRouteList.map((vertical) => vertical.serviceId);
-
-  try {
-    const [{ data: tenants }, { data: branding }, { data: services }] = await Promise.all([
-      supabase.from('tenants').select('*').order('created_at', { ascending: true }).limit(12),
-      supabase.from('tenant_branding').select('*'),
-      supabase
-        .from('services')
-        .select('*')
-        .in('id', serviceIds)
-        .eq('is_active', true)
-        .order('created_at', { ascending: true }),
-    ]);
-
-    const safeTenants = tenants ?? [];
-    const safeBranding = branding ?? [];
-    const tenantsBySlug = new Map(safeTenants.map((tenant) => [tenant.slug, tenant]));
-    const brandingByTenant = new Map(safeBranding.map((entry) => [entry.tenant_id, entry]));
-    const servicesById = new Map((services ?? []).map((service) => [service.id, service]));
-
-    const featuredServices: FeaturedServiceCard[] = verticalRouteList.flatMap((vertical) => {
-      const service = servicesById.get(vertical.serviceId);
-      const tenant = tenantsBySlug.get(vertical.tenantSlug);
-
-      if (!service || !tenant) {
-        return [];
-      }
-
-      const brand = brandingByTenant.get(tenant.id);
-
-      return [{
-        ...service,
-        accent: brand?.primary_color ?? vertical.accent,
-        tenantName: tenant.name,
-        tenantSlug: tenant.slug,
-        vertical: vertical.id as VerticalKey,
-      }];
-    });
-
-    return {
-      featuredServices,
-      tenants: safeTenants,
-      branding: safeBranding,
-    };
-  } catch {
-    return {
-      featuredServices: [],
-      tenants: [],
-      branding: [],
-    };
-  }
-}
-
-export default async function HomePage() {
-  const { featuredServices, tenants, branding } = await getLandingData();
-
+export default function HomePage() {
   return (
-    <BookingLandingPage
-      featuredServices={featuredServices}
-      tenants={tenants}
-      branding={branding}
-    />
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 selection:bg-indigo-500/30 selection:text-indigo-200">
+      <LandingHeader />
+      <main>
+        {/* 1. HERO SECTION */}
+        <HeroSection />
+
+        {/* 2. SOCIAL PROOF & KEY METRICS */}
+        <SocialProofStrip />
+
+        {/* 3. PROBLEM VS SOLUTION */}
+        <ProblemSolution />
+
+        {/* 4. KEY PLATFORM PILLARS */}
+        <FeatureShowcase />
+
+        {/* 5. AI & WHITE-LABEL HIGHLIGHT */}
+        <AiWhiteLabelHighlight />
+
+        {/* 6. ENTERPRISE RELIABILITY & SECURITY */}
+        <EnterpriseReliability />
+
+        {/* 7. TRANSPARENT PRICING & COMMISSION KILLER ROI CALCULATOR */}
+        <PricingWithRoiCalculator />
+
+        {/* 8. FREQUENTLY ASKED QUESTIONS */}
+        <FaqSection />
+
+        {/* 9. FINAL CALL TO ACTION */}
+        <FinalCtaSection />
+      </main>
+      <LandingFooter />
+    </div>
   );
 }
