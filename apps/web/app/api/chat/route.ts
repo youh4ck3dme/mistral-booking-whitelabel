@@ -37,6 +37,8 @@ const chatRequestSchema = z.object({
   messages: z.array(chatMessageSchema).min(1, 'At least one message is required'),
 });
 
+export const maxDuration = 10; // Vercel Hobby hard execution limit safety
+
 export async function POST(request: Request) {
   const rateLimitGuard = checkRequestRateLimit(request, 'chat');
   if (!rateLimitGuard.allowed) {
@@ -68,26 +70,27 @@ export async function POST(request: Request) {
 
   const supabase = createClient();
 
-  // 1. Check if tenant exists
-  const { data: tenant, error: tenantError } = await supabase
-    .from('tenants')
-    .select('id')
-    .eq('id', tenantId)
-    .maybeSingle();
+  // 1. Fetch tenant, active services and membership in parallel
+  const [tenantRes, servicesRes, membershipRes] = await Promise.all([
+    supabase.from('tenants').select('id, name').eq('id', tenantId).maybeSingle(),
+    supabase
+      .from('services')
+      .select('id, name, duration, price')
+      .eq('tenant_id', tenantId)
+      .eq('is_active', true),
+    supabase
+      .from('tenant_users')
+      .select('id, role')
+      .eq('tenant_id', tenantId)
+      .eq('user_id', user.id)
+      .maybeSingle(),
+  ]);
 
-  if (tenantError || !tenant) {
+  if (tenantRes.error || !tenantRes.data) {
     return NextResponse.json({ error: 'Tenant not found' }, { status: 404 });
   }
 
-  // 2. Check if user is a member of this tenant (or platform admin)
-  const { data: membership } = await supabase
-    .from('tenant_users')
-    .select('id, role')
-    .eq('tenant_id', tenantId)
-    .eq('user_id', user.id)
-    .maybeSingle();
-
-  const isMember = Boolean(membership);
+  const isMember = Boolean(membershipRes.data);
   const isPlatform = !isMember && (await isPlatformAdmin(user.id));
 
   if (!isMember && !isPlatform) {
@@ -97,13 +100,18 @@ export async function POST(request: Request) {
     );
   }
 
-  // 3. Input sanitization & token clamping (limit history to last 6 messages)
+  // 2. Input sanitization & token clamping (limit history to last 6 messages)
   const clampedMessages = messages.slice(-6).map((msg) => ({
     ...msg,
     content: msg.role === 'user' ? msg.content.trim() : msg.content,
   }));
 
-  const agent = createBookingAssistant({ tenantId, supabase });
+  const agent = createBookingAssistant({
+    tenantId,
+    tenantName: tenantRes.data.name,
+    supabase,
+    preloadedServices: servicesRes.data ?? [],
+  });
 
   return createAgentUIStreamResponse({
     agent,

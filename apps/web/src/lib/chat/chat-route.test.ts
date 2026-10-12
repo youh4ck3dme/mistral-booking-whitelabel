@@ -30,6 +30,15 @@ const fromMock = vi.fn((table: string) => {
       }),
     };
   }
+  if (table === 'services') {
+    return {
+      select: () => ({
+        eq: () => ({
+          eq: () => Promise.resolve({ data: [{ id: 'srv-1', name: 'Strih', duration: 30, price: 20 }], error: null }),
+        }),
+      }),
+    };
+  }
   return {};
 });
 

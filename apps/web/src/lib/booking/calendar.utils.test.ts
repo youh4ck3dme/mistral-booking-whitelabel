@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   generateCalendarMonth,
   getCurrentMonthAndYear,
@@ -245,24 +245,24 @@ describe('Time Slot Generation', () => {
     });
 
     it('should mark past slots for today', () => {
-      const today = new Date();
-      const slots = generateTimeSlotsForDate(today, 60, { start: '08:00:00', end: '18:00:00' });
-      
-      // First few slots should be marked as past if it's past that time
-      const currentHours = today.getHours();
-      const currentMinutes = today.getMinutes();
-      const currentTotalMinutes = currentHours * 60 + currentMinutes;
+      vi.useFakeTimers();
+      const mockNow = new Date('2026-08-02T13:30:00.000Z');
+      vi.setSystemTime(mockNow);
+
+      const slots = generateTimeSlotsForDate(mockNow, 60, { start: '08:00:00', end: '18:00:00' });
       
       for (const slot of slots) {
         const [startH, startM] = slot.startTime.split(':').map(Number);
-        const slotTotalMinutes = startH * 60 + startM;
-        
-        if (slotTotalMinutes < currentTotalMinutes) {
+        const slotDate = new Date(mockNow);
+        slotDate.setHours(startH, startM, 0, 0);
+
+        if (slotDate < mockNow) {
           expect(slot.isPast).toBe(true);
         } else {
           expect(slot.isPast).toBe(false);
         }
       }
+      vi.useRealTimers();
     });
 
     it('should not mark slots as past for future dates', () => {

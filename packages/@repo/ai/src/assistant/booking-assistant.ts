@@ -15,22 +15,50 @@ const CHAT_MODEL = 'mistral-small-latest';
  * `auth.uid()` server-side (migration 007) — an unauthenticated/anon client
  * will fail with "Not authenticated" on every booking attempt.
  */
-export function createBookingAssistant(params: { tenantId: string; supabase: TypedSupabaseClient }) {
-  const { tenantId, supabase } = params;
+export interface PreloadedService {
+  id: string;
+  name: string;
+  duration: number;
+  price: number;
+}
+
+/**
+ * `supabase` must be a per-request, session-authenticated client (e.g. from
+ * `apps/web/src/utils/supabase/server.ts`), not the shared anon singleton.
+ * `create_booking`/`cancel_booking` derive the caller's identity from
+ * `auth.uid()` server-side (migration 007) — an unauthenticated/anon client
+ * will fail with "Not authenticated" on every booking attempt.
+ */
+export function createBookingAssistant(params: {
+  tenantId: string;
+  tenantName?: string;
+  supabase: TypedSupabaseClient;
+  preloadedServices?: PreloadedService[];
+}) {
+  const { tenantId, tenantName, supabase, preloadedServices = [] } = params;
   const todayISO = new Date().toISOString().slice(0, 10);
+
+  const servicesListText =
+    preloadedServices.length > 0
+      ? `\nDostupné služby podniku (použi ich priamo, nie je potrebné volať list_services):\n` +
+        preloadedServices
+          .map((s) => `- ${s.name} (ID: ${s.id}, ${s.duration} min, ${s.price} €)`)
+          .join('\n') +
+        '\n'
+      : '';
 
   return new ToolLoopAgent({
     model: mistral(CHAT_MODEL),
-    instructions: `Si asistent pre rezervácie termínov. Odpovedaj vždy po slovensky, stručne a prakticky.
+    instructions: `Si asistent pre online rezervácie${tenantName ? ` pre prevádzku ${tenantName}` : ''}. Odpovedaj vždy po slovensky, stručne, vecne a maximálne do 2-3 viet.
 Dnešný dátum: ${todayISO}.
-
+${servicesListText}
 Postupuj v tomto poradí:
-1. Zisti dostupné služby cez list_services (ak ich používateľ ešte nespomenul).
+1. Ak používateľ vyberá službu a služby sú uvedené vyššie, ponúkni ich priamo. Ak zoznam chýba alebo používateľ žiada aktualizáciu, zisti služby cez list_services.
 2. Over voľné termíny cez get_available_slots pre konkrétny dátum a vybranú službu.
 3. Rezerváciu vytvor cez create_booking LEN AK používateľ v aktuálnej správe jasne a explicitne potvrdil konkrétny termín (dátum + čas + službu).
 
 Nikdy si nevymýšľaj časy ani ID služieb — vždy ich over cez nástroje. Ak create_booking zlyhá (napr. termín je už obsadený), ospravedlň sa, over aktuálne voľné termíny znova a navrhni alternatívu.`,
-    stopWhen: isStepCount(6),
+    stopWhen: isStepCount(4), // Clamped for Vercel Hobby serverless execution window (<10s)
     tools: {
       list_services: tool({
         description: 'Vráti zoznam aktívnych služieb tenantu (id, názov, trvanie v minútach, cena v EUR).',
