@@ -1,21 +1,15 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "lib": ["ES2020"],
+    "lib": ["ES2020", "DOM"],
     "module": "commonjs",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
-    "baseUrl": ".",
-    "paths": {
-      "@repo/ui": ["packages/@repo/ui/src"],
-      "@repo/core": ["packages/@repo/core/src"],
-      "@repo/supabase": ["packages/@repo/supabase/src"],
-      "@repo/ai": ["packages/@repo/ai/src"]
-    }
+    "baseUrl": "."
   },
-  "include": ["scripts/**/*"],
+  "include": ["playwright.config.ts", "tests/**/*.ts"],
   "exclude": ["node_modules", "**/node_modules", "apps/**", "packages/**", "dist"]
 }
