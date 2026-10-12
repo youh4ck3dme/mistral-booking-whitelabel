@@ -7,6 +7,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
     "baseUrl": ".",
     "paths": {
       "@repo/ui": ["packages/@repo/ui/src"],
@@ -15,12 +16,6 @@
       "@repo/ai": ["packages/@repo/ai/src"]
     }
   },
-  "exclude": ["node_modules", "**/node_modules"],
-  "references": [
-    { "path": "./apps/web" },
-    { "path": "./packages/@repo/ui" },
-    { "path": "./packages/@repo/core" },
-    { "path": "./packages/@repo/supabase" },
-    { "path": "./packages/@repo/ai" }
-  ]
+  "include": ["scripts/**/*"],
+  "exclude": ["node_modules", "**/node_modules", "apps/**", "packages/**", "dist"]
 }
