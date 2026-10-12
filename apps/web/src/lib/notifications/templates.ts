@@ -42,6 +42,27 @@ function renderShell({
   const bookingDate = formatDateTime(context.booking.start_time);
   const brandName = getBrandName(context);
 
+  const payload =
+    context.delivery.payload && typeof context.delivery.payload === 'object'
+      ? (context.delivery.payload as Record<string, unknown>)
+      : null;
+  const rawManageUrl = payload?.manage_url ?? payload?.manageUrl;
+  const manageUrl =
+    typeof rawManageUrl === 'string' && rawManageUrl.trim().length > 0
+      ? rawManageUrl.trim()
+      : null;
+
+  const manageHtml = manageUrl
+    ? `
+        <div style="margin-top:16px;">
+          <a href="${manageUrl}" style="display:inline-block;padding:12px 20px;border-radius:999px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);color:#eaeaea;font-weight:600;text-decoration:none;font-size:14px;">Spravovať rezerváciu (zmena / storno)</a>
+        </div>`
+    : '';
+
+  const manageText = manageUrl
+    ? `\nSpráva rezervácie (zmena / storno): ${manageUrl}`
+    : '';
+
   const html = `
     <div style="background:#0a0a0a;color:#eaeaea;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;padding:32px;">
       <div style="max-width:640px;margin:0 auto;background:rgba(26,26,26,0.92);border:1px solid rgba(255,255,255,0.08);border-radius:28px;padding:32px;">
@@ -54,12 +75,14 @@ function renderShell({
           <div style="font-size:15px;color:rgba(234,234,234,0.82);margin-bottom:4px;">${bookingDate}</div>
           <div style="font-size:15px;color:rgba(234,234,234,0.82);">${brandName}</div>
         </div>
-        <a href="${portalUrl}" style="display:inline-block;padding:14px 22px;border-radius:999px;background:${accent};color:#0a0a0a;font-weight:700;text-decoration:none;">Otvoriť klientský portál</a>
+        <div>
+          <a href="${portalUrl}" style="display:inline-block;padding:14px 22px;border-radius:999px;background:${accent};color:#0a0a0a;font-weight:700;text-decoration:none;">Otvoriť klientský portál</a>${manageHtml}
+        </div>
       </div>
     </div>
   `;
 
-  const text = `${headline}\n\n${message}\n\nSlužba: ${context.service.name}\nTermín: ${bookingDate}\nTenant: ${brandName}\nPortál: ${portalUrl}`;
+  const text = `${headline}\n\n${message}\n\nSlužba: ${context.service.name}\nTermín: ${bookingDate}\nTenant: ${brandName}\nPortál: ${portalUrl}${manageText}`;
 
   return { html, text };
 }

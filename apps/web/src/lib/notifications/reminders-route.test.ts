@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { resetRateLimiter } from '@repo/web/src/lib/security/rate-limit';
 
 const runReminderDispatchCycle = vi.fn();
 vi.mock('./reminders', () => ({ runReminderDispatchCycle: () => runReminderDispatchCycle() }));
@@ -15,6 +16,7 @@ describe('POST /api/notifications/reminders', () => {
   const saved = { ...process.env };
 
   beforeEach(() => {
+    resetRateLimiter();
     runReminderDispatchCycle.mockReset();
     runReminderDispatchCycle.mockResolvedValue({ failed: 0, processed: 0, sent: 0, scheduled: 0 });
     process.env = { ...saved, NOTIFICATION_CRON_SECRET: SECRET };
@@ -37,5 +39,21 @@ describe('POST /api/notifications/reminders', () => {
     const res = await POST(request({ authorization: `Bearer ${SECRET}` }));
     expect(res.status).toBe(200);
     expect(runReminderDispatchCycle).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns 429 when rate limit threshold is exceeded (SEC-6)', async () => {
+    process.env.RATE_LIMIT_NOTIFICATIONS_MAX = '2';
+
+    const res1 = await POST(request({ authorization: `Bearer ${SECRET}` }));
+    expect(res1.status).toBe(200);
+
+    const res2 = await POST(request({ authorization: `Bearer ${SECRET}` }));
+    expect(res2.status).toBe(200);
+
+    const res3 = await POST(request({ authorization: `Bearer ${SECRET}` }));
+    expect(res3.status).toBe(429);
+    expect(res3.headers.get('Retry-After')).toBeDefined();
+
+    delete process.env.RATE_LIMIT_NOTIFICATIONS_MAX;
   });
 });

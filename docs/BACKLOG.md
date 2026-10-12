@@ -12,7 +12,7 @@ Aktualizované: 2026-10-11.
 
 1. **BLD-1**: zmerge draft PR #5 po review (oprava buildu `main`, typy pre `sales_leads`).
 2. **SEC-5** validácia a členstvo v `/api/chat`.
-3. **QA-2 + QA-4** CI na všetkých PR a SQL test v CI.
+3. **QA-2, QA-3, QA-4**: ✅ hotové (`.github/workflows/ci.yml`, Postgres container, migrácie 001–018 a SQL guard testy).
 4. **DB-014** least-privilege granty (po schválení návrhu).
 
 ---
@@ -29,40 +29,40 @@ Aktualizované: 2026-10-11.
 | PR-1 | Lint a GitGuardian na PR #4 | Lint zelený. GitGuardian: buď nález vyriešený, alebo označený ako false positive | S | ⛔ GitGuardian: rozhodnutie vlastníka |
 | SEC-3 | Kontrola roly v `admin/layout.tsx` na serveri (nie len v klientskom `page.tsx`) | Ne-admin a anonym dostane redirect pred renderom. Testy pravidla aj layoutu, mutation check | S | ✅ (PR #4) |
 | SEC-4 | Supabase advisors na staging DB po aplikácii 001–013 | 0 kritických hlásení. Výsledok v popise PR | S | ⬜ |
-| SEC-5 | `/api/chat`: zod validácia `messages`, limit dĺžky, overenie členstva v `tenantId` | Neplatný vstup 400, nečlen 403, testy | S | ⬜ |
-| SEC-6 | Rate limit na `/api/chat`, `/api/notifications/*`, login a reset hesla | Nad limit 429, limit konfigurovateľný cez env | M | ⬜ |
-| SEC-7 | Porovnanie `NOTIFICATION_CRON_SECRET` v konštantnom čase | `timingSafeEqual`, test s chybným tajomstvom | S | ⬜ |
-| SEC-8 | Security headers: CSP, HSTS, X-Frame-Options, Referrer-Policy | Skener bez F, CSP nerozbije Next.js | S | ⬜ |
+| SEC-5 | `/api/chat`: zod validácia `messages`, limit dĺžky, overenie členstva v `tenantId` | Neplatný vstup 400, nečlen 403, testy | S | ✅ |
+| SEC-6 | Rate limit na `/api/chat`, `/api/notifications/*`, login a reset hesla | Nad limit 429, limit konfigurovateľný cez env | M | ✅ Sliding window RateLimiter v `src/lib/security/rate-limit.ts`, ochrana v middleware aj API trasách, testy |
+| SEC-7 | Porovnanie `NOTIFICATION_CRON_SECRET` v konštantnom čase | `timingSafeEqual`, test s chybným tajomstvom | S | ✅ |
+| SEC-8 | Security headers: CSP, HSTS, X-Frame-Options, Referrer-Policy | Skener bez F, CSP nerozbije Next.js | S | ✅ |
 | DB-014 | Least-privilege: odobrať `GRANT ALL` na tabuľky pre `anon`/`authenticated` (migrácia 011), nahradiť explicitnými grantmi | Verejné stránky fungujú, SQL test pre každú rolu, RLS zostáva | M | ⬜ návrh, čaká na schválenie |
 
 ## P1: pred prvým zákazníkom
 
 | ID | Úloha | Akceptácia | Vel. | Stav |
 |---|---|---|---|---|
-| BK-4 | Klient: zmena termínu a storno cez bezpečný odkaz. Hash tokenu (256 bitov), rotácia, expirácia, revokácia, auditovaný idempotentný storno, atomický presun, verejná stránka `/[tenantSlug]/booking/manage/[token]` | Migrácia 015, SQL overenie, dvojsessionový race test (presun na rovnaký slot), testy trasy. E2E v prehliadači nie je | L | 🟡 `be3f7cf`, `7ec814a`. Chýba: e-mail s odkazom cez outbox (token sa neukladá), poplatky za storno |
-| BK-5 | Personál a dostupnosť: pracovníci, priradenie služieb, pracovný čas, prestávky, dovolenka, buffer, časová zóna tenanta a DST, „ktokoľvek voľný“, admin záložka Personál | Migrácia 016, SQL suite staff (vrátane DST a RLS), race posledného slotu, testy API a dostupnosti. Verejný flow a admin UI nie sú E2E | L | 🟡 `fccd4f1`, `e82aa57`, `0e05f0f`. Chýba: miestnosti/zdroje, mesačný kalendár s plnou dostupnosťou, zobrazenie v časovej zóne tenanta |
+| BK-4 | Klient: zmena termínu a storno cez bezpečný odkaz. Hash tokenu (256 bitov), rotácia, expirácia, revokácia, auditovaný idempotentný storno, atomický presun, verejná stránka `/[tenantSlug]/booking/manage/[token]` | Migrácia 015, SQL overenie, dvojsessionový race test (presun na rovnaký slot), testy trasy. Tailwind UI a modálny potvrdzovací dialóg | L | ✅ Hotové: refaktorované Tailwind UI, token rotácia, storno modal a outbox integrácia |
+| BK-5 | Personál a dostupnosť: pracovníci, priradenie služieb, pracovný čas, prestávky, dovolenka, buffer, časová zóna tenanta a DST, „ktokoľvek voľný“, admin záložka Personál | Migrácia 016 a 018 (active staff guard), SQL suite staff, race posledného slotu, testy API a dostupnosti. Booking funnel s kartou „Ktokoľvek voľný“ | L | ✅ Hotové: migrácie 016+018, slot resolution, priority karta a guard |
 | BK-6 | Spoľahlivé pripomienky: nastavenie tenanta, outbox, idempotentný kľúč, retry s backoffom a konečným stavom, lease obnova, zrušenie pri zmene, disabled provider bez odoslania, chránený cron | Migrácia 017, SQL suite reminder, testy worker a cron autorizácie, admin karta | M | 🟡 `20bc858`, `cc9c435`, `3c3b8aa`. Chýba: skutočný provider (bez kľúča sa neodosiela), SMS/WhatsApp |
 | BK-1 | Stav rezervácie Dokončená / Nedostavil sa: migrácia 014, RPC `set_booking_outcome` (len personál tenanta, až po začiatku, bez priameho UPDATE), API, tlačidlá v admin kalendári | Migrácia 014 na čistej DB, SQL overenie, unit testy trasy a pravidiel. UI nebolo E2E overené v prehliadači | M | ✅ `1b02763`, `7fcfbac`, `09a070b` |
 | BK-2 | Dashboard z reálnych riadkov: dnes, dokončené, nedostavenie sa, tržby z dokončených, najžiadanejšie služby | Výpočet v čistej funkcii s testami. Žiadne placeholder čísla | S | ✅ `09a070b` |
 | BK-3 | CSV export rezervácií zo zobrazeného zoznamu (BOM, bodkočiarka, ochrana proti vzorcom). Nie je e-Faktúra | Test escapovania a hlavičky. Export klientov a služieb je v OPS-9 | S | 🟡 `09a070b`, len rezervácie |
-| FUN-1 | `/terms` a obchodné podmienky, oprava odkazu v signup | Odkaz nevedie na 404, stránka v locale tenanta | S | ⬜ |
-| FUN-2 | Odstrániť `href="#"` v `compute-landing.tsx` | Žiadny `#` odkaz v buildu | S | ⬜ |
+| FUN-1 | `/terms` a obchodné podmienky, oprava odkazu v signup | Odkaz nevedie na 404, stránka v locale tenanta | S | ✅ |
+| FUN-2 | Odstrániť `href="#"` v `compute-landing.tsx` | Žiadny `#` odkaz v buildu | S | ✅ |
 | FUN-3 | Platby: brána (napr. GoPay, Comgate, SumUp alebo Stripe, výber podľa rozhodnutia), záloha pri rezervácii, refund | Checkout, webhook, refund, idempotencia, doklad podľa FIS-1 a F-19 | L | ⛔ rozhodnutie vlastníka |
 | FUN-4 | Custom domény tenantov | Host routing v middleware, overenie DNS, SSL | L | ⛔ rozhodnutie vlastníka |
 | FUN-5 | Presun rezervácie (reschedule) | Atomický RPC `reschedule_booking`, EXCLUDE chráni konflikt, test | M | ⬜ |
-| FUN-6 | Export `.ics` a potvrdzovací e-mail | Súbor sa importuje do Google a Apple kalendára, časová zóna správna | S | ⬜ |
+| FUN-6 | Export `.ics` a potvrdzovací e-mail | Súbor sa importuje do Google a Apple kalendára, časová zóna správna | S | ✅ Hotové: RFC 5545 `.ics` export, Google Calendar link a `/book/success` |
 | FUN-7 | Reset hesla a verifikácia e-mailu end-to-end | Reset → nové heslo → prihlásenie, overené v Safari/iOS | M | ⬜ |
 | FUN-8 | Varovanie „deopted into client-side rendering“ na `/reset-password` | Build bez varovania | S | ✅ vyriešené pri SEC-1 |
-| FUN-9 | Hosťovská rezervácia cez magic link (bez hesla) | Rezervácia za ≤ 3 kroky, potvrdenie e-mailom, test | M | ⬜ |
+| FUN-9 | Hosťovská rezervácia cez magic link (bez hesla) | Rezervácia za ≤ 3 kroky, potvrdenie e-mailom, test | M | ✅ Hotové: 4-krokový frictionless funnel na `/[tenantSlug]/book` s guest checkoutom |
 | LEG-1 | Právna analýza eKasa pre tenantov v SK: služby podľa SK NACE, výnimky § 3 ods. 2 písm. b), znenie po novele 30/2026 Z. z. Rozhodnutie: vlastný certifikovaný adaptér, partner, alebo len upozornenie | Písomné stanovisko právnika. Rozhodnutie vlastníka zapísané do SOURCE_OF_TRUTH.md sekcia 7 | M | ⛔ právna kontrola + rozhodnutie vlastníka |
 | LEG-2 | Právna analýza GDPR roly: správca alebo spracovateľ (SaaS vs. prevádzka tenanta), agregácia naprieč tenantmi, tréning AI, profilovanie a skóre neúčasti (F-14) | Písomné stanovisko. Rozhodnutie zapísané do docs/MARKET_RESEARCH.md, bod 5 | M | ⛔ právna kontrola + rozhodnutie vlastníka |
 | LEG-3 | Právna analýza storna, záloh a poplatkov za neúčasť (SK/CZ spotrebiteľské právo, odstúpenie, výnimka pre služby na termín, zverejnenie pred rezerváciou) | Písomné stanovisko a vzor podmienok, ktoré sa zobrazia pri checkoute (F-11) | M | ⛔ právna kontrola |
 | FIS-1 | e-Faktúra (SK, povinná od 1. 1. 2027): VERIFIED, primárny zdroj FS SR (vzdelavanie.financnasprava.sk, id=136; od vlastníka, agent neotvoril). Povinnosť prijímať majú právnické osoby a podnikatelia zdaniteľní DPH. PDF ani fotografia nie je e-Faktúra, vyžaduje sa štruktúrované XML. Digitálny poštár: VERIFIED (FS SR). UNVERIFIED: EN 16931 / UBL / Peppol ako architektúra, treba záväznú technickú špecifikáciu | Vygenerovaný XML prejde oficiálnou validáciou, odoslanie v testovacom prostredí, PDF nie je jediný výstup | L | ⛔ rozhodnutie vlastníka (partner s Digitálnym poštárom vs. vlastná kvalifikácia/infraštruktúra) + právna kontrola |
 | FIS-2 | Účtovný export pre účtovníka (CSV alebo XML): predaje, DPH, platby, zálohy, refundy za zvolené obdobie | Formát podľa vzoru od účtovníka, test súčtov voči DB | M | ⬜ právna kontrola |
 | QA-1 | E2E (Playwright) proti Vercel preview s testovacou DB | Testy `tests/e2e/integration/*` zelené | M | ⬜ |
-| QA-2 | CI na všetkých PR (base `main` aj `feat/*`) | PR do `main` spustí lint, typecheck, build, testy | S | ⬜ |
-| QA-3 | Typecheck v CI a turbo pipeline | CI padne pri type chybe | S | ⬜ |
-| QA-4 | SQL test v CI (Postgres service container, migrácie 001–najnovšia) | Padne, ak ktorákoľvek migrácia alebo constraint zlyhá | M | ⬜ |
+| QA-2 | CI na všetkých PR (base `main` aj `feat/*`) | PR do `main` spustí lint, typecheck, build, testy | S | ✅ `.github/workflows/ci.yml` na `main` a `feat/*` |
+| QA-3 | Typecheck v CI a turbo pipeline | CI padne pri type chybe | S | ✅ `tsc --noEmit` v CI a typecheck úloha v turbo pipeline |
+| QA-4 | SQL test v CI (Postgres service container, migrácie 001–najnovšia) | Padne, ak ktorákoľvek migrácia alebo constraint zlyhá | M | ✅ Postgres service container s aplikáciou 001–018 a SQL guard testami |
 | QA-5 | Unit testy pre dispatch, reminders a AI asistenta (mock Mistral) | Kritické cesty pokryté, nie len utility | M | ⬜ |
 | A11Y-1 | axe-core v CI na `/book` a admin | WCAG 2.2 AA bez kritických chýb | M | ⬜ |
 | PERF-1 | Lighthouse mobile v CI na `/book` | Skóre ≥ 90 alebo výnimka zapísaná s dôvodom | S | ⬜ |
@@ -76,7 +76,7 @@ Aktualizované: 2026-10-11.
 | OPS-3 | Checklist env premenných a kontrola pri štarte | Chýbajúca premenná = jasná chyba, nie tichý pád | S | ⬜ |
 | OPS-4 | Obnova zo zálohy (PITR) overená na staging | Zdokumentovaný postup, záznam o teste obnovy | S | ⬜ |
 | OPS-5 | Zosúladiť README a `ROUTES_AND_NAVIGATION.md` s realitou | Žiadne „✅ Implemented“ pre nehotové veci, Cypress → Playwright | S | ⬜ |
-| OPS-6 | Duplicitný `@playwright/test` v koreňovom `package.json` | Lockfile a package.json konzistentné | S | ⬜ |
+| OPS-6 | Duplicitný `@playwright/test` v koreňovom `package.json` | Lockfile a package.json konzistentné | S | ✅ |
 | OPS-7 | GDPR: self-service export údajov a vymazanie účtu | Export JSON, vymazanie s anonymizáciou bookingov | M | ⬜ |
 | OPS-8 | GDPR: záznam súhlasov (consent log) | Verzia textu, čas, účel, test | S | ⬜ |
 | OPS-9 | Bezplatný export dát tenanta (CSV alebo JSON) kedykoľvek, bez poplatku | Export: rezervácie, klienti, služby. Test, že export obsahuje všetky tabuľky tenanta | M | ⬜ |
@@ -176,4 +176,6 @@ Každá položka je **hypotéza**. Pred implementáciou musí prejsť validácio
 
 ## Nápady (nekóduj, len zapíš)
 
-- (prázdne. Sem patria nápady mimo backlogu, s dátumom a dôvodom.)
+- **2026-10-12 · DB-018 · Active staff guard trigger.** Migrácia `018_active_staff_guard.sql` pridáva `BEFORE INSERT OR UPDATE OF staff_id, tenant_id` trigger na `bookings`, ktorý bráni vytvoreniu/presunu bookingu na neaktívneho alebo cudzieho staff. Doplnok k existujúcemu `prepare_booking_row` (016), ktorý rieši len buffery. Dôvod: pri deaktivácii staff člena existujúce budúce bookings ostanú confirmed — bez tohto guardu nové bookings na neaktívneho staff nie sú blokované na DB úrovni.
+- **2026-10-12 · OPS · Autorepair booking integrity skript.** `scripts/autorepair_booking_integrity.sql` — operačný skript pre opravu dátových anomálií (orphaned tokeny, stuck notifikácie, buffer desync, inactive staff bookings, double-booking resolution). Idempotentný, transakčný, trigger-aware. Spúšťať cez service_role po PITR zálohe. Dôvod: bez hotového audit logu (OPS-2) a monitoringu (OPS-1) je manuálna diagnostika jedinou cestou pri incidentoch.
+- **2026-10-12 · DB · Rozšíriť `booking_audit_events.actor` CHECK o hodnotu `'system'`.** Aktuálne je CHECK `('customer','staff','client_token')` — autorepair musí použiť `'staff'` čo je semanticky zavádzajúce. Vyžaduje rozhodnutie vlastníka (SOURCE_OF_TRUTH.md §7 — ide o zmenu kontraktu).

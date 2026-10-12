@@ -1,4 +1,5 @@
 import { updateSession } from '@repo/web/src/utils/supabase/middleware';
+import { checkRequestRateLimit } from '@repo/web/src/lib/security/rate-limit';
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
@@ -50,7 +51,8 @@ function setCachedTenant(slug: string, tenant: CachedTenant): void {
 // ---------------------------------------------------------------------------
 // Route classification
 // ---------------------------------------------------------------------------
-const PUBLIC_ROUTES = new Set(['/', '/404', '/login', '/signup', '/forgot-password', '/reset-password', '/privacy']);
+const AUTH_ROUTES = new Set(['/login', '/signup', '/forgot-password', '/reset-password']);
+const PUBLIC_ROUTES = new Set(['/', '/404', '/login', '/signup', '/forgot-password', '/reset-password', '/privacy', '/terms']);
 const API_PREFIX = '/api';
 
 // /platform is no longer in the skip list — it needs its own auth check below.
@@ -65,6 +67,14 @@ export async function middleware(req: NextRequest) {
   // Pass static assets and Next.js internals through immediately.
   if (pathname.includes('.')) {
     return NextResponse.next();
+  }
+
+  // Rate limit authentication endpoints (brute-force prevention)
+  if (AUTH_ROUTES.has(pathname)) {
+    const rateLimitGuard = checkRequestRateLimit(req, 'auth');
+    if (!rateLimitGuard.allowed) {
+      return rateLimitGuard.response;
+    }
   }
 
   // Always-public prefixes (API routes handle their own auth).

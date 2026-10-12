@@ -1,10 +1,16 @@
 import { getServerUser } from '@repo/web/src/lib/auth/server-user';
+import { checkRequestRateLimit } from '@repo/web/src/lib/security/rate-limit';
 import { NextResponse } from 'next/server';
 
 import { processPendingNotificationDeliveries } from '@repo/web/src/lib/notifications/dispatch';
 import { verifyBookingAccess } from '@repo/web/src/lib/notifications/repository';
 
 export async function POST(request: Request) {
+  const rateLimitGuard = checkRequestRateLimit(request, 'notifications');
+  if (!rateLimitGuard.allowed) {
+    return rateLimitGuard.response;
+  }
+
   const user = await getServerUser();
 
   if (!user) {

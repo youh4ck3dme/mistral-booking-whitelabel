@@ -32,6 +32,7 @@ next-env.d.ts
 # IDE
 .idea/
 .vscode/
+*.code-workspace
 *.swp
 *.swo
 

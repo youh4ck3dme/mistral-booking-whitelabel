@@ -1,4 +1,5 @@
 import { getServerUser } from '@repo/web/src/lib/auth/server-user';
+import { checkRequestRateLimit } from '@repo/web/src/lib/security/rate-limit';
 import { createClient } from '@repo/web/src/utils/supabase/server';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
@@ -27,6 +28,11 @@ async function resolveTenant(supabase: ReturnType<typeof createClient>, slug: st
  * so non-admins get zero counts and no rows. Recipient e-mail addresses are never returned.
  */
 export async function GET(request: Request) {
+  const rateLimitGuard = checkRequestRateLimit(request, 'notifications');
+  if (!rateLimitGuard.allowed) {
+    return rateLimitGuard.response;
+  }
+
   const user = await getServerUser();
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: NO_STORE });
@@ -81,6 +87,11 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const rateLimitGuard = checkRequestRateLimit(request, 'notifications');
+  if (!rateLimitGuard.allowed) {
+    return rateLimitGuard.response;
+  }
+
   const user = await getServerUser();
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: NO_STORE });

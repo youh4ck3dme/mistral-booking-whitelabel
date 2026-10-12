@@ -5,8 +5,28 @@ const supabaseMock = vi.hoisted(() => ({
   getSession: vi.fn(),
 }));
 
+const VALID_TENANT_ID = '11111111-1111-4111-8111-111111111111';
+
 vi.mock('@repo/web/src/utils/supabase/server', () => ({
-  createClient: () => ({ auth: supabaseMock }),
+  createClient: () => ({
+    auth: supabaseMock,
+    from: (table: string) => ({
+      select: () => ({
+        eq: () => ({
+          maybeSingle: async () => ({
+            data: table === 'tenants' ? { id: VALID_TENANT_ID } : { id: 'm1', role: 'client' },
+            error: null,
+          }),
+          eq: () => ({
+            maybeSingle: async () => ({
+              data: { id: 'm1', role: 'client' },
+              error: null,
+            }),
+          }),
+        }),
+      }),
+    }),
+  }),
 }));
 vi.mock('ai', () => ({
   createAgentUIStreamResponse: async () => new Response('STREAM', { status: 200 }),
@@ -26,7 +46,11 @@ import { verifyBookingAccess } from '@repo/web/src/lib/notifications/repository'
 const chatRequest = () =>
   new Request('http://localhost/api/chat', {
     method: 'POST',
-    body: JSON.stringify({ messages: [], tenantId: 't1' }),
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      messages: [{ role: 'user', content: 'Ahoj' }],
+      tenantId: VALID_TENANT_ID,
+    }),
   });
 
 const dispatchRequest = () =>
