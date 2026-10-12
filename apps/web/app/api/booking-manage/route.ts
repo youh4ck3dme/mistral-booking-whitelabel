@@ -107,6 +107,12 @@ export async function POST(request: Request) {
     p_new_token_hash: hashManageToken(newToken),
   });
   if (error) {
+    if (error.code === '23514') {
+      return NextResponse.json(
+        { status: 'staff_unavailable', error: 'Zvolený pracovník už nie je k dispozícii.' },
+        { status: 409, headers: NO_STORE }
+      );
+    }
     console.error('reschedule_booking_by_token failed', error.code);
     return NextResponse.json({ error: 'Presun sa nepodarilo dokončiť.' }, { status: 500, headers: NO_STORE });
   }

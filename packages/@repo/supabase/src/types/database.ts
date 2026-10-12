@@ -9,6 +9,7 @@ export interface Database {
           name: string;
           slug: string;
           locale: string;
+          timezone: string;
           created_at: string;
         };
         Insert: {
@@ -16,6 +17,7 @@ export interface Database {
           name: string;
           slug: string;
           locale?: string;
+          timezone?: string;
           created_at?: string;
         };
         Update: {
@@ -23,6 +25,7 @@ export interface Database {
           name?: string;
           slug?: string;
           locale?: string;
+          timezone?: string;
           created_at?: string;
         };
         Relationships: [];
@@ -84,6 +87,7 @@ export interface Database {
           tenant_id: string;
           user_id: string;
           service_id: string;
+          staff_id: string | null;
           start_time: string;
           end_time: string;
           status: 'confirmed' | 'cancelled' | 'pending' | 'completed' | 'no_show';
@@ -93,6 +97,7 @@ export interface Database {
           tenant_id: string;
           user_id: string;
           service_id: string;
+          staff_id?: string | null;
           start_time: string;
           end_time: string;
           status?: 'confirmed' | 'cancelled' | 'pending' | 'completed' | 'no_show';
@@ -102,6 +107,7 @@ export interface Database {
           tenant_id?: string;
           user_id?: string;
           service_id?: string;
+          staff_id?: string | null;
           start_time?: string;
           end_time?: string;
           status?: 'confirmed' | 'cancelled' | 'pending' | 'completed' | 'no_show';
@@ -368,7 +374,70 @@ export interface Database {
         Insert: { id?: string; tenant_id: string; staff_id: string; starts_at: string; ends_at: string; reason?: string | null }
         Update: { id?: string; tenant_id?: string; staff_id?: string; starts_at?: string; ends_at?: string; reason?: string | null }
         Relationships: []
-      }
+      };
+      booking_manage_tokens: {
+        Row: {
+          id: string;
+          booking_id: string;
+          tenant_id: string;
+          token_hash: string;
+          expires_at: string;
+          created_at: string;
+          created_by: string | null;
+          revoked_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          booking_id: string;
+          tenant_id: string;
+          token_hash: string;
+          expires_at: string;
+          created_at?: string;
+          created_by?: string | null;
+          revoked_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          booking_id?: string;
+          tenant_id?: string;
+          token_hash?: string;
+          expires_at?: string;
+          created_at?: string;
+          created_by?: string | null;
+          revoked_at?: string | null;
+        };
+        Relationships: [];
+      };
+      booking_audit_events: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          booking_id: string;
+          actor: string;
+          action: string;
+          details: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          booking_id: string;
+          actor: string;
+          action: string;
+          details?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          booking_id?: string;
+          actor?: string;
+          action?: string;
+          details?: Json;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -421,7 +490,44 @@ export interface Database {
         };
         Returns: string;
       };
+      get_available_slots: {
+        Args: {
+          p_tenant_id: string;
+          p_service_id: string;
+          p_start_range: string;
+          p_end_range: string;
+          p_staff_id?: string | null;
+        };
+        Returns: {
+          slot_start: string;
+          slot_end: string;
+          staff_id: string;
+        }[];
       };
+      get_booking_by_manage_token: {
+        Args: {
+          p_token_hash: string;
+          p_tenant_slug: string;
+        };
+        Returns: Json;
+      };
+      cancel_booking_by_token: {
+        Args: {
+          p_token_hash: string;
+          p_tenant_slug: string;
+        };
+        Returns: Json;
+      };
+      reschedule_booking_by_token: {
+        Args: {
+          p_token_hash: string;
+          p_tenant_slug: string;
+          p_new_start: string;
+          p_new_token_hash: string;
+        };
+        Returns: Json;
+      };
+    };
     Enums: {
       booking_status: 'confirmed' | 'cancelled' | 'pending' | 'completed' | 'no_show';
       user_role: 'admin' | 'staff' | 'client';

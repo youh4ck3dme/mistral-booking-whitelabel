@@ -3,6 +3,7 @@
 // This never reports a successful send that did not happen.
 
 import { sendTransactionalEmail } from '@repo/web/src/lib/notifications/provider';
+import { createServiceRoleClient } from '@repo/web/src/lib/supabase/service-role';
 
 export interface ManageLinkEmailInput {
   to: string;
@@ -63,3 +64,56 @@ export async function sendManageLinkEmail(input: ManageLinkEmailInput): Promise<
     return { sent: false, reason: 'send_failed' };
   }
 }
+
+/**
+ * Attaches the unhashed management link to pending outbox notification deliveries for this booking (BK-4).
+ * The raw token exists in the DB only inside the encrypted/scoped transactional outbox payload
+ * destined for the customer's email, leaving only the one-way SHA-256 hash in booking_manage_tokens.
+ */
+export async function attachManageLinkToOutbox(
+  bookingId: string,
+  manageUrl: string
+): Promise<boolean> {
+  try {
+    const supabase = createServiceRoleClient({ requireServiceRole: true });
+
+    const { data: deliveries, error: fetchError } = await supabase
+      .from('notification_deliveries')
+      .select('id, payload')
+      .eq('booking_id', bookingId)
+      .eq('status', 'pending');
+
+    if (fetchError || !deliveries || deliveries.length === 0) {
+      return false;
+    }
+
+    let updatedCount = 0;
+    for (const delivery of deliveries) {
+      const currentPayload =
+        delivery.payload && typeof delivery.payload === 'object'
+          ? (delivery.payload as Record<string, unknown>)
+          : {};
+
+      const newPayload = {
+        ...currentPayload,
+        manage_url: manageUrl,
+        manageUrl,
+      };
+
+      const { error: updateError } = await supabase
+        .from('notification_deliveries')
+        .update({ payload: newPayload })
+        .eq('id', delivery.id);
+
+      if (!updateError) {
+        updatedCount += 1;
+      }
+    }
+
+    return updatedCount > 0;
+  } catch (error) {
+    console.error('attachManageLinkToOutbox error', error);
+    return false;
+  }
+}
+

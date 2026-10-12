@@ -95,6 +95,17 @@ export function AdminCalendar({
     return bookingsByDate[selectedDate] || [];
   }, [selectedDate, bookingsByDate]);
 
+  // Today's bookings for quick daily reception operations
+  const todayDateStr = useMemo(() => formatDate(new Date()), []);
+  const todayBookings = useMemo(() => {
+    return bookings
+      .filter((b) => {
+        const bDate = new Date(b.start_time).toISOString().split('T')[0];
+        return bDate === todayDateStr;
+      })
+      .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+  }, [bookings, todayDateStr]);
+
   // Staff list for the calendar filter. RLS limits it to the tenant.
   useEffect(() => {
     let cancelled = false;
@@ -133,7 +144,7 @@ export function AdminCalendar({
     }
     
     return result;
-  }, [bookings, selectedServiceId, selectedStatus, selectedDate]);
+  }, [bookings, selectedServiceId, selectedStaffId, selectedStatus, selectedDate]);
 
   // Navigation handlers
   const handlePrevMonth = useCallback(() => {
@@ -432,19 +443,41 @@ export function AdminCalendar({
             <>
               <button
                 type="button"
-                className="premium-button-secondary premium-button-small"
+                className="premium-button-small"
+                style={{
+                  backgroundColor: '#059669',
+                  color: '#ffffff',
+                  border: '1px solid #059669',
+                  fontWeight: 600,
+                  marginRight: '4px',
+                  borderRadius: '6px',
+                  padding: '3px 8px',
+                  cursor: 'pointer',
+                }}
                 onClick={() => handleSetOutcome(booking.id, 'completed')}
                 disabled={outcomeBusyId === booking.id || isLoading}
+                title="Označiť ako dokončené (zelené)"
               >
-                Dokončená
+                ✓ Dokončené
               </button>
               <button
                 type="button"
-                className="premium-button-secondary premium-button-small"
+                className="premium-button-small"
+                style={{
+                  backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                  color: '#f87171',
+                  border: '1px solid rgba(239, 68, 68, 0.4)',
+                  fontWeight: 600,
+                  marginRight: '4px',
+                  borderRadius: '6px',
+                  padding: '3px 8px',
+                  cursor: 'pointer',
+                }}
                 onClick={() => handleSetOutcome(booking.id, 'no_show')}
                 disabled={outcomeBusyId === booking.id || isLoading}
+                title="Označiť ako nedostavenie sa (červené)"
               >
-                Nedostavil sa
+                ✕ Nedostavil sa
               </button>
             </>
           )}
@@ -504,6 +537,144 @@ export function AdminCalendar({
         </p>
       )}
 
+      {/* Dnešná denná operatíva pre personál & recepciu */}
+      <div
+        className="admin-today-operativa"
+        style={{
+          marginTop: '1.25rem',
+          marginBottom: '1.5rem',
+          padding: '1.25rem',
+          borderRadius: '16px',
+          border: '1px solid #27272a',
+          backgroundColor: 'rgba(24, 24, 27, 0.75)',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', padding: '2px 8px', borderRadius: '999px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                Denná operatíva
+              </span>
+              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#a1a1aa' }}>
+                Dnes • {todayBookings.length} {todayBookings.length === 1 ? 'termín' : todayBookings.length >= 2 && todayBookings.length <= 4 ? 'termíny' : 'termínov'}
+              </span>
+            </div>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#ffffff', margin: '4px 0 0 0' }}>
+              Dnešné termíny a rýchle zaznamenanie stavu
+            </h3>
+          </div>
+          <button
+            type="button"
+            className="premium-button-secondary premium-button-small"
+            onClick={handleExportCsv}
+            disabled={bookings.length === 0}
+            title="Bezpečný export termínov do CSV (UTF-8 BOM, bodkočiarka, sanitizácia vzorcov)"
+          >
+            Exportovať CSV
+          </button>
+        </div>
+
+        {todayBookings.length === 0 ? (
+          <p style={{ fontSize: '0.875rem', color: '#71717a', margin: 0 }}>
+            Na dnešný deň nie sú naplánované žiadne rezervácie.
+          </p>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '0.75rem' }}>
+            {todayBookings.map((b) => {
+              const eligible = canSetOutcome(b, new Date());
+              return (
+                <div
+                  key={b.id}
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: '12px',
+                    border: '1px solid #3f3f46',
+                    backgroundColor: 'rgba(9, 9, 11, 0.7)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#ffffff' }}>
+                        {formatTime(b.start_time)} – {formatTime(b.end_time)}
+                      </span>
+                      <p style={{ fontSize: '0.8125rem', color: '#d4d4d8', margin: '2px 0 0 0', fontWeight: 500 }}>
+                        {b.service?.name ?? 'Služba'}
+                      </p>
+                    </div>
+                    <span
+                      style={{
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        padding: '2px 8px',
+                        borderRadius: '999px',
+                        backgroundColor: getStatusColor(b.status),
+                        color: '#ffffff',
+                      }}
+                    >
+                      {formatStatus(b.status)}
+                    </span>
+                  </div>
+
+                  {b.status === 'confirmed' && (
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
+                      {eligible ? (
+                        <>
+                          <button
+                            type="button"
+                            style={{
+                              backgroundColor: '#059669',
+                              color: '#ffffff',
+                              border: 'none',
+                              padding: '5px 10px',
+                              borderRadius: '8px',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              flex: 1,
+                            }}
+                            onClick={() => handleSetOutcome(b.id, 'completed')}
+                            disabled={outcomeBusyId === b.id || isLoading}
+                            title="Označiť ako dokončené (zelené)"
+                          >
+                            ✓ Dokončené
+                          </button>
+                          <button
+                            type="button"
+                            style={{
+                              backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                              color: '#f87171',
+                              border: '1px solid rgba(239, 68, 68, 0.3)',
+                              padding: '5px 10px',
+                              borderRadius: '8px',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              flex: 1,
+                            }}
+                            onClick={() => handleSetOutcome(b.id, 'no_show')}
+                            disabled={outcomeBusyId === b.id || isLoading}
+                            title="Označiť ako nedostavenie sa (červené)"
+                          >
+                            ✕ Nedostavil sa
+                          </button>
+                        </>
+                      ) : (
+                        <span style={{ fontSize: '0.75rem', color: '#a1a1aa', fontStyle: 'italic' }}>
+                          Zmena stavu po začiatku ({formatTime(b.start_time)})
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       {/* Calendar */}
       <div className="admin-calendar-section">
         <div className="admin-calendar-header-bar">
@@ -536,6 +707,15 @@ export function AdminCalendar({
           </div>
           
           <div className="admin-calendar-actions">
+            <button
+              type="button"
+              className="premium-button-secondary"
+              onClick={handleExportCsv}
+              disabled={bookings.length === 0}
+              title="Bezpečný export termínov do CSV (UTF-8 BOM, bodkočiarka, formula sanitizácia)"
+            >
+              Export CSV
+            </button>
             <button
               type="button"
               className="premium-button-secondary"

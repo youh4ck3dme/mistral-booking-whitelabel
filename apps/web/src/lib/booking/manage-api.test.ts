@@ -4,6 +4,7 @@ const rpc = vi.fn();
 const maybeSingle = vi.fn();
 const getServerUser = vi.fn();
 const sendManageLinkEmail = vi.fn();
+const attachManageLinkToOutbox = vi.fn();
 
 vi.mock('@repo/web/src/utils/supabase/server', () => ({
   createClient: () => ({
@@ -16,6 +17,7 @@ vi.mock('@repo/web/src/utils/supabase/server', () => ({
 vi.mock('@repo/web/src/lib/auth/server-user', () => ({ getServerUser: () => getServerUser() }));
 vi.mock('@repo/web/src/lib/booking/manage-link-email', () => ({
   sendManageLinkEmail: (input: unknown) => sendManageLinkEmail(input),
+  attachManageLinkToOutbox: (bookingId: string, url: string) => attachManageLinkToOutbox(bookingId, url),
 }));
 
 import { hashManageToken, generateManageToken } from '@repo/web/src/lib/booking/manage-token';
@@ -129,6 +131,23 @@ describe('POST /api/booking-manage', () => {
     expect(body.manageUrl).toBeUndefined();
   });
 
+  it('maps active staff guard failure 23514 to 409 and descriptive error', async () => {
+    rpc.mockResolvedValue({
+      data: null,
+      error: { code: '23514', message: 'Staff member is not active or does not belong to tenant' },
+    });
+    const res = await manage({
+      action: 'reschedule',
+      tenantSlug: TENANT,
+      token: TOKEN,
+      startTime: '2030-03-02T14:00:00Z',
+    });
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.status).toBe('staff_unavailable');
+    expect(body.error).toContain('Zvolený pracovník už nie je k dispozícii');
+  });
+
   it('returns a generic 500 on database errors without leaking details', async () => {
     rpc.mockResolvedValue({ data: null, error: { code: 'XX000', message: 'internal detail' } });
     const res = await manage({ action: 'cancel', tenantSlug: TENANT, token: TOKEN });
@@ -145,6 +164,8 @@ describe('POST /api/bookings/[bookingId]/manage-link', () => {
     maybeSingle.mockReset();
     getServerUser.mockReset();
     sendManageLinkEmail.mockReset();
+    attachManageLinkToOutbox.mockReset();
+    attachManageLinkToOutbox.mockResolvedValue(false);
     getServerUser.mockResolvedValue({ id: 'user-1', email: 'client@example.test' });
     maybeSingle.mockResolvedValue({
       data: {
@@ -154,6 +175,19 @@ describe('POST /api/bookings/[bookingId]/manage-link', () => {
       },
       error: null,
     });
+  });
+
+  it('attaches manage link to outbox and avoids duplicate direct email when outbox delivery exists', async () => {
+    rpc.mockResolvedValue({ data: { expiresAt: '2030-03-03T11:00:00Z', actor: 'customer' }, error: null });
+    attachManageLinkToOutbox.mockResolvedValue(true);
+
+    const res = await manageLinkRoute(new Request('http://x', { method: 'POST' }), ctx);
+    expect(res.status).toBe(200);
+
+    const body = await res.json();
+    expect(body.email).toEqual({ sent: true, reason: 'attached_to_outbox' });
+    expect(attachManageLinkToOutbox).toHaveBeenCalledWith(BOOKING_ID, body.manageUrl);
+    expect(sendManageLinkEmail).not.toHaveBeenCalled();
   });
 
   it('returns 401 when there is no authenticated user', async () => {

@@ -5,7 +5,10 @@ import {
   generateManageToken,
   hashManageToken,
 } from '@repo/web/src/lib/booking/manage-token';
-import { sendManageLinkEmail } from '@repo/web/src/lib/booking/manage-link-email';
+import {
+  attachManageLinkToOutbox,
+  sendManageLinkEmail,
+} from '@repo/web/src/lib/booking/manage-link-email';
 import { createClient } from '@repo/web/src/utils/supabase/server';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
@@ -78,9 +81,17 @@ export async function POST(_request: Request, { params }: { params: { bookingId:
   const issued = data as { expiresAt: string; actor: 'customer' | 'staff' };
   const manageUrl = buildManageUrl(getAppUrl(), tenant.slug, token);
 
-  // Email goes out only for the customer's own confirmation, and only when the adapter is configured.
+  // Deliver the raw manage token via the transactional notification outbox (BK-4):
+  // When a pending outbox delivery exists, enrich its payload with manage_url.
+  const attachedToOutbox = await attachManageLinkToOutbox(bookingId, manageUrl);
+
+  // Email goes out only for the customer's own confirmation:
+  // If attached to outbox, the outbox worker will send it with the manageUrl.
+  // If not attached (e.g. no pending outbox row), send direct transactional email if configured.
   let email: { sent: boolean; reason?: string } = { sent: false, reason: 'not_requested' };
-  if (issued.actor === 'customer' && user.email) {
+  if (attachedToOutbox) {
+    email = { sent: true, reason: 'attached_to_outbox' };
+  } else if (issued.actor === 'customer' && user.email) {
     email = await sendManageLinkEmail({
       to: user.email,
       tenantName: tenant.name,
