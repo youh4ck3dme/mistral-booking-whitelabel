@@ -7,7 +7,10 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test",
+    "typecheck": "pnpm --filter @repo/web exec tsc --noEmit",
+    "test:sql": "bash ./scripts/run_ci_migrations_test.sh",
     "test:e2e": "playwright test",
+    "test:e2e:install": "playwright install --with-deps chromium",
     "test:e2e:open": "playwright test --ui",
     "setup:ui": "playwright install chromium webkit",
     "test:ui": "playwright test",
@@ -20,7 +23,6 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",
-    "@playwright/test": "^1.59.1",
     "@playwright/test": "^1.59.1",
     "turbo": "^2.0.0",
     "typescript": "^5.0.0"
