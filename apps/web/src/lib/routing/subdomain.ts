@@ -118,6 +118,7 @@ export function isSystemApiRoute(pathname: string): boolean {
   return (
     pathname.startsWith('/api/cron') ||
     pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/api/v1') ||
     pathname === '/api/health'
   );
 }
@@ -147,7 +148,7 @@ export function applySecurityHeaders(res: NextResponse, req: NextRequest): NextR
     res.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.headers.set(
       'Access-Control-Allow-Headers',
-      'Content-Type, Authorization, x-tenant-slug, x-tenant-id, x-forwarded-host'
+      'Content-Type, Authorization, x-api-key, x-tenant-slug, x-tenant-id, x-forwarded-host'
     );
     res.headers.set('Access-Control-Max-Age', '86400');
   }

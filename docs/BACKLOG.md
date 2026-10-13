@@ -149,7 +149,7 @@ Každá položka je **hypotéza**. Pred implementáciou musí prejsť validácio
 | ID | Hypotéza | Vel. | Stav |
 |---|---|---|---|
 | F-22 🔬 | Analytika: heatmapa vyťaženia, tržby na slot, retencia, zdroj rezervácie | M | ⬜ |
-| F-23 🔬 | Verejné API s kľúčmi per tenant, webhooky, Zapier a Make | L | ⬜ |
+| F-23 🔬 | Verejné API s kľúčmi per tenant, webhooky, Zapier a Make | L | 🟡 REST API v1 pre AutoOps AI hotové (`/api/v1/services`, `/api/v1/availability`, `/api/v1/bookings/today`, `POST /api/v1/bookings`) |
 | F-24 🔬 | PWA pre personál: offline rozpis a push notifikácie | M | ⬜ |
 
 ---
