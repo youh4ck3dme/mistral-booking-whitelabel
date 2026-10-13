@@ -438,7 +438,7 @@ export function AdminCalendar({
           </div>
         </td>
         <td className="admin-booking-user">
-          {booking.user_id.substring(0, 8)}...
+          {booking.user_id ? `${booking.user_id.substring(0, 8)}...` : (booking.guest_name || 'Hosť')}
         </td>
         <td className="admin-booking-status">
           <span 
@@ -885,7 +885,7 @@ export function AdminCalendar({
                       <strong>{booking.service?.name || booking.service_id.substring(0, 8)}</strong>
                     </td>
                     <td className="admin-booking-user">
-                      {booking.user_id.substring(0, 8)}...
+                      {booking.user_id ? `${booking.user_id.substring(0, 8)}...` : (booking.guest_name || 'Hosť')}
                     </td>
                     <td className="admin-booking-status">
                       <span 

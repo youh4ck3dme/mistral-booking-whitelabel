@@ -26,11 +26,16 @@ export interface Service {
 export interface Booking {
   id: string;
   tenant_id: string;
-  user_id: string;
+  user_id: string | null;
   service_id: string;
+  staff_id?: string | null;
   start_time: string;
   end_time: string;
   status: 'confirmed' | 'cancelled' | 'pending' | 'completed' | 'no_show';
+  guest_name?: string | null;
+  guest_email?: string | null;
+  guest_phone?: string | null;
+  note?: string | null;
 }
 
 export interface TimeSlotConfig {
