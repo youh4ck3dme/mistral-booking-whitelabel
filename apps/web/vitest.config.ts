@@ -7,6 +7,7 @@ export default defineConfig({
   oxc: { jsx: { runtime: 'automatic' } },
   resolve: {
     alias: {
+      '@': path.resolve(__dirname, '.'),
       '@repo/ai': path.resolve(__dirname, '../../packages/@repo/ai/src'),
       '@repo/core': path.resolve(__dirname, '../../packages/@repo/core/src'),
       '@repo/supabase': path.resolve(__dirname, '../../packages/@repo/supabase/src'),

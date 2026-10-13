@@ -115,9 +115,24 @@ Codex ani iný agent sa ich nesmie zmocniť. Pri narazení sa najprv spýtaj.
 - Status v `BACKLOG.md` je aktualizovaný.
 - Popis PR obsahuje overenia a neoverené časti.
 
-## 10. Stav k 2026-10-11
+## 10. Stav k 2026-10-13
 
-- Hotové: SEC-1 (Next 14.2.35), SEC-2 (`getUser`), odstránené natvrdo testovacie heslo, DB hardening (migrácia 013).
-- Blokery: `main` sa nebuildí (`src/lib/leads/lead.service.server.ts`), GitGuardian check na PR #4 padá, Lint na PR #4 ešte nie je potvrdený ako zelený.
-- Zdroj úloh a detailný stav: `docs/BACKLOG.md`.
-- Výskum trhu a právne body (overené 2026-10-11, bez právneho poradenstva): `docs/MARKET_RESEARCH.md`.
+- **Produkčný deploy na Verceli (HOTVO):**
+  - Aplikácia je nasadená a beží naživo na: `https://web-ulcd.vercel.app` (alias pre `h4ck3d/web-ulcd`).
+  - Nastavený Vercel Root Directory: `apps/web` s povoleným `Include files outside the root directory in the Build Step` (pre podporu monorepo balíčkov).
+  - Produkčné premenné prostredia bezpečne nahraté cez Vercel CLI (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `MISTRAL_API_KEY`, `CRON_SECRET`, `NOTIFICATION_CRON_SECRET`, `NOTIFICATION_BATCH_SIZE`, `RATE_LIMIT_*`).
+  - Vytvorený jedno-príkazový automatizovaný provisioning skript: `apps/web/scripts/setup-vercel-env.ps1`.
+- **Overená kvalita klientskeho a serverového kódu:**
+  - `pnpm lint`: 0 chýb / varovaní.
+  - `pnpm typecheck` (`tsc --noEmit`): 0 chýb.
+  - `pnpm test` (Vitest): 24 testovacích súborov, **225/225 úspešných testov** (100% pass).
+  - `pnpm build` (Turborepo): všetkých 5 balíčkov (`@repo/supabase`, `@repo/ui`, `@repo/core`, `@repo/ai`, `@repo/web`) a 16 Next.js trás skompilovaných bez chýb.
+- **Overené live trasy (HTTP 200 OK):**
+  - `https://web-ulcd.vercel.app` (hlavná landing page)
+  - `https://web-ulcd.vercel.app/praha-hair-salon` (profil salónu / tenanta)
+  - `https://web-ulcd.vercel.app/praha-hair-salon/book` (rezervačný lievik s personálom a službami)
+- **Supabase DB stav:**
+  - Vyriešená schéma tabuľky `tenants` (doplnený stĺpec `name`).
+  - Chýba ešte nasadenie nepovinného providera pre e-maily (Resend API key a overená doména).
+- **Zdroj úloh a detailný stav:** `docs/BACKLOG.md`.
+- **Výskum trhu a právne body:** `docs/MARKET_RESEARCH.md`.

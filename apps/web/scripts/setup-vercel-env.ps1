@@ -1,0 +1,161 @@
+# One-shot Vercel production env setup. Run from the PROJECT ROOT:
+#   pwsh -NoProfile -File apps/web/scripts/setup-vercel-env.ps1
+# Options: -DryRun (no changes on Vercel), -Environment production|preview|development
+#
+# What it does:
+#   1. makes sure you are logged in to Vercel and the project is linked (apps/web)
+#   2. creates/updates apps/web/.env.production.local (gitignored), generating a fresh
+#      CRON_SECRET once and reusing it on re-runs
+#   3. tries to fetch Supabase anon/service keys via the supabase CLI (if logged in),
+#      otherwise prompts for them (input is hidden for secrets, Enter skips optional ones)
+#   4. pushes every non-empty value to Vercel with `vercel env add` (secrets as --sensitive)
+# Secret values are never printed.
+param(
+  [string]$Environment = 'production',
+  [switch]$DryRun
+)
+$ErrorActionPreference = 'Stop'
+
+$root = (Get-Location).Path
+$web = Join-Path $root 'apps/web'
+if (-not (Test-Path (Join-Path $web 'package.json'))) { throw "Run this from the project root (apps/web not found in $root)." }
+$envFile = Join-Path $web '.env.production.local'
+$localFile = Join-Path $web '.env.local'
+
+function Read-EnvFile($path) {
+  $h = [ordered]@{}
+  if (Test-Path $path) {
+    Get-Content $path | ForEach-Object { if ($_ -match '^\s*([A-Z0-9_]+)=(.*)$') { $h[$Matches[1]] = $Matches[2].Trim() } }
+  }
+  return $h
+}
+function Convert-Secure($ss) { [System.Net.NetworkCredential]::new('', $ss).Password }
+function New-HexSecret {
+  $b = New-Object byte[] 32
+  [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b)
+  -join ($b | ForEach-Object { $_.ToString('x2') })
+}
+# Prefer the globally installed `vercel` (npx may be broken); fall back to pnpm dlx, then npx.
+function Vc {
+  $in = @($input)
+  if (Get-Command vercel -ErrorAction SilentlyContinue) { if ($in.Count) { $in | & vercel @args } else { & vercel @args } }
+  elseif (Get-Command pnpm -ErrorAction SilentlyContinue) { if ($in.Count) { $in | & pnpm dlx vercel @args } else { & pnpm dlx vercel @args } }
+  else { if ($in.Count) { $in | & npx --yes vercel @args } else { & npx --yes vercel @args } }
+}
+function Invoke-Vercel {
+  param([string[]]$VArgs, [string]$StdIn)
+  Push-Location $web
+  try {
+    $StdIn | Vc @VArgs | Out-Null
+    $script:vercelExit = $LASTEXITCODE
+  } finally { Pop-Location }
+}
+
+# ---- 1. Vercel login + link -------------------------------------------------
+if (-not $DryRun) {
+  Write-Host '== Vercel login check ==' -ForegroundColor Cyan
+  Push-Location $web
+  try {
+    Vc whoami 2>$null | Out-Null
+    if ($LASTEXITCODE -ne 0) { Vc login; if ($LASTEXITCODE -ne 0) { throw 'vercel login failed' } }
+    if (-not ((Test-Path '.vercel/project.json') -or (Test-Path (Join-Path $root '.vercel/project.json')))) {
+      Write-Host '== Linking project (answer the Vercel prompts) ==' -ForegroundColor Cyan
+      Vc link
+      if ($LASTEXITCODE -ne 0) { throw 'vercel link failed' }
+    }
+  } finally { Pop-Location }
+}
+
+# ---- 2. Build/refresh .env.production.local ---------------------------------
+Write-Host '== Preparing .env.production.local ==' -ForegroundColor Cyan
+$local = Read-EnvFile $localFile
+$cur = Read-EnvFile $envFile
+function Pick($k, $default = '') {
+  if ($cur.Contains($k) -and $cur[$k]) { return $cur[$k] }
+  $v = $local[$k]
+  if ($v -and $v -notmatch 'placeholder|example\.com|your-') { return $v }
+  return $default
+}
+$cron = if ($cur['CRON_SECRET']) { $cur['CRON_SECRET'] } elseif ($cur['NOTIFICATION_CRON_SECRET']) { $cur['NOTIFICATION_CRON_SECRET'] } else { New-HexSecret }
+
+$vars = [ordered]@{
+  NEXT_PUBLIC_SUPABASE_URL                = Pick 'NEXT_PUBLIC_SUPABASE_URL'
+  NEXT_PUBLIC_SUPABASE_ANON_KEY           = Pick 'NEXT_PUBLIC_SUPABASE_ANON_KEY'
+  SUPABASE_SERVICE_ROLE_KEY               = Pick 'SUPABASE_SERVICE_ROLE_KEY'
+  NEXT_PUBLIC_APP_URL                     = Pick 'NEXT_PUBLIC_APP_URL'
+  NEXT_PUBLIC_ENVIRONMENT                 = 'production'
+  NOTIFICATION_BATCH_SIZE                 = Pick 'NOTIFICATION_BATCH_SIZE' '20'
+  NOTIFICATION_CRON_SECRET                = $cron
+  CRON_SECRET                             = $cron
+  NOTIFICATION_FROM_EMAIL                 = Pick 'NOTIFICATION_FROM_EMAIL'
+  NOTIFICATION_REPLY_TO_EMAIL             = Pick 'NOTIFICATION_REPLY_TO_EMAIL'
+  RESEND_API_KEY                          = Pick 'RESEND_API_KEY'
+  MISTRAL_API_KEY                         = Pick 'MISTRAL_API_KEY'
+  RATE_LIMIT_CHAT_MAX                     = Pick 'RATE_LIMIT_CHAT_MAX' '20'
+  RATE_LIMIT_CHAT_WINDOW_MS               = Pick 'RATE_LIMIT_CHAT_WINDOW_MS' '60000'
+  RATE_LIMIT_NOTIFICATIONS_MAX            = Pick 'RATE_LIMIT_NOTIFICATIONS_MAX' '30'
+  RATE_LIMIT_NOTIFICATIONS_WINDOW_MS      = Pick 'RATE_LIMIT_NOTIFICATIONS_WINDOW_MS' '60000'
+  RATE_LIMIT_AUTH_MAX                     = Pick 'RATE_LIMIT_AUTH_MAX' '10'
+  RATE_LIMIT_AUTH_WINDOW_MS               = Pick 'RATE_LIMIT_AUTH_WINDOW_MS' '60000'
+}
+
+function Save-Env {
+  $lines = @('# PRODUCTION env - generated by setup-vercel-env.ps1, gitignored.')
+  foreach ($k in $vars.Keys) { $lines += "$k=$($vars[$k])" }
+  Set-Content -Path $envFile -Value $lines -Encoding utf8
+}
+
+# ---- 3. Supabase keys (auto, then prompt) -----------------------------------
+if ((-not $vars.NEXT_PUBLIC_SUPABASE_ANON_KEY -or -not $vars.SUPABASE_SERVICE_ROLE_KEY) -and $vars.NEXT_PUBLIC_SUPABASE_URL -match 'https://([a-z0-9]+)\.supabase\.co') {
+  $ref = $Matches[1]
+  if (Get-Command supabase -ErrorAction SilentlyContinue) {
+    Write-Host "== Trying to fetch Supabase API keys for project $ref via supabase CLI ==" -ForegroundColor Cyan
+    try {
+      $json = supabase projects api-keys --project-ref $ref -o json 2>$null | ConvertFrom-Json
+      foreach ($key in $json) {
+        if ($key.name -eq 'anon' -and -not $vars.NEXT_PUBLIC_SUPABASE_ANON_KEY) { $vars.NEXT_PUBLIC_SUPABASE_ANON_KEY = $key.api_key }
+        if ($key.name -eq 'service_role' -and -not $vars.SUPABASE_SERVICE_ROLE_KEY) { $vars.SUPABASE_SERVICE_ROLE_KEY = $key.api_key }
+      }
+    } catch { Write-Host '   (could not fetch - will ask instead)' -ForegroundColor Yellow }
+  }
+}
+
+$prompts = @(
+  @{ Name = 'NEXT_PUBLIC_SUPABASE_URL';      Secret = $false; Required = $true;  Hint = 'Supabase project URL (https://xxxx.supabase.co)' },
+  @{ Name = 'NEXT_PUBLIC_SUPABASE_ANON_KEY'; Secret = $true;  Required = $true;  Hint = 'Supabase anon key (Dashboard > Settings > API)' },
+  @{ Name = 'SUPABASE_SERVICE_ROLE_KEY';     Secret = $true;  Required = $true;  Hint = 'Supabase service_role key (Dashboard > Settings > API)' },
+  @{ Name = 'MISTRAL_API_KEY';               Secret = $true;  Required = $false; Hint = 'Mistral API key (console.mistral.ai) - Enter = skip, chat assistant will not work' },
+  @{ Name = 'RESEND_API_KEY';                Secret = $true;  Required = $false; Hint = 'Resend API key - Enter = skip, e-mails will not be sent' },
+  @{ Name = 'NOTIFICATION_FROM_EMAIL';       Secret = $false; Required = $false; Hint = 'From e-mail on your verified Resend domain - Enter = skip' },
+  @{ Name = 'NOTIFICATION_REPLY_TO_EMAIL';   Secret = $false; Required = $false; Hint = 'Reply-to e-mail - Enter = skip' },
+  @{ Name = 'NEXT_PUBLIC_APP_URL';           Secret = $false; Required = $false; Hint = 'Production URL e.g. https://app.example.com - Enter = use Vercel production URL' }
+)
+foreach ($p in $prompts) {
+  if ($vars[$p.Name]) { continue }
+  while ($true) {
+    if ($p.Secret) { $val = Convert-Secure (Read-Host -Prompt "$($p.Name) [$($p.Hint)]" -AsSecureString) }
+    else { $val = Read-Host -Prompt "$($p.Name) [$($p.Hint)]" }
+    $val = $val.Trim()
+    if ($val -or -not $p.Required) { $vars[$p.Name] = $val; break }
+    Write-Host '   required - please enter a value' -ForegroundColor Yellow
+  }
+}
+Save-Env
+Write-Host "Saved $envFile" -ForegroundColor Green
+
+# ---- 4. Push to Vercel ------------------------------------------------------
+Write-Host "== Pushing to Vercel ($Environment)$(if ($DryRun) { ' [DRY RUN]' }) ==" -ForegroundColor Cyan
+$failed = @()
+foreach ($k in $vars.Keys) {
+  $v = $vars[$k]
+  if ([string]::IsNullOrWhiteSpace($v)) { Write-Host "SKIP (empty)  $k"; continue }
+  if ($DryRun) { Write-Host "DRY-RUN       $k"; continue }
+  $vargs = @('env', 'add', $k, $Environment, '--force')
+  # NEXT_PUBLIC_* are inlined in the browser bundle, so they cannot be sensitive
+  if ($k -notmatch '^NEXT_PUBLIC_') { $vargs += '--sensitive' }
+  Invoke-Vercel -VArgs $vargs -StdIn $v
+  if ($script:vercelExit -eq 0) { Write-Host "ADDED         $k" -ForegroundColor Green }
+  else { Write-Host "FAILED        $k" -ForegroundColor Red; $failed += $k }
+}
+if ($failed.Count) { Write-Host "Failed: $($failed -join ', ')" -ForegroundColor Red; exit 1 }
+Write-Host 'Done. Redeploy for the new variables to take effect: vercel --prod (from apps/web) or push to your connected branch.' -ForegroundColor Green

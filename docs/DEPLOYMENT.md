@@ -91,42 +91,57 @@ This guide will walk you through deploying the **NEXIFY TECH CENTER** white-labe
 
 ---
 
-## 🌐 Step 2: Set Up Vercel
+## 🌐 Step 2: Set Up Vercel (Turborepo Monorepo)
 
-### 2.1 Create a New Vercel Project
+### 2.1 Project Settings (Kritické pre Monorepo)
 
-1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
-2. Click **"Add New" → "Project"**
-3. Import your GitHub repository: `youh4ck3dme/mistral-booking-whitelabel`
-4. Configure the project:
-   - **Project Name**: `nexify-tech-center`
-   - **Framework Preset**: Next.js
-   - **Root Directory**: (leave empty)
-5. Click **"Deploy"**
+1. Prepojte projekt s Vercelom cez Dashboard alebo CLI z **rootu repozitára**:
+   ```powershell
+   vercel link
+   ```
+2. V **Vercel Dashboard → Settings → General**:
+   - **Root Directory**: `apps/web`
+   - **Include files outside the root directory in the Build Step**: **Enabled** *(Povinné pre monorepo `@repo/*` balíčky)*
+   - **Framework Preset**: Next.js (automaticky rozpoznané)
+   - **Build Command**: `next build` (alebo `turbo run build`)
+   - **Install Command**: automaticky `pnpm install`
 
-### 2.2 Configure Environment Variables
+### 2.2 Automatizovaný Provisioning Premenných (Odporúčané)
 
-1. In your Vercel project, go to **Settings → Environment Variables**
-2. Add the following variables:
+Repozitár obsahuje skript na jedno-klikové/jedno-príkazové nahratie premenných z rootu:
+```powershell
+pwsh -NoProfile -File apps/web/scripts/setup-vercel-env.ps1
+```
+Tento skript:
+- Bezpečne skontroluje prihlásenie a link.
+- Vygeneruje a zosynchronizuje 64-hex znakový `CRON_SECRET` a `NOTIFICATION_CRON_SECRET`.
+- Nahradí placeholdery reálnymi kľúčmi a nahrá ich do Vercel prostredia `production` s prepínačom `--sensitive` (kľúče sa v logoch nezobrazujú).
 
-   | Name | Value | Description |
-   |------|-------|-------------|
-   | `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase Project URL | Frontend Supabase connection |
-   | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anon key | Frontend Supabase auth |
-   | `SUPABASE_SERVICE_ROLE_KEY` | Your Supabase service role key | Server-side operations |
-   | `SUPABASE_DB_URL` | `postgresql://postgres:[YOUR_DATABASE_PASSWORD]@db.[YOUR_PROJECT_REF].supabase.co:5432/postgres` | For migrations |
+### 2.3 Zoznam Produkčných Premenných Prostredia
 
-3. To get the **service role key**:
-   - Go to **Project Settings → API** in Supabase
-   - Under **Project API keys**, find **service_role secret**
+| Názov premennej | Typ | Popis / Účel |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Config | Verejná Supabase URL (napr. `https://xxxx.supabase.co`) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Config | Verejný anon JWT kľúč pre frontend auth |
+| `SUPABASE_SERVICE_ROLE_KEY` | Secret | Tajný kľúč pre server-side operácie a lookup tenanta |
+| `MISTRAL_API_KEY` | Secret | API kľúč pre AI rezervačného asistenta (`/api/chat`) |
+| `CRON_SECRET` | Secret | Tajný token pre autorizáciu outbox cronu (`/api/cron/process-outbox`) |
+| `NOTIFICATION_CRON_SECRET` | Secret | Tajný token pre trigger pripomienok (`/api/notifications/reminders`) |
+| `NOTIFICATION_BATCH_SIZE` | Secret | Dávka notifikácií (predvolené `20`) |
+| `NEXT_PUBLIC_ENVIRONMENT` | Config | `production` |
+| `RATE_LIMIT_CHAT_MAX` / `_WINDOW_MS` | Secret | Ochrana endpointu chatu (20 požiadaviek / 60 000 ms) |
+| `RATE_LIMIT_NOTIFICATIONS_MAX` / `_WINDOW_MS` | Secret | Ochrana notifikačného outboxu (30 požiadaviek / 60 000 ms) |
+| `RATE_LIMIT_AUTH_MAX` / `_WINDOW_MS` | Secret | Ochrana prihlasovania (10 pokusov / 60 000 ms) |
+| `RESEND_API_KEY` | Secret | *(Voliteľné)* Kľúč z Resend pre odosielanie e-mailov |
+| `NOTIFICATION_FROM_EMAIL` | Secret | *(Voliteľné)* Overená odosielacia e-mailová adresa |
 
-### 2.3 Configure Build Settings
+### 2.4 Nasadenie z Terminálu (Deploy)
 
-1. In Vercel project settings, go to **Build & Development Settings**
-2. Set:
-   - **Build Command**: `pnpm build`
-   - **Install Command**: `pnpm install`
-   - **Output Directory**: `.next`
+Z **rootu projektu**:
+```powershell
+vercel --prod
+```
+Aplikácia sa automaticky nasadí a priradí k produkčnej doméne (napr. `https://web-ulcd.vercel.app`).
 
 ---
 
