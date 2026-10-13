@@ -106,13 +106,13 @@ export function SuccessViewClient({
         </div>
 
         <div className="space-y-1.5">
-          <span className="text-xs font-semibold uppercase tracking-widest text-emerald-400 font-mono">
+          <span className="text-xs font-semibold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-mono">
             Rezervácia potvrdená
           </span>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
             Tešíme sa na vašu návštevu!
           </h1>
-          <p className="text-sm text-zinc-400 max-w-md mx-auto">
+          <p className="text-sm text-zinc-600 dark:text-zinc-400 max-w-md mx-auto">
             Potvrdenie a zabezpečený odkaz na zmenu termínu sme odoslali na váš e-mail.
           </p>
         </div>
@@ -121,48 +121,48 @@ export function SuccessViewClient({
       {/* ======================================================== */}
       {/* SÚHRNNÁ KARTA (RECEIPT CARD)                             */}
       {/* ======================================================== */}
-      <div className="rounded-3xl border border-zinc-800 bg-gradient-to-b from-zinc-900/90 to-zinc-950 p-6 sm:p-8 space-y-6 shadow-2xl">
-        <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
+      <div className="rounded-3xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-gradient-to-b dark:from-zinc-900/90 dark:to-zinc-950 p-6 sm:p-8 space-y-6 shadow-xl dark:shadow-2xl">
+        <div className="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800">
           <div>
-            <div className="text-xs text-zinc-400">Prevádzka</div>
-            <div className="text-lg font-bold text-white">{tenantName}</div>
+            <div className="text-xs text-zinc-500 dark:text-zinc-400">Prevádzka</div>
+            <div className="text-lg font-bold text-zinc-900 dark:text-white">{tenantName}</div>
           </div>
-          <span className="text-[11px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span className="text-[11px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
             ID: {bookingId.slice(0, 8)}
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
           <div className="space-y-1">
-            <span className="text-zinc-500">Dohodnutá služba:</span>
-            <div className="font-semibold text-white text-sm">{serviceName}</div>
-            <div className="flex items-center gap-3 text-zinc-400 font-mono pt-0.5">
+            <span className="text-zinc-500 dark:text-zinc-400">Dohodnutá služba:</span>
+            <div className="font-semibold text-zinc-900 dark:text-white text-sm">{serviceName}</div>
+            <div className="flex items-center gap-3 text-zinc-600 dark:text-zinc-400 font-mono pt-0.5">
               <span>⏱ {serviceDuration} min</span>
-              <span className="text-emerald-400 font-bold">💳 {servicePrice} € (na mieste)</span>
+              <span className="text-emerald-700 dark:text-emerald-400 font-bold">💳 {servicePrice} € (na mieste)</span>
             </div>
           </div>
 
           <div className="space-y-1">
-            <span className="text-zinc-500">Pridelený personál:</span>
-            <div className="font-semibold text-white text-sm flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="text-zinc-500 dark:text-zinc-400">Pridelený personál:</span>
+            <div className="font-semibold text-zinc-900 dark:text-white text-sm flex items-center gap-1.5">
+              <User className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
               <span>{staffName}</span>
             </div>
-            <div className="text-[11px] text-zinc-400">Špecialista prevádzky</div>
+            <div className="text-[11px] text-zinc-500 dark:text-zinc-400">Špecialista prevádzky</div>
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-zinc-950/80 border border-zinc-800 space-y-1">
-          <div className="text-[11px] text-zinc-500 flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+        <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200 dark:bg-zinc-950/80 dark:border-zinc-800 space-y-1">
+          <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+            <Calendar className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
             <span>Presný termín návštevy:</span>
           </div>
-          <div className="text-sm font-bold text-white font-mono">{formattedDate}</div>
+          <div className="text-sm font-bold text-zinc-900 dark:text-white font-mono">{formattedDate}</div>
         </div>
 
         {/* Micro-actions Buttons */}
         <div className="space-y-3 pt-2">
-          <div className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+          <div className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider">
             Rýchle akcie do kalendára
           </div>
 
@@ -171,9 +171,9 @@ export function SuccessViewClient({
             <button
               type="button"
               onClick={handleDownloadIcs}
-              className="py-3 px-4 rounded-xl border border-zinc-800 bg-zinc-900/80 hover:bg-zinc-850 hover:border-zinc-700 text-xs font-semibold text-zinc-200 transition-colors flex items-center justify-center gap-2"
+              className="py-3 px-4 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 hover:border-zinc-300 text-xs font-semibold text-zinc-800 dark:border-zinc-800 dark:bg-zinc-900/80 dark:hover:bg-zinc-850 dark:hover:border-zinc-700 dark:text-zinc-200 shadow-sm transition-colors flex items-center justify-center gap-2"
             >
-              <Download className="w-4 h-4 text-indigo-400" />
+              <Download className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
               <span>Stiahnuť do kalendára (.ics)</span>
             </button>
 
@@ -182,24 +182,24 @@ export function SuccessViewClient({
               href={googleCalUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="py-3 px-4 rounded-xl border border-zinc-800 bg-zinc-900/80 hover:bg-zinc-850 hover:border-zinc-700 text-xs font-semibold text-zinc-200 transition-colors flex items-center justify-center gap-2"
+              className="py-3 px-4 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 hover:border-zinc-300 text-xs font-semibold text-zinc-800 dark:border-zinc-800 dark:bg-zinc-900/80 dark:hover:bg-zinc-850 dark:hover:border-zinc-700 dark:text-zinc-200 shadow-sm transition-colors flex items-center justify-center gap-2"
             >
-              <ExternalLink className="w-4 h-4 text-emerald-400" />
+              <ExternalLink className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>Google Kalendár</span>
             </a>
           </div>
         </div>
 
         {/* Self-service Link Callout */}
-        <div className="pt-4 border-t border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="text-xs text-zinc-400 flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+        <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-xs text-zinc-600 dark:text-zinc-400 flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span>Zmena alebo storno je možné kedykoľvek bez telefonátu.</span>
           </div>
 
           <Link
             href={`/${tenantSlug}/booking/manage/${token}`}
-            className="w-full sm:w-auto py-2.5 px-4 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
+            className="w-full sm:w-auto py-2.5 px-4 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
           >
             <span>Spravovať rezerváciu</span>
             <ArrowRight className="w-3.5 h-3.5" />

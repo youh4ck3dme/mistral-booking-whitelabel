@@ -1,5 +1,3 @@
-'use client';
-
 import type { CSSProperties, MouseEvent } from 'react';
 import { useCallback, useMemo } from 'react';
 import type { TimeSlot } from './calendar.utils';

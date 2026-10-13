@@ -1,5 +1,3 @@
-'use client';
-
 import type { CSSProperties, MouseEvent } from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import type {
@@ -358,8 +356,8 @@ export const calendarStyles = `
     font-size: 0.75rem;
     font-weight: 500;
     text-transform: uppercase;
-    color: #666;
-    border-bottom: 1px solid #e5e7eb;
+    color: var(--page-subtle-fg, #6b7280);
+    border-bottom: 1px solid var(--page-border, #e5e7eb);
   }
 
   .booking-calendar-body {
@@ -390,7 +388,7 @@ export const calendarStyles = `
     align-items: center;
     justify-content: center;
     font-size: 0.875rem;
-    color: #374151;
+    color: var(--page-fg, #374151);
     position: relative;
   }
 

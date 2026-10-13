@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import React from 'react';
 import type { CSSProperties } from 'react';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 // Session- and tenant-dependent: must render per request, never prerender at build time.
 export const dynamic = 'force-dynamic';
@@ -75,6 +76,7 @@ export default async function TenantLayout({
                 <Link href={`/${params.tenantSlug}/book`} className="premium-button">
                   Book now
                 </Link>
+                <ThemeToggle />
               </div>
             </div>
           </div>

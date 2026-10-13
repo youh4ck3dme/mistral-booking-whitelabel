@@ -1,5 +1,3 @@
-'use client';
-
 import { useMemo } from 'react';
 import { Calendar, Clock, ArrowLeft, Check, AlertCircle } from 'lucide-react';
 
@@ -71,10 +69,10 @@ export function Step3SlotSelect({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white tracking-tight">
             Vyberte si termín a čas
           </h2>
-          <p className="text-xs sm:text-sm text-zinc-400">
+          <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
             Zvoľte vyhovujúci deň a voľný časový slot.
           </p>
         </div>
@@ -82,7 +80,7 @@ export function Step3SlotSelect({
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900/60 text-xs text-zinc-400 hover:text-white hover:border-zinc-700 transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 bg-white/90 text-xs text-zinc-600 hover:text-zinc-900 hover:border-zinc-300 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-400 dark:hover:text-white dark:hover:border-zinc-700 transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Zmeniť personál</span>
@@ -91,8 +89,8 @@ export function Step3SlotSelect({
 
       {/* 1. Date Selection Carousel / Row */}
       <div className="space-y-2">
-        <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
-          <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+        <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
+          <Calendar className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
           <span>Dostupné dni</span>
         </label>
 
@@ -107,17 +105,17 @@ export function Step3SlotSelect({
                 onClick={() => onSelectDate(item.dateStr)}
                 className={`flex-shrink-0 w-16 sm:w-20 py-3 rounded-2xl border text-center transition-all duration-200 ${
                   isSelected
-                    ? 'border-indigo-500 bg-indigo-500 text-white shadow-lg shadow-indigo-500/25 ring-2 ring-indigo-400/40'
-                    : 'border-zinc-800 bg-zinc-900/70 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+                    ? 'border-indigo-600 bg-indigo-600 text-white shadow-lg shadow-indigo-600/25 ring-2 ring-indigo-400/40'
+                    : 'border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 hover:text-zinc-900 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-400 dark:hover:border-zinc-700 dark:hover:text-zinc-200'
                 }`}
               >
-                <div className={`text-[11px] font-medium uppercase ${isSelected ? 'text-indigo-100' : 'text-zinc-500'}`}>
+                <div className={`text-[11px] font-medium uppercase ${isSelected ? 'text-indigo-100' : 'text-zinc-500 dark:text-zinc-400'}`}>
                   {item.dayName}
                 </div>
-                <div className="text-lg sm:text-xl font-extrabold my-0.5">
+                <div className={`text-lg sm:text-xl font-extrabold my-0.5 ${isSelected ? 'text-white' : 'text-zinc-900 dark:text-white'}`}>
                   {item.dayNum}
                 </div>
-                <div className={`text-[10px] truncate px-1 ${isSelected ? 'text-indigo-100' : 'text-zinc-500'}`}>
+                <div className={`text-[10px] truncate px-1 ${isSelected ? 'text-indigo-100' : 'text-zinc-500 dark:text-zinc-400'}`}>
                   {item.monthName.slice(0, 3)}
                 </div>
               </button>
@@ -129,24 +127,24 @@ export function Step3SlotSelect({
       {/* 2. Time Slot Grid */}
       <div className="space-y-3 pt-2">
         <div className="flex items-center justify-between">
-          <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-indigo-400" />
+          <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
             <span>Voľné časy pre vybraný deň</span>
           </label>
-          <span className="text-[11px] text-zinc-500">
+          <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
             {slotsForSelectedDate.length} {slotsForSelectedDate.length === 1 ? 'slot' : 'slotov'}
           </span>
         </div>
 
         {loading ? (
-          <div className="p-8 text-center text-xs text-zinc-500 rounded-2xl border border-zinc-800 bg-zinc-900/30">
+          <div className="p-8 text-center text-xs text-zinc-600 dark:text-zinc-400 rounded-2xl border border-zinc-200 bg-white/50 dark:border-zinc-800 dark:bg-zinc-900/30">
             Načítavam voľné termíny...
           </div>
         ) : slotsForSelectedDate.length === 0 ? (
-          <div className="p-8 text-center space-y-2 rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/30">
+          <div className="p-8 text-center space-y-2 rounded-2xl border border-dashed border-zinc-300 bg-zinc-50/50 dark:border-zinc-800 dark:bg-zinc-900/30">
             <AlertCircle className="w-6 h-6 text-zinc-500 mx-auto" />
-            <p className="text-sm font-semibold text-zinc-300">Pre tento deň už nie sú voľné sloty.</p>
-            <p className="text-xs text-zinc-500">Zvoľte prosím iný dátum v kalendári vyššie.</p>
+            <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-300">Pre tento deň už nie sú voľné sloty.</p>
+            <p className="text-xs text-zinc-600 dark:text-zinc-500">Zvoľte prosím iný dátum v kalendári vyššie.</p>
           </div>
         ) : (
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2.5">
@@ -161,8 +159,8 @@ export function Step3SlotSelect({
                   onClick={() => onSelectSlot(slot)}
                   className={`py-3 px-2 rounded-xl text-center font-mono text-sm font-bold border transition-all duration-200 ${
                     isSelected
-                      ? 'border-emerald-500 bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20 scale-[1.03]'
-                      : 'border-zinc-800 bg-zinc-900/80 text-zinc-200 hover:border-indigo-500/60 hover:bg-zinc-800'
+                      ? 'border-emerald-600 bg-emerald-600 text-white shadow-md shadow-emerald-600/20 scale-[1.03]'
+                      : 'border-zinc-200 bg-white text-zinc-800 hover:border-indigo-500 hover:text-indigo-700 hover:bg-indigo-50/60 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80 dark:text-zinc-200 dark:hover:border-indigo-500/60 dark:hover:bg-zinc-800'
                   }`}
                 >
                   {formatted}

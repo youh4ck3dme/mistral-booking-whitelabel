@@ -200,10 +200,10 @@ export function BookingFunnel({
       {/* ======================================================== */}
       {/* 4-STEP PROGRESS BAR                                      */}
       {/* ======================================================== */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 sm:p-5 backdrop-blur-xl">
+      <div className="rounded-2xl border border-zinc-200 bg-white/80 dark:border-zinc-800 dark:bg-zinc-900/60 p-4 sm:p-5 backdrop-blur-xl shadow-sm">
         <div className="flex items-center justify-between relative">
           {/* Background progress track line */}
-          <div className="absolute top-1/2 left-6 right-6 -translate-y-1/2 h-[2px] bg-zinc-800 -z-0" />
+          <div className="absolute top-1/2 left-6 right-6 -translate-y-1/2 h-[2px] bg-zinc-200 dark:bg-zinc-800 -z-0" />
           <div
             className="absolute top-1/2 left-6 -translate-y-1/2 h-[2px] bg-emerald-400 transition-all duration-300 -z-0"
             style={{ width: `${((step - 1) / 3) * 100}%` }}
@@ -229,14 +229,14 @@ export function BookingFunnel({
                       ? 'bg-emerald-400 text-zinc-950 ring-2 ring-emerald-400/40 shadow-md cursor-pointer'
                       : isCurrent
                         ? 'bg-indigo-500 text-white ring-4 ring-indigo-500/20 shadow-lg shadow-indigo-500/20'
-                        : 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
+                        : 'bg-zinc-100 text-zinc-400 border border-zinc-200 dark:bg-zinc-800 dark:text-zinc-500 dark:border-zinc-700 cursor-not-allowed'
                   }`}
                 >
                   {isCompleted ? <Check className="w-4 h-4 stroke-[3]" /> : <Icon className="w-4 h-4" />}
                 </button>
                 <span
                   className={`text-[11px] font-semibold mt-1.5 transition-colors hidden sm:block ${
-                    isCurrent ? 'text-white' : isCompleted ? 'text-emerald-400' : 'text-zinc-500'
+                    isCurrent ? 'text-zinc-900 dark:text-white' : isCompleted ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-400 dark:text-zinc-500'
                   }`}
                 >
                   {s.label}
@@ -250,7 +250,7 @@ export function BookingFunnel({
       {/* ======================================================== */}
       {/* ACTIVE STEP CARD CONTENT                                 */}
       {/* ======================================================== */}
-      <div className="rounded-3xl border border-zinc-800/80 bg-zinc-900/40 p-5 sm:p-8 lg:p-10 backdrop-blur-2xl shadow-xl">
+      <div className="rounded-3xl border border-zinc-200/80 bg-white/90 dark:border-zinc-800/80 dark:bg-zinc-900/40 p-5 sm:p-8 lg:p-10 backdrop-blur-2xl shadow-xl">
         {step === 1 && (
           <Step1ServiceSelect
             services={initialServices}

@@ -33,13 +33,13 @@ export default async function BookingSuccessPage({
   if (!token || !isWellFormedManageToken(token)) {
     return (
       <div className="min-h-screen py-16 px-4 flex items-center justify-center">
-        <div className="max-w-md w-full rounded-2xl border border-zinc-800 bg-zinc-900/80 p-8 text-center space-y-6 shadow-2xl backdrop-blur-xl">
-          <div className="w-14 h-14 mx-auto rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-400">
+        <div className="max-w-md w-full rounded-2xl border border-zinc-200 bg-white/90 shadow-2xl dark:border-zinc-800 dark:bg-zinc-900/80 p-8 text-center space-y-6 backdrop-blur-xl">
+          <div className="w-14 h-14 mx-auto rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-500 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400">
             <CalendarX className="w-7 h-7" />
           </div>
           <div className="space-y-2">
-            <h1 className="text-xl font-bold text-white">Rezervácia nebola nájdená</h1>
-            <p className="text-sm text-zinc-400">
+            <h1 className="text-xl font-bold text-zinc-900 dark:text-white">Rezervácia nebola nájdená</h1>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
               Chýba platný autentifikačný token alebo odkaz vypršal.
             </p>
           </div>
@@ -67,13 +67,13 @@ export default async function BookingSuccessPage({
   if (error || !data || (data as { status: string }).status !== 'ok') {
     return (
       <div className="min-h-screen py-16 px-4 flex items-center justify-center">
-        <div className="max-w-md w-full rounded-2xl border border-zinc-800 bg-zinc-900/80 p-8 text-center space-y-6 shadow-2xl backdrop-blur-xl">
-          <div className="w-14 h-14 mx-auto rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-400">
+        <div className="max-w-md w-full rounded-2xl border border-zinc-200 bg-white/90 shadow-2xl dark:border-zinc-800 dark:bg-zinc-900/80 p-8 text-center space-y-6 backdrop-blur-xl">
+          <div className="w-14 h-14 mx-auto rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-500 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400">
             <CalendarX className="w-7 h-7" />
           </div>
           <div className="space-y-2">
-            <h1 className="text-xl font-bold text-white">Neplatný odkaz</h1>
-            <p className="text-sm text-zinc-400">
+            <h1 className="text-xl font-bold text-zinc-900 dark:text-white">Neplatný odkaz</h1>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
               Tento odkaz na rezerváciu už neexistuje alebo vypršal.
             </p>
           </div>
