@@ -49,17 +49,17 @@ export function FaqSection() {
   };
 
   return (
-    <section id="faq" className="py-20 md:py-28 relative bg-zinc-950/80 border-t border-zinc-800">
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 space-y-16">
+    <section id="faq" className="py-20 md:py-28 relative border-t border-white/[0.08]">
+      <div className="premium-container max-w-4xl space-y-16">
         {/* Header */}
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-700 bg-zinc-900 text-zinc-300 text-xs font-semibold uppercase tracking-wider">
-            Často kladené otázky
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/10 bg-white/[0.03]">
+            <span className="premium-eyebrow">Často kladené otázky</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          <h2 className="premium-section-title text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
             Všetko, čo potrebujete vedieť pred začatím
           </h2>
-          <p className="text-zinc-400 text-base sm:text-lg leading-relaxed">
+          <p className="premium-lead max-w-2xl mx-auto">
             Máte otázku, na ktorú tu nenájdete odpoveď? Náš tím je pripravený vám pomôcť 24/7.
           </p>
         </div>
@@ -73,21 +73,21 @@ export function FaqSection() {
             return (
               <div
                 key={faq.id}
-                className="rounded-2xl border border-zinc-800 bg-zinc-900/40 overflow-hidden transition-colors hover:border-zinc-700"
+                className="premium-card p-0 overflow-hidden transition-colors hover:border-white/20"
               >
                 <button
                   type="button"
                   onClick={() => toggle(faq.id)}
                   aria-expanded={isOpen}
                   aria-controls={contentId}
-                  className="w-full text-left p-6 sm:p-7 flex items-center justify-between gap-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                  className="w-full text-left p-6 sm:p-7 flex items-center justify-between gap-4 focus:outline-none"
                 >
                   <span className="text-base sm:text-lg font-semibold text-white">
                     {faq.question}
                   </span>
                   <span
-                    className={`shrink-0 w-8 h-8 rounded-full border border-zinc-700 bg-zinc-800 flex items-center justify-center text-zinc-300 transition-transform duration-200 ${
-                      isOpen ? 'rotate-180 bg-indigo-500/20 text-indigo-300 border-indigo-500/40' : ''
+                    className={`shrink-0 w-8 h-8 rounded-full border border-white/10 bg-white/[0.04] flex items-center justify-center text-white/70 transition-transform duration-200 ${
+                      isOpen ? 'rotate-180 bg-white/10 text-white border-white/20' : ''
                     }`}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -100,7 +100,7 @@ export function FaqSection() {
                   <div
                     id={contentId}
                     role="region"
-                    className="px-6 pb-6 sm:px-7 sm:pb-7 text-sm sm:text-base text-zinc-300 leading-relaxed border-t border-zinc-800/60 pt-4"
+                    className="px-6 pb-6 sm:px-7 sm:pb-7 text-sm sm:text-base text-white/70 leading-relaxed border-t border-white/10 pt-4"
                   >
                     {faq.answer}
                   </div>

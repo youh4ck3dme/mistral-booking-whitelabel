@@ -75,17 +75,17 @@ export function EnterpriseReliability() {
   ];
 
   return (
-    <section id="reliability" className="py-20 md:py-28 relative bg-zinc-950/90 border-t border-zinc-800">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-16">
+    <section id="reliability" className="py-20 md:py-28 relative border-t border-white/[0.08]">
+      <div className="premium-container space-y-16">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-700 bg-zinc-900 text-zinc-300 text-xs font-semibold uppercase tracking-wider">
-            Inžiniering & Spoľahlivosť
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/10 bg-white/[0.03]">
+            <span className="premium-eyebrow">Inžiniering & Spoľahlivosť</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          <h2 className="premium-section-title text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
             Postavené pre prevádzky, kde výpadok znamená stratu zákazníka
           </h2>
-          <p className="text-zinc-400 text-base sm:text-lg leading-relaxed">
+          <p className="premium-lead max-w-2xl mx-auto">
             Vyvinuté s dôrazom na bezpečnosť finančného sektora. Žiadne provizórne WordPress pluginy,
             ale robustný cloudový backend pripravený na škálovanie.
           </p>
@@ -96,10 +96,10 @@ export function EnterpriseReliability() {
           {pillars.map((pillar) => (
             <div
               key={pillar.title}
-              className="rounded-3xl border border-zinc-800 bg-zinc-900/50 p-7 sm:p-8 space-y-6 hover:border-zinc-700 transition-colors"
+              className="premium-card p-7 sm:p-8 space-y-6 hover:border-white/20 transition-colors"
             >
               <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-2xl bg-zinc-800/80 border border-zinc-700/60 flex items-center justify-center text-zinc-200">
+                <div className="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-white">
                   {pillar.icon}
                 </div>
                 <span
@@ -111,10 +111,10 @@ export function EnterpriseReliability() {
 
               <div className="space-y-2.5">
                 <h3 className="text-xl font-bold text-white">{pillar.title}</h3>
-                <p className="text-sm text-zinc-400 leading-relaxed">{pillar.description}</p>
+                <p className="text-sm text-white/60 leading-relaxed">{pillar.description}</p>
               </div>
 
-              <div className="pt-3 border-t border-zinc-800/80 flex items-center gap-2 text-xs font-semibold text-zinc-300">
+              <div className="pt-3 border-t border-white/[0.08] flex items-center gap-2 text-xs font-semibold text-white/80">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                 <span>{pillar.metric}</span>
               </div>
@@ -123,15 +123,15 @@ export function EnterpriseReliability() {
         </div>
 
         {/* Technical Stack Architecture Footnote */}
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/30 p-6 flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-zinc-400">
+        <div className="premium-card p-6 flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-white/60">
           <div className="flex items-center gap-4">
-            <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
             <span>
-              <strong className="text-zinc-200">Moderný technologický stack:</strong> Next.js 14 App Router,
+              <strong className="text-white">Moderný technologický stack:</strong> Next.js 14 App Router,
               PostgreSQL 15 s GiST indexmi, Supabase Auth (SSR safe s `auth.getUser()`) a Vercel Edge Network.
             </span>
           </div>
-          <div className="font-mono text-zinc-500 whitespace-nowrap">
+          <div className="font-mono text-white/40 whitespace-nowrap">
             Latency &lt; 90ms • 99.99% SLA
           </div>
         </div>

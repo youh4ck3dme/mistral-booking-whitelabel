@@ -24,17 +24,17 @@ export function FeatureShowcase() {
   ];
 
   return (
-    <section id="features" className="py-20 md:py-28 relative bg-zinc-950/70 border-t border-zinc-800/80">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-16">
+    <section id="features" className="py-20 md:py-28 relative border-t border-white/[0.08]">
+      <div className="premium-container space-y-16">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-xs font-semibold uppercase tracking-wider">
-            Kľúčové piliere platformy
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/10 bg-white/[0.03]">
+            <span className="premium-eyebrow">Kľúčové piliere platformy</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          <h2 className="premium-section-title text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
             Všetko, čo prevádzka potrebuje na bezchybný chod
           </h2>
-          <p className="text-zinc-400 text-base sm:text-lg leading-relaxed">
+          <p className="premium-lead max-w-2xl mx-auto">
             Namiesto zložitých a neprehľadných nastavení sme sa zamerali na to, čo personál reálne využíva každý deň.
           </p>
         </div>
@@ -48,21 +48,21 @@ export function FeatureShowcase() {
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className={`text-left px-5 py-3.5 rounded-xl border transition-all ${
+                className={`text-left px-5 py-3.5 rounded-2xl border transition-all ${
                   isActive
-                    ? 'border-indigo-500/60 bg-indigo-500/10 text-white shadow-lg shadow-indigo-500/10 ring-1 ring-indigo-500/30'
-                    : 'border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+                    ? 'border-white/30 bg-white/10 text-white shadow-lg shadow-white/5 ring-1 ring-white/20'
+                    : 'border-white/[0.08] bg-white/[0.02] text-white/60 hover:text-white hover:border-white/20'
                 }`}
               >
                 <div className="text-sm font-semibold">{tab.title}</div>
-                <div className="text-xs text-zinc-500 font-normal">{tab.subtitle}</div>
+                <div className="text-xs text-white/40 font-normal">{tab.subtitle}</div>
               </button>
             );
           })}
         </div>
 
         {/* Tab Content Display */}
-        <div className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-6 sm:p-10 backdrop-blur-xl">
+        <div className="premium-card p-6 sm:p-10 backdrop-blur-2xl">
           {activeTab === 'schedule' && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
               <div className="lg:col-span-6 space-y-5">

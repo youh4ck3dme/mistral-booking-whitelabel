@@ -93,17 +93,17 @@ export function HeroLiveSimulator() {
   };
 
   return (
-    <div className="w-full rounded-2xl border border-zinc-700/70 bg-gradient-to-b from-zinc-900/95 via-zinc-900/90 to-zinc-950/95 shadow-2xl backdrop-blur-xl overflow-hidden">
+    <div className="w-full premium-card p-0 shadow-2xl backdrop-blur-2xl overflow-hidden">
       {/* Simulation Top Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-zinc-800 bg-zinc-950/70 text-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-white/10 bg-black/40 text-xs">
         {/* Browser URL Simulation */}
         <div className="flex items-center gap-2 min-w-0">
           <div className="flex gap-1.5 shrink-0">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500/70" />
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500/70" />
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/70" />
+            <span className="w-2.5 h-2.5 rounded-full bg-white/20" />
+            <span className="w-2.5 h-2.5 rounded-full bg-white/20" />
+            <span className="w-2.5 h-2.5 rounded-full bg-white/20" />
           </div>
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 font-mono text-[11px] text-zinc-400 truncate max-w-[200px] sm:max-w-xs">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 border border-white/10 font-mono text-[11px] text-white/60 truncate max-w-[200px] sm:max-w-xs">
             <Lock className="w-3 h-3 text-emerald-400 shrink-0" />
             <span className="truncate">{brand.domain}</span>
           </div>
@@ -113,12 +113,12 @@ export function HeroLiveSimulator() {
         <button
           type="button"
           onClick={toggleBrand}
-          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-semibold border border-zinc-700 bg-zinc-800/80 hover:bg-zinc-700 text-zinc-200 transition-all duration-200 shadow-sm"
+          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold border border-white/10 bg-white/[0.04] hover:bg-white/10 text-white transition-all duration-200 shadow-sm"
           title="Zmeniť branding značky"
         >
-          <Palette className="w-3.5 h-3.5 text-indigo-400" />
+          <Palette className="w-3.5 h-3.5 text-white/80" />
           <span>Branding: {brand.name.split(' ')[0]}</span>
-          <RefreshCw className="w-3 h-3 text-zinc-400 ml-0.5" />
+          <RefreshCw className="w-3 h-3 text-white/40 ml-0.5" />
         </button>
       </div>
 

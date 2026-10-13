@@ -27,18 +27,18 @@ export function SocialProofStrip() {
   ];
 
   return (
-    <section className="relative border-y border-zinc-800 bg-zinc-950/60 py-12 md:py-16">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12">
+    <section className="relative border-y border-white/[0.08] bg-black/20 py-12 md:py-16">
+      <div className="premium-container space-y-12">
         {/* Brand strip */}
         <div className="text-center space-y-4">
-          <p className="text-xs uppercase tracking-widest text-zinc-500 font-semibold">
+          <p className="premium-eyebrow text-xs tracking-widest text-white/50 font-semibold">
             Dôverujú nám prémiové prevádzky a nezávislí špecialisti
           </p>
           <div className="flex flex-wrap items-center justify-center gap-8 md:gap-14 opacity-60">
             {brands.map((brand) => (
               <span
                 key={brand}
-                className="text-sm md:text-base font-bold tracking-widest text-zinc-400 font-mono hover:text-zinc-200 transition-colors"
+                className="text-sm md:text-base font-bold tracking-widest text-white/60 font-mono hover:text-white transition-colors"
               >
                 {brand}
               </span>
@@ -47,17 +47,17 @@ export function SocialProofStrip() {
         </div>
 
         {/* 3 Core Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-zinc-800/80">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-white/[0.08]">
           {metrics.map((metric) => (
             <div
               key={metric.label}
-              className="p-6 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 text-center md:text-left space-y-2 hover:border-zinc-700 transition-colors"
+              className="premium-card p-6 md:p-8 text-center md:text-left space-y-2 hover:border-white/20 transition-colors"
             >
-              <div className="text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-white via-zinc-200 to-indigo-300 bg-clip-text text-transparent">
+              <div className="premium-stat-value text-3xl sm:text-4xl font-extrabold text-white">
                 {metric.value}
               </div>
-              <div className="text-sm font-semibold text-zinc-200">{metric.label}</div>
-              <p className="text-xs text-zinc-400 leading-relaxed">{metric.description}</p>
+              <div className="text-sm font-semibold text-white/90">{metric.label}</div>
+              <p className="text-xs text-white/60 leading-relaxed">{metric.description}</p>
             </div>
           ))}
         </div>
