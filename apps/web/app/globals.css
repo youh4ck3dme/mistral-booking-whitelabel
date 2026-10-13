@@ -30,6 +30,45 @@
 }
 
 :root {
+  color-scheme: light;
+
+  /* Brand & Prism */
+  --brand: 251 76% 57%;
+  --brand-soft: 251 65% 96%;
+  --prism: 199 89% 60%;
+
+  /* Svetlé plátno */
+  --page-bg-start: #fbfcfd;
+  --page-bg-mid: #f3f5f8;
+  --page-bg-end: #eaf0f6;
+  --page-fg: #14171c;
+  --page-fg-muted: rgba(20, 23, 28, 0.65);
+  --page-fg-subtle: rgba(20, 23, 28, 0.40);
+
+  /* Svetlé sklo a povrchy */
+  --page-card-bg: rgba(255, 255, 255, 0.78);
+  --page-card-bg-hover: rgba(255, 255, 255, 0.90);
+  --page-border: rgba(20, 23, 28, 0.08);
+  --page-border-hover: rgba(20, 23, 28, 0.16);
+  --page-glow: rgba(99, 102, 241, 0.08);
+
+  /* Glass highlight & shadow */
+  --glass-highlight: rgba(255, 255, 255, 0.95);
+  --glass-shadow: 0 8px 32px 0 rgba(15, 23, 42, 0.06);
+
+  /* Sémantické shadcn premenné v HSL */
+  --background: 210 20% 99%;
+  --foreground: 220 18% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 18% 10%;
+  --border: 210 9% 87%;
+  --input: 210 9% 87%;
+  --primary: 220 18% 10%;
+  --primary-foreground: 0 0% 100%;
+  --muted: 210 20% 96%;
+  --muted-foreground: 220 10% 44%;
+
+  /* Typografia */
   --font-sans: 'Instrument Sans', system-ui, sans-serif;
   --font-display: 'Instrument Serif', Georgia, serif;
   --font-heading:
@@ -41,82 +80,90 @@
     system-ui,
     sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
-  --foreground-rgb: 234, 234, 234;
-  --background-start-rgb: 10, 10, 10;
-  --background-end-rgb: 7, 7, 7;
-  --page-bg-start: #0a0a0a;
-  --page-bg-end: #070707;
+
+  /* Kompatibilita pre existujúce .premium-* triedy */
   --page-bg: linear-gradient(180deg, var(--page-bg-start) 0%, var(--page-bg-end) 100%);
-  --page-fg: #eaeaea;
-  --page-muted: rgba(234, 234, 234, 0.64);
-  --page-subtle: rgba(234, 234, 234, 0.48);
-  --page-subtle-strong: rgba(234, 234, 234, 0.62);
-  --page-inverse: #0a0a0a;
-  --page-nav-bg: rgba(17, 17, 17, 0.72);
-  --page-card-bg: rgba(26, 26, 26, 0.7);
-  --page-card-bg-strong: rgba(26, 26, 26, 0.72);
+  --page-muted: var(--page-fg-muted);
+  --page-subtle: var(--page-fg-subtle);
+  --page-subtle-strong: rgba(20, 23, 28, 0.55);
+  --page-inverse: #fbfcfd;
+  --page-nav-bg: rgba(255, 255, 255, 0.78);
+  --page-card-bg-strong: rgba(255, 255, 255, 0.88);
+  --page-card-elevated: rgba(20, 23, 28, 0.04);
+  --page-card-elevated-strong: rgba(20, 23, 28, 0.08);
+  --page-border-strong: rgba(20, 23, 28, 0.14);
+  --page-grid-line: rgba(20, 23, 28, 0.04);
+  --page-step-number: rgba(20, 23, 28, 0.42);
+  --page-primary-button-bg: #14171c;
+  --page-primary-button-bg-hover: #262c36;
+  --page-primary-button-text: #ffffff;
+  --page-secondary-button-bg: rgba(20, 23, 28, 0.04);
+  --page-secondary-button-text: #14171c;
+  --page-glow-primary: rgba(99, 102, 241, 0.10);
+  --page-glow-secondary: rgba(236, 72, 153, 0.06);
+
+  --title-gradient: linear-gradient(135deg, #14171c 0%, #475569 100%);
+  --foreground-rgb: 20, 23, 28;
+  --background-start-rgb: 251, 252, 253;
+  --background-end-rgb: 234, 240, 246;
+}
+
+.dark,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --page-bg-start: #04070c;
+  --page-bg-mid: #060b13;
+  --page-bg-end: #030509;
+  --page-fg: #f5f8fc;
+  --page-fg-muted: rgba(245, 248, 252, 0.68);
+  --page-fg-subtle: rgba(245, 248, 252, 0.40);
+
+  --page-card-bg: rgba(10, 16, 26, 0.72);
+  --page-card-bg-hover: rgba(14, 22, 36, 0.82);
+  --page-border: rgba(255, 255, 255, 0.08);
+  --page-border-hover: rgba(255, 255, 255, 0.16);
+  --page-glow: rgba(99, 102, 241, 0.15);
+
+  --glass-highlight: rgba(255, 255, 255, 0.12);
+  --glass-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.85);
+
+  --background: 220 18% 6%;
+  --foreground: 210 20% 98%;
+  --card: 220 18% 8%;
+  --card-foreground: 210 20% 98%;
+  --border: 220 13% 18%;
+  --input: 220 13% 18%;
+  --primary: 210 20% 98%;
+  --primary-foreground: 220 18% 10%;
+  --muted: 220 13% 15%;
+  --muted-foreground: 218 11% 65%;
+
+  /* Kompatibilita pre existujúce .premium-* triedy */
+  --page-bg: linear-gradient(180deg, var(--page-bg-start) 0%, var(--page-bg-end) 100%);
+  --page-muted: var(--page-fg-muted);
+  --page-subtle: var(--page-fg-subtle);
+  --page-subtle-strong: rgba(245, 248, 252, 0.55);
+  --page-inverse: #04070c;
+  --page-nav-bg: rgba(6, 11, 19, 0.75);
+  --page-card-bg-strong: rgba(14, 22, 36, 0.82);
   --page-card-elevated: rgba(255, 255, 255, 0.04);
   --page-card-elevated-strong: rgba(255, 255, 255, 0.06);
-  --page-border: rgba(255, 255, 255, 0.08);
   --page-border-strong: rgba(255, 255, 255, 0.12);
-  --page-border-hover: rgba(255, 255, 255, 0.3);
   --page-grid-line: rgba(255, 255, 255, 0.035);
   --page-step-number: rgba(255, 255, 255, 0.46);
   --page-primary-button-bg: #ffffff;
   --page-primary-button-bg-hover: #f1f1f1;
-  --page-primary-button-text: #0a0a0a;
-  --page-secondary-button-bg: rgba(255, 255, 255, 0.03);
+  --page-primary-button-text: #04070c;
+  --page-secondary-button-bg: rgba(255, 255, 255, 0.04);
   --page-secondary-button-text: #ffffff;
   --page-glow-primary: rgba(124, 155, 255, 0.18);
   --page-glow-secondary: rgba(255, 111, 181, 0.13);
-  --theme-toggle-bg: rgba(17, 17, 17, 0.78);
-  --theme-toggle-border: rgba(255, 255, 255, 0.1);
-  --theme-toggle-border-hover: rgba(255, 255, 255, 0.22);
-  --theme-toggle-text: #ffffff;
-  --theme-toggle-muted: rgba(234, 234, 234, 0.56);
-  --theme-track-bg: rgba(255, 255, 255, 0.08);
-  --theme-thumb-bg: linear-gradient(135deg, #ffffff 0%, #d9defe 100%);
-  --theme-focus-ring: rgba(124, 155, 255, 0.55);
-  color-scheme: dark;
-}
 
-:root[data-theme='light'] {
-  --foreground-rgb: 18, 23, 33;
-  --background-start-rgb: 247, 244, 240;
-  --background-end-rgb: 238, 233, 227;
-  --page-bg-start: #f7f4f0;
-  --page-bg-end: #eee9e3;
-  --page-fg: #121721;
-  --page-muted: rgba(18, 23, 33, 0.68);
-  --page-subtle: rgba(18, 23, 33, 0.5);
-  --page-subtle-strong: rgba(18, 23, 33, 0.64);
-  --page-inverse: #f7f4f0;
-  --page-nav-bg: rgba(255, 252, 247, 0.78);
-  --page-card-bg: rgba(255, 255, 255, 0.74);
-  --page-card-bg-strong: rgba(255, 255, 255, 0.82);
-  --page-card-elevated: rgba(18, 23, 33, 0.04);
-  --page-card-elevated-strong: rgba(18, 23, 33, 0.08);
-  --page-border: rgba(18, 23, 33, 0.1);
-  --page-border-strong: rgba(18, 23, 33, 0.14);
-  --page-border-hover: rgba(18, 23, 33, 0.24);
-  --page-grid-line: rgba(18, 23, 33, 0.06);
-  --page-step-number: rgba(18, 23, 33, 0.42);
-  --page-primary-button-bg: #121721;
-  --page-primary-button-bg-hover: #1a2230;
-  --page-primary-button-text: #f7f4f0;
-  --page-secondary-button-bg: rgba(18, 23, 33, 0.03);
-  --page-secondary-button-text: #121721;
-  --page-glow-primary: rgba(124, 155, 255, 0.18);
-  --page-glow-secondary: rgba(255, 111, 181, 0.1);
-  --theme-toggle-bg: rgba(255, 252, 247, 0.88);
-  --theme-toggle-border: rgba(18, 23, 33, 0.12);
-  --theme-toggle-border-hover: rgba(18, 23, 33, 0.24);
-  --theme-toggle-text: #121721;
-  --theme-toggle-muted: rgba(18, 23, 33, 0.58);
-  --theme-track-bg: rgba(18, 23, 33, 0.08);
-  --theme-thumb-bg: linear-gradient(135deg, #121721 0%, #334155 100%);
-  --theme-focus-ring: rgba(59, 130, 246, 0.35);
-  color-scheme: light;
+  --title-gradient: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.7) 100%);
+  --foreground-rgb: 245, 248, 252;
+  --background-start-rgb: 4, 7, 12;
+  --background-end-rgb: 3, 5, 9;
 }
 
 * {
@@ -343,7 +390,15 @@ img {
 }
 
 .premium-title-gradient {
-  background: linear-gradient(120deg, #ff6fb5 0%, #8ba5ff 45%, #6ec8ff 100%);
+  background: var(--title-gradient, linear-gradient(135deg, #14171c 0%, #475569 100%));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.dark .premium-title-gradient,
+[data-theme='dark'] .premium-title-gradient {
+  background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.7) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

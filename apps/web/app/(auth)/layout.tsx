@@ -1,7 +1,8 @@
+import { ThemeToggle } from '@/components/theme-toggle';
+import { getServerSession } from '@repo/web/src/lib/auth/server-session';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import React from 'react';
-import { getServerSession } from '@repo/web/src/lib/auth/server-session';
 
 // Session- and tenant-dependent: must render per request, never prerender at build time.
 export const dynamic = 'force-dynamic';
@@ -42,6 +43,7 @@ export default async function AuthLayout({
               <Link href="/" className="premium-button-secondary">
                 Back home
               </Link>
+              <ThemeToggle />
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import React from 'react';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { getServerSession } from '@repo/web/src/lib/auth/server-session';
 import { isPlatformAdmin } from '@repo/web/src/lib/auth/platform-admin';
 
@@ -50,6 +51,7 @@ export default async function PlatformLayout({
               <Link href="/logout" className="premium-button">
                 Sign out
               </Link>
+              <ThemeToggle />
             </div>
           </div>
         </div>
