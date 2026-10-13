@@ -85,32 +85,44 @@ export interface Database {
         Row: {
           id: string;
           tenant_id: string;
-          user_id: string;
+          user_id: string | null;
           service_id: string;
           staff_id: string | null;
           start_time: string;
           end_time: string;
           status: 'confirmed' | 'cancelled' | 'pending' | 'completed' | 'no_show';
+          guest_name: string | null;
+          guest_email: string | null;
+          guest_phone: string | null;
+          note: string | null;
         };
         Insert: {
           id?: string;
           tenant_id: string;
-          user_id: string;
+          user_id?: string | null;
           service_id: string;
           staff_id?: string | null;
           start_time: string;
           end_time: string;
           status?: 'confirmed' | 'cancelled' | 'pending' | 'completed' | 'no_show';
+          guest_name?: string | null;
+          guest_email?: string | null;
+          guest_phone?: string | null;
+          note?: string | null;
         };
         Update: {
           id?: string;
           tenant_id?: string;
-          user_id?: string;
+          user_id?: string | null;
           service_id?: string;
           staff_id?: string | null;
           start_time?: string;
           end_time?: string;
           status?: 'confirmed' | 'cancelled' | 'pending' | 'completed' | 'no_show';
+          guest_name?: string | null;
+          guest_email?: string | null;
+          guest_phone?: string | null;
+          note?: string | null;
         };
         Relationships: [];
       };
@@ -137,7 +149,7 @@ export interface Database {
           subject: string | null;
           tenant_id: string;
           updated_at: string;
-          user_id: string;
+          user_id: string | null;
         };
         Insert: {
           attempt_count?: number;
@@ -161,7 +173,7 @@ export interface Database {
           subject?: string | null;
           tenant_id: string;
           updated_at?: string;
-          user_id: string;
+          user_id?: string | null;
         };
         Update: {
           attempt_count?: number;
@@ -185,7 +197,7 @@ export interface Database {
           subject?: string | null;
           tenant_id?: string;
           updated_at?: string;
-          user_id?: string;
+          user_id?: string | null;
         };
         Relationships: [];
       };
@@ -438,6 +450,60 @@ export interface Database {
         };
         Relationships: [];
       };
+      booking_waitlist: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          service_id: string;
+          guest_name: string;
+          guest_email: string;
+          guest_phone: string | null;
+          status: 'waiting' | 'notified' | 'claimed' | 'expired';
+          created_at: string;
+          notified_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          service_id: string;
+          guest_name: string;
+          guest_email: string;
+          guest_phone?: string | null;
+          status?: 'waiting' | 'notified' | 'claimed' | 'expired';
+          created_at?: string;
+          notified_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          service_id?: string;
+          guest_name?: string;
+          guest_email?: string;
+          guest_phone?: string | null;
+          status?: 'waiting' | 'notified' | 'claimed' | 'expired';
+          created_at?: string;
+          notified_at?: string | null;
+        };
+        Relationships: [];
+      };
+      autoops_events: {
+        Row: {
+          id: number;
+          ran_at: string;
+          summary: Json;
+        };
+        Insert: {
+          id?: number;
+          ran_at?: string;
+          summary: Json;
+        };
+        Update: {
+          id?: number;
+          ran_at?: string;
+          summary?: Json;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -451,6 +517,24 @@ export interface Database {
           p_end_time: string;
         };
         Returns: string;
+      };
+      create_guest_booking: {
+        Args: {
+          p_tenant_id: string;
+          p_service_id: string;
+          p_start_time: string;
+          p_client_name: string;
+          p_client_email: string;
+          p_client_phone: string;
+          p_token_hash: string;
+          p_staff_id?: string | null;
+          p_note?: string | null;
+        };
+        Returns: Json;
+      };
+      run_autoops_cycle: {
+        Args: Record<string, never>;
+        Returns: Json;
       };
       claim_notification_deliveries: {
         Args: {
