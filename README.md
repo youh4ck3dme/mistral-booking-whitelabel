@@ -86,11 +86,13 @@ mistral-booking-whitelabel/
 | Feature | Description | Status |
 |---------|-------------|--------|
 | Multi-Tenancy | Single DB + `tenant_id` + RLS isolation | ✅ Implemented |
-| White-Label | Custom branding, domains, and theming per tenant | ✅ Implemented |
-| Booking System | Secure RPC-based booking with time slot validation | ✅ Implemented |
+| White-Label | Custom branding, tenant slugs, theming & floor map (custom domains in decision) | ✅ Implemented |
+| Booking System | Secure RPC-based booking with time slot validation & guest checkout | ✅ Implemented |
 | **Clickable Calendar** | Interactive calendar with time slot picker for reservations | ✅ Implemented |
-| AI CRO | Recommendations, upsell bundles, A/B testing | ✅ Implemented |
-| Admin Dashboards | Tenant and platform-level admin panels | ✅ Implemented |
+| AI CRO | Recommendations, upsell bundles, A/B testing & Mistral Chat | ✅ Implemented |
+| AutoOps AI & REST API v1 | Key-authenticated REST API connector (`/api/v1/*`), BizAgent 4.0 & cron worker | ✅ Implemented |
+| Env Validation | Startup environment verification & schema checks (OPS-3) | ✅ Implemented |
+| Admin Dashboards | Tenant and platform-level admin panels with CSV export & floor canvas | ✅ Implemented |
 
 ---
 
@@ -126,20 +128,23 @@ mistral-booking-whitelabel/
 ### Run Tests
 
 ```bash
-# Unit tests
+# Unit & Integration tests (Vitest)
 pnpm test
 
-# E2E tests (Cypress)
-pnpm run test:e2e
+# E2E tests (Playwright)
+pnpm test:e2e
 
 # Lint
 pnpm lint
+
+# Typecheck
+pnpm --filter @repo/web exec tsc --noEmit
 ```
 
 ### Test Coverage
 
-- Unit tests: Core booking logic, RLS policies, AI fallback, **calendar utilities (51 tests)**
-- Integration tests: FE/BE slot parity, tenant isolation
+- Unit tests: Core booking logic, RLS policies, AI fallback, API v1 connector, **calendar utilities, floor canvas**
+- Integration tests: FE/BE slot parity, tenant isolation, concurrency checks
 - E2E tests: Full booking flow for 2+ tenants, **calendar interaction tests**
 
 ---

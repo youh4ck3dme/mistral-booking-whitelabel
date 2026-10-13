@@ -7,6 +7,45 @@ process.env.NEXIFY_API_KEY = TEST_KEY;
 // Mock service-role client
 const mockFrom = vi.fn();
 
+const mockTenantQuery = {
+  select: () => ({
+    eq: () => ({
+      limit: () => ({
+        maybeSingle: () =>
+          Promise.resolve({
+            data: {
+              id: 'dc34b261-8e15-4c57-9aff-f71456adec67',
+              name: 'PRAHA Hair Salon',
+              slug: 'praha-hair-salon',
+            },
+            error: null,
+          }),
+      }),
+    }),
+    limit: () => ({
+      maybeSingle: () =>
+        Promise.resolve({
+          data: {
+            id: 'dc34b261-8e15-4c57-9aff-f71456adec67',
+            name: 'PRAHA Hair Salon',
+            slug: 'praha-hair-salon',
+          },
+          error: null,
+        }),
+    }),
+  }),
+};
+
+function resetMockFrom() {
+  mockFrom.mockReset();
+  mockFrom.mockImplementation((table: string) => {
+    if (table === 'tenants') {
+      return mockTenantQuery;
+    }
+    return {};
+  });
+}
+
 vi.mock('@repo/web/src/lib/supabase/service-role', () => ({
   createServiceRoleClient: () => ({
     from: mockFrom,
@@ -20,6 +59,10 @@ import { GET as getTodayBookings } from '@repo/web/app/api/v1/bookings/today/rou
 import { POST as createBooking } from '@repo/web/app/api/v1/bookings/route';
 
 describe('API v1 - Authentication & Security', () => {
+  beforeEach(() => {
+    resetMockFrom();
+  });
+
   it('rejects missing x-api-key', () => {
     expect(verifyApiKey(null)).toBe(false);
     expect(verifyApiKey(undefined)).toBe(false);
@@ -67,7 +110,7 @@ describe('API v1 - Authentication & Security', () => {
 
 describe('GET /api/v1/services', () => {
   beforeEach(() => {
-    mockFrom.mockReset();
+    resetMockFrom();
   });
 
   it('returns 401 when x-api-key is missing', async () => {
@@ -79,31 +122,39 @@ describe('GET /api/v1/services', () => {
   });
 
   it('returns 200 with tenant and services structure on valid key', async () => {
-    mockFrom.mockReturnValue({
-      select: () => ({
-        eq: () => ({
-          eq: () =>
-            Promise.resolve({
-              data: [
-                {
-                  id: 'srv_1',
-                  name_sk: 'Konzultácia',
-                  duration: 30,
-                  price: 50,
-                  is_active: true,
-                },
-                {
-                  id: 'srv_2',
-                  name: 'Strih',
-                  duration: 45,
-                  price: 35,
-                  is_active: true,
-                },
-              ],
-              error: null,
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'tenants') {
+        return mockTenantQuery;
+      }
+      if (table === 'services') {
+        return {
+          select: () => ({
+            eq: () => ({
+              eq: () =>
+                Promise.resolve({
+                  data: [
+                    {
+                      id: 'srv_1',
+                      name_sk: 'Konzultácia',
+                      duration: 30,
+                      price: 50,
+                      is_active: true,
+                    },
+                    {
+                      id: 'srv_2',
+                      name: 'Strih',
+                      duration: 45,
+                      price: 35,
+                      is_active: true,
+                    },
+                  ],
+                  error: null,
+                }),
             }),
-        }),
-      }),
+          }),
+        };
+      }
+      return {};
     });
 
     const req = new NextRequest('http://localhost/api/v1/services', {
@@ -128,12 +179,20 @@ describe('GET /api/v1/services', () => {
   });
 
   it('falls back to mock services when DB query errors or returns empty', async () => {
-    mockFrom.mockReturnValue({
-      select: () => ({
-        eq: () => ({
-          eq: () => Promise.resolve({ data: [], error: null }),
-        }),
-      }),
+    mockFrom.mockImplementation((table: string) => {
+      if (table === 'tenants') {
+        return mockTenantQuery;
+      }
+      if (table === 'services') {
+        return {
+          select: () => ({
+            eq: () => ({
+              eq: () => Promise.resolve({ data: [], error: null }),
+            }),
+          }),
+        };
+      }
+      return {};
     });
 
     const req = new NextRequest('http://localhost/api/v1/services', {
@@ -150,7 +209,7 @@ describe('GET /api/v1/services', () => {
 
 describe('GET /api/v1/availability', () => {
   beforeEach(() => {
-    mockFrom.mockReset();
+    resetMockFrom();
   });
 
   it('returns 401 when unauthorized', async () => {
@@ -169,6 +228,9 @@ describe('GET /api/v1/availability', () => {
 
   it('returns available slots in { slots: string[] } structure', async () => {
     mockFrom.mockImplementation((table: string) => {
+      if (table === 'tenants') {
+        return mockTenantQuery;
+      }
       if (table === 'services') {
         return {
           select: () => ({
@@ -232,7 +294,7 @@ describe('GET /api/v1/availability', () => {
 
 describe('GET /api/v1/bookings/today', () => {
   beforeEach(() => {
-    mockFrom.mockReset();
+    resetMockFrom();
   });
 
   it('returns 401 when unauthorized', async () => {
@@ -243,6 +305,9 @@ describe('GET /api/v1/bookings/today', () => {
 
   it('returns today bookings format for Morning Brief', async () => {
     mockFrom.mockImplementation((table: string) => {
+      if (table === 'tenants') {
+        return mockTenantQuery;
+      }
       if (table === 'services') {
         return {
           select: () => ({
@@ -311,7 +376,7 @@ describe('GET /api/v1/bookings/today', () => {
 
 describe('POST /api/v1/bookings', () => {
   beforeEach(() => {
-    mockFrom.mockReset();
+    resetMockFrom();
   });
 
   it('returns 401 when unauthorized', async () => {
@@ -335,6 +400,9 @@ describe('POST /api/v1/bookings', () => {
 
   it('returns 201 on valid booking creation', async () => {
     mockFrom.mockImplementation((table: string) => {
+      if (table === 'tenants') {
+        return mockTenantQuery;
+      }
       if (table === 'services') {
         return {
           select: () => ({

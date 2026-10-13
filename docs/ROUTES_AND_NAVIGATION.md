@@ -235,6 +235,49 @@ Všechny routy v `(auth)` složce jsou veřejné, ale vyžadují nebo provádí 
 
 ## 🔌 API Endpointy
 
+### AutoOps AI REST API v1 (F-23)
+Endpointy pre prepojenie s AutoOps AI agentom a externými konektormi. Zabezpečené cez hlavičku `x-api-key: nex_live_...`.
+
+#### GET /api/v1/services
+- **Popis:** Zoznam aktívnych služieb tenanta a metadáta salónu
+- **Hlavičky:** `x-api-key: nex_live_[hash]`
+- **Odpoveď:** `{ tenant: { id, name, slug }, services: Array<{ id, name, duration, price, currency }> }`
+- **Handler:** `app/api/v1/services/route.ts`
+
+#### GET /api/v1/availability
+- **Popis:** Voľné časové sloty pre službu a dátum
+- **Query parametre:** `?serviceId=...&date=YYYY-MM-DD`
+- **Hlavičky:** `x-api-key: nex_live_[hash]`
+- **Odpoveď:** `{ slots: string[] }`
+- **Handler:** `app/api/v1/availability/route.ts`
+
+#### GET /api/v1/bookings/today
+- **Popis:** Dnešný harmonogram rezervácií pre ranný briefing
+- **Hlavičky:** `x-api-key: nex_live_[hash]`
+- **Odpoveď:** `{ date: string, total: number, bookings: Array<{ id, time, serviceId, customer, status }> }`
+- **Handler:** `app/api/v1/bookings/today/route.ts`
+
+#### POST /api/v1/bookings
+- **Popis:** Vytvorenie novej rezervácie cez AutoOps konektor
+- **Hlavičky:** `x-api-key: nex_live_[hash]`
+- **Telo žiadosti:** `{ customer: { name, email, phone }, serviceId: string, startAt: string }`
+- **Odpoveď (201):** `{ success: true, booking: { id, serviceId, date, time, customer, status } }`
+- **Handler:** `app/api/v1/bookings/route.ts`
+
+### AI Chat & Asistent
+#### POST /api/chat
+- **Popis:** Interaktívny rezervačný chat asistent (Mistral AI)
+- **Telo žiadosti:** `{ messages: Message[], tenantId: string }`
+- **Autentizácia:** Overenie členstva v tenante, Zod validácia, rate limit (SEC-5, SEC-6)
+- **Handler:** `app/api/chat/route.ts`
+
+### Cron & Background Workers
+#### POST /api/cron/autoops-worker
+- **Popis:** Periodický worker spúšťajúci audit vyťaženia a ranný brief AutoOps BizAgenta
+- **Hlavičky:** `Authorization: Bearer [CRON_SECRET]`
+- **Odpoveď:** `{ status: "ok", timestamp: string, worker: string, processed: boolean }`
+- **Handler:** `app/api/cron/autoops-worker/route.ts`
+
 ### Notifikace
 
 #### POST /api/notifications/dispatch
@@ -245,9 +288,9 @@ Všechny routy v `(auth)` složce jsou veřejné, ale vyžadují nebo provádí 
 - **Handler:** `app/api/notifications/dispatch/route.ts`
 
 #### POST /api/notifications/reminders
-- **Popis:** Odeslání připomínek rezervací
-- **Tělo žádosti:** (prázdné nebo s filtry)
-- **Autentizace:** Vyžaduje validní session
+- **Popis:** Odeslání připomínek rezervací (chráněný cron s timingSafeEqual)
+- **Hlavičky:** `Authorization: Bearer [NOTIFICATION_CRON_SECRET]`
+- **Autentizace:** Timing-safe porovnanie secretu (SEC-7)
 - **Odpověď:** `{ sent: number, processed: number }`
 - **Handler:** `app/api/notifications/reminders/route.ts`
 

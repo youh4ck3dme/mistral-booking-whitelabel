@@ -73,9 +73,9 @@ Aktualizované: 2026-10-11.
 |---|---|---|---|---|
 | OPS-1 | Chybový monitoring (Sentry alebo ekvivalent), server aj klient | Chyby s tenant ID, bez osobných údajov v payloade | S | ⬜ |
 | OPS-2 | Audit log: kto zmenil službu, rolu alebo rezerváciu | Tabuľka s používateľom a časom, RLS, test | M | ⬜ |
-| OPS-3 | Checklist env premenných a kontrola pri štarte | Chýbajúca premenná = jasná chyba, nie tichý pád | S | ⬜ |
+| OPS-3 | Checklist env premenných a kontrola pri štarte | Chýbajúca premenná = jasná chyba, nie tichý pád | S | ✅ Hotové: Zod schema validácia (`apps/web/src/lib/env/validator.ts`, 9 unit testov, `requireEnv`, striktná kontrola v produkcii) |
 | OPS-4 | Obnova zo zálohy (PITR) overená na staging | Zdokumentovaný postup, záznam o teste obnovy | S | ⬜ |
-| OPS-5 | Zosúladiť README a `ROUTES_AND_NAVIGATION.md` s realitou | Žiadne „✅ Implemented“ pre nehotové veci, Cypress → Playwright | S | ⬜ |
+| OPS-5 | Zosúladiť README a `ROUTES_AND_NAVIGATION.md` s realitou | Žiadne „✅ Implemented“ pre nehotové veci, Cypress → Playwright | S | ✅ Hotové: Cypress nahradený za Playwright/Vitest, pridané API v1 endpointy, cron worker, chat a validácia env |
 | OPS-6 | Duplicitný `@playwright/test` v koreňovom `package.json` | Lockfile a package.json konzistentné | S | ✅ |
 | OPS-7 | GDPR: self-service export údajov a vymazanie účtu | Export JSON, vymazanie s anonymizáciou bookingov | M | ⬜ |
 | OPS-8 | GDPR: záznam súhlasov (consent log) | Verzia textu, čas, účel, test | S | ⬜ |
@@ -149,7 +149,7 @@ Každá položka je **hypotéza**. Pred implementáciou musí prejsť validácio
 | ID | Hypotéza | Vel. | Stav |
 |---|---|---|---|
 | F-22 🔬 | Analytika: heatmapa vyťaženia, tržby na slot, retencia, zdroj rezervácie | M | ⬜ |
-| F-23 🔬 | Verejné API s kľúčmi per tenant, webhooky, Zapier a Make | L | 🟡 REST API v1 pre AutoOps AI hotové (`/api/v1/services`, `/api/v1/availability`, `/api/v1/bookings/today`, `POST /api/v1/bookings`) |
+| F-23 🔬 | Verejné API s kľúčmi per tenant, webhooky, Zapier a Make | L | ✅ Hotové: REST API v1 pre AutoOps AI (`/api/v1/*`), BizAgent 4.0 runtime a cron worker (`/api/cron/autoops-worker`), x-api-key autentifikácia, floor map preview |
 | F-24 🔬 | PWA pre personál: offline rozpis a push notifikácie | M | ⬜ |
 
 ---
