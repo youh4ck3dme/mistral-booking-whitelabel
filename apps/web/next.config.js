@@ -60,6 +60,14 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'projects.larsenevans.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.bookio.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'flagcdn.com',
+      },
     ],
   },
   async headers() {
