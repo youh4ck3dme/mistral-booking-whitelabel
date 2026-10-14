@@ -65,7 +65,7 @@ export function createBizAgent(config: BizAgentConfig) {
 
   const instructions = buildBizAgentInstructions(tenantName, channel, todayISO, servicesPrompt);
 
-  return new ToolLoopAgent({
+  const agent = new ToolLoopAgent({
     model: mistral('mistral-small-latest'),
     instructions,
     stopWhen: isStepCount(4),
@@ -81,26 +81,41 @@ export function createBizAgent(config: BizAgentConfig) {
             const rangeStart = new Date(`${date}T00:00:00Z`).toISOString();
             const rangeEnd = new Date(`${date}T23:59:59Z`).toISOString();
 
-            // 1. Try get_available_slots RPC
-            const { data: slots, error: slotsError } = await db.rpc('get_available_slots', {
+            // 1. Try get_available_slots RPC with standard params (p_tenant_id, p_service_id, p_date, p_staff_id)
+            const rpcRes = await (db.rpc ? db.rpc('get_available_slots', {
               p_tenant_id: tenantId,
               p_service_id: serviceId,
-              p_start_range: rangeStart,
-              p_end_range: rangeEnd,
-            });
+              p_date: date,
+              p_staff_id: null,
+            }) : Promise.resolve({ data: null, error: null }));
 
-            if (!slotsError && Array.isArray(slots) && slots.length > 0) {
+            const slots = rpcRes?.data;
+            const slotsError = rpcRes?.error;
+
+            if (slotsError) {
+              return { error: 'Termíny sa nepodarilo overiť: ' + (slotsError.message || 'Chyba') };
+            }
+
+            if (Array.isArray(slots) && slots.length > 0) {
               return {
-                availableSlots: slots.map((s: any) => s.slot_start || s),
+                availableSlots: slots.map((s: any) => ({
+                  staffId: s.staff_id || s.staffId,
+                  startTime: s.start_time || s.startTime,
+                  endTime: s.end_time || s.endTime,
+                  slot_start: s.start_time || s.slot_start || s,
+                })),
               };
             }
 
             // 2. Fallback to custom get_service_availability RPC if present
-            const { data: altData, error: altError } = await db.rpc('get_service_availability', {
+            const altRes = await (db.rpc ? db.rpc('get_service_availability', {
               p_tenant_id: tenantId,
               p_service_id: serviceId,
               p_date: date,
-            });
+            }) : Promise.resolve({ data: null, error: null }));
+
+            const altData = altRes?.data;
+            const altError = altRes?.error;
 
             if (!altError && altData) {
               return { availableSlots: altData };
@@ -114,13 +129,14 @@ export function createBizAgent(config: BizAgentConfig) {
               .maybeSingle();
 
             const duration = service?.duration || 30;
-            const { data: booked } = await db.rpc('get_booked_slots', {
+            const bookedRes = await (db.rpc ? db.rpc('get_booked_slots', {
               p_tenant_id: tenantId,
               p_service_id: serviceId,
               p_start_range: rangeStart,
               p_end_range: rangeEnd,
-            });
+            }) : Promise.resolve({ data: null, error: null }));
 
+            const booked = bookedRes?.data;
             const bookedRanges = (booked || []).map((b: any) => ({
               start_time: b.start_time,
               end_time: b.end_time,
@@ -136,7 +152,7 @@ export function createBizAgent(config: BizAgentConfig) {
       }),
 
       book_guest_slot: tool({
-        description: 'Vytvorí rezerváciu po schválení klientom a vygeneruje odkaz na správu.',
+        description: 'Vytvorí záväznú hosťovskú rezerváciu po schválení klientom a vygeneruje odkaz na správu.',
         inputSchema: z.object({
           serviceId: z.string().describe('ID služby'),
           startTimeISO: z.string().describe('Začiatok v ISO formáte'),
@@ -248,10 +264,13 @@ export function createBizAgent(config: BizAgentConfig) {
 
             if (action === 'check') {
               // 1. Try RPC get_booking_by_manage_token
-              const { data: rpcData, error: rpcErr } = await db.rpc('get_booking_by_manage_token', {
+              const rpcRes = await (db.rpc ? db.rpc('get_booking_by_manage_token', {
                 p_token_hash: tokenHash,
                 p_tenant_slug: tenantSlug,
-              });
+              }) : Promise.resolve({ data: null, error: null }));
+
+              const rpcData = rpcRes?.data;
+              const rpcErr = rpcRes?.error;
 
               if (!rpcErr && rpcData && (rpcData as any).status === 'ok') {
                 const b = (rpcData as any).booking;
@@ -271,8 +290,8 @@ export function createBizAgent(config: BizAgentConfig) {
                 .eq('token_hash', tokenHash)
                 .maybeSingle();
 
-              if (!tokenRec || tokenRec.revoked_at || new Date(tokenRec.expires_at) < new Date()) {
-                return { success: false, error: 'Odkaz na správu rezervácie je neplatný alebo vypršal.' };
+              if (!tokenRec || tokenRec.revoked_at || (tokenRec.expires_at && new Date(tokenRec.expires_at) < new Date())) {
+                return { success: false, error: 'Rezerváciu sa nepodarilo nájsť (neplatný token alebo vypršal).' };
               }
 
               const { data: bookingRec } = await db
@@ -282,7 +301,7 @@ export function createBizAgent(config: BizAgentConfig) {
                 .maybeSingle();
 
               if (!bookingRec) {
-                return { success: false, error: 'Rezervácia sa nenašla.' };
+                return { success: false, error: 'Rezerváciu sa nepodarilo nájsť.' };
               }
 
               return {
@@ -295,10 +314,13 @@ export function createBizAgent(config: BizAgentConfig) {
 
             if (action === 'cancel') {
               // 1. Try cancel_booking_by_token RPC
-              const { data: cancelData, error: cancelErr } = await db.rpc('cancel_booking_by_token', {
+              const cancelRes = await (db.rpc ? db.rpc('cancel_booking_by_token', {
                 p_token_hash: tokenHash,
                 p_tenant_slug: tenantSlug,
-              });
+              }) : Promise.resolve({ data: null, error: null }));
+
+              const cancelData = cancelRes?.data;
+              const cancelErr = cancelRes?.error;
 
               if (!cancelErr && cancelData && ((cancelData as any).status === 'ok' || (cancelData as any).status === 'already_cancelled')) {
                 return { success: true, message: 'Rezervácia bola úspešne zrušená.' };
@@ -325,12 +347,15 @@ export function createBizAgent(config: BizAgentConfig) {
               const newTokenHash = hashSha256Hex(newToken);
 
               // 1. Try reschedule_booking_by_token RPC
-              const { data: reschedData, error: reschedErr } = await db.rpc('reschedule_booking_by_token', {
+              const reschedRes = await (db.rpc ? db.rpc('reschedule_booking_by_token', {
                 p_token_hash: tokenHash,
                 p_tenant_slug: tenantSlug,
                 p_new_start: newStartTimeISO,
                 p_new_token_hash: newTokenHash,
-              });
+              }) : Promise.resolve({ data: null, error: null }));
+
+              const reschedData = reschedRes?.data;
+              const reschedErr = reschedRes?.error;
 
               if (!reschedErr && reschedData && (reschedData as any).status === 'ok') {
                 return { success: true, message: 'Termín rezervácie bol úspešne presunutý.' };
@@ -366,6 +391,11 @@ export function createBizAgent(config: BizAgentConfig) {
       }),
     },
   });
+
+  (agent as any).instructions = instructions;
+  (agent as any).model = mistral('mistral-small-latest');
+
+  return agent;
 }
 
 function generateDaySlots(
