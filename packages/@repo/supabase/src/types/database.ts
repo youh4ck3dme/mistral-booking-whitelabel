@@ -294,6 +294,166 @@ export interface Database {
         };
         Relationships: [];
       };
+      sales_leads: {
+        Row: {
+          id: string;
+          company_name: string;
+          contact_name: string | null;
+          contact_role: string | null;
+          vertical: string;
+          country: string | null;
+          city: string | null;
+          email: string | null;
+          linkedin_url: string | null;
+          website_url: string | null;
+          contact_form_url: string | null;
+          score: number;
+          score_reason: Record<string, unknown>;
+          problem_summary: string;
+          offer_angle: string;
+          proposed_service: string;
+          estimated_setup_price_eur: number | null;
+          estimated_monthly_price_eur: number | null;
+          status: string;
+          priority: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_name: string;
+          contact_name?: string | null;
+          contact_role?: string | null;
+          vertical: string;
+          country?: string | null;
+          city?: string | null;
+          email?: string | null;
+          linkedin_url?: string | null;
+          website_url?: string | null;
+          contact_form_url?: string | null;
+          score: number;
+          score_reason?: Record<string, unknown>;
+          problem_summary: string;
+          offer_angle: string;
+          proposed_service: string;
+          estimated_setup_price_eur?: number | null;
+          estimated_monthly_price_eur?: number | null;
+          status?: string;
+          priority?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_name?: string;
+          contact_name?: string | null;
+          contact_role?: string | null;
+          vertical?: string;
+          country?: string | null;
+          city?: string | null;
+          email?: string | null;
+          linkedin_url?: string | null;
+          website_url?: string | null;
+          contact_form_url?: string | null;
+          score?: number;
+          score_reason?: Record<string, unknown>;
+          problem_summary?: string;
+          offer_angle?: string;
+          proposed_service?: string;
+          estimated_setup_price_eur?: number | null;
+          estimated_monthly_price_eur?: number | null;
+          status?: string;
+          priority?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      sales_messages: {
+        Row: {
+          id: string;
+          lead_id: string;
+          channel: string;
+          subject: string | null;
+          body: string;
+          status: string;
+          sent_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          lead_id: string;
+          channel: string;
+          subject?: string | null;
+          body: string;
+          status?: string;
+          sent_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          lead_id?: string;
+          channel?: string;
+          subject?: string | null;
+          body?: string;
+          status?: string;
+          sent_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "sales_messages_lead_id_fkey";
+            columns: ["lead_id"];
+            isOneToOne: false;
+            referencedRelation: "sales_leads";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      sales_offers: {
+        Row: {
+          id: string;
+          lead_id: string;
+          offer_type: string;
+          title: string;
+          setup_price_eur: number;
+          monthly_price_eur: number;
+          scope: Record<string, unknown>;
+          status: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          lead_id: string;
+          offer_type: string;
+          title: string;
+          setup_price_eur: number;
+          monthly_price_eur: number;
+          scope?: Record<string, unknown>;
+          status?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          lead_id?: string;
+          offer_type?: string;
+          title?: string;
+          setup_price_eur?: number;
+          monthly_price_eur?: number;
+          scope?: Record<string, unknown>;
+          status?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "sales_offers_lead_id_fkey";
+            columns: ["lead_id"];
+            isOneToOne: false;
+            referencedRelation: "sales_leads";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
