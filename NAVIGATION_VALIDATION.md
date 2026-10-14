@@ -226,7 +226,7 @@ import { defineConfig } from 'cypress';
 
 export default defineConfig({
   e2e: {
-    baseUrl: 'http://localhost:3000',
+    baseUrl: 'http://localhost:3009',
     specPattern: 'cypress/e2e/navigation/**/*.cy.ts',
     setupNodeEvents(on, config) {
       // Zde můžete přidat custom plugins
@@ -654,7 +654,7 @@ pnpm install
 pnpm install --save-dev cypress
 ```
 
-#### Chyba: "Port 3000 already in use"
+#### Chyba: "Port 3009 already in use"
 
 **Řešení:** Změňte port v `pnpm dev` nebo zavřete již běžící proces.
 

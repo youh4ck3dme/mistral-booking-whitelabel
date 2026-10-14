@@ -226,7 +226,7 @@ export async function middleware(req: NextRequest) {
     return applySecurityHeaders(response, req);
   }
 
-  // 8. Main Domain Routing (e.g. nexify.sk, localhost:3000, *.vercel.app root)
+  // 8. Main Domain Routing (e.g. nexify.sk, localhost:3009, *.vercel.app root)
   if (PUBLIC_MARKETING_ROUTES.has(pathname)) {
     return applySecurityHeaders(NextResponse.next(), req);
   }

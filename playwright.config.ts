@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const useExternalBaseURL = Boolean(process.env.PLAYWRIGHT_BASE_URL);
-const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:3000';
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:3009';
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -21,7 +21,7 @@ export default defineConfig({
   webServer: useExternalBaseURL
     ? undefined
     : {
-        command: 'pnpm --filter @repo/web start -- --hostname 127.0.0.1 --port 3000',
+        command: 'pnpm --filter @repo/web start -- --hostname 127.0.0.1 --port 3009',
         env: {
           ...process.env,
           NOTIFICATION_CRON_SECRET:

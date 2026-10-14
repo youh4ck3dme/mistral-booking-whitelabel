@@ -14,8 +14,8 @@ export NEXT_PUBLIC_SUPABASE_URL="$API_URL"
 export NEXT_PUBLIC_SUPABASE_ANON_KEY="$ANON_KEY"
 export SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
 export SUPABASE_DB_URL="$DB_URL"
-export NEXT_PUBLIC_APP_URL="http://127.0.0.1:3000"
-export PLAYWRIGHT_BASE_URL="http://127.0.0.1:3000"
+export NEXT_PUBLIC_APP_URL="http://127.0.0.1:3009"
+export PLAYWRIGHT_BASE_URL="http://127.0.0.1:3009"
 export PLAYWRIGHT_EMAIL="${PLAYWRIGHT_EMAIL:-playwright-admin@example.com}"
 # Random per run unless provided; bootstrap-local-auth.mjs creates the user with it.
 export PLAYWRIGHT_PASSWORD="${PLAYWRIGHT_PASSWORD:-$(openssl rand -hex 16)}"
@@ -41,7 +41,7 @@ pnpm lint
 pnpm build
 pnpm test
 
-pnpm --filter @repo/web start -- --hostname 127.0.0.1 --port 3000 >/tmp/mistral-booking-verify.log 2>&1 &
+pnpm --filter @repo/web start -- --hostname 127.0.0.1 --port 3009 >/tmp/mistral-booking-verify.log 2>&1 &
 SERVER_PID=$!
 
 cleanup() {

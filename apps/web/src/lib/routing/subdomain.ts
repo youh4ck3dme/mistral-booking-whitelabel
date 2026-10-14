@@ -21,7 +21,7 @@ export const RESERVED_SUBDOMAINS = new Set([
 export function extractTenantSlug(host: string | null): string | null {
   if (!host) return null;
 
-  // Strip port (e.g., localhost:3000 -> localhost, barber.localhost:3000 -> barber.localhost)
+  // Strip port (e.g., localhost:3009 -> localhost, barber.localhost:3009 -> barber.localhost)
   const hostname = host.split(':')[0].toLowerCase().trim();
   if (!hostname) return null;
 

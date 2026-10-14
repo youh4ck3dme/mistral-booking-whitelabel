@@ -16,9 +16,9 @@ describe('extractTenantSlug', () => {
   });
 
   it('returns null for main localhost and 127.0.0.1 without subdomain', () => {
-    expect(extractTenantSlug('localhost:3000')).toBeNull();
+    expect(extractTenantSlug('localhost:3009')).toBeNull();
     expect(extractTenantSlug('localhost')).toBeNull();
-    expect(extractTenantSlug('127.0.0.1:3000')).toBeNull();
+    expect(extractTenantSlug('127.0.0.1:3009')).toBeNull();
     expect(extractTenantSlug('127.0.0.1')).toBeNull();
   });
 
@@ -29,7 +29,7 @@ describe('extractTenantSlug', () => {
   });
 
   it('extracts slug from localhost subdomains', () => {
-    expect(extractTenantSlug('barber-district.localhost:3000')).toBe('barber-district');
+    expect(extractTenantSlug('barber-district.localhost:3009')).toBe('barber-district');
     expect(extractTenantSlug('salon-elite.localhost')).toBe('salon-elite');
   });
 
@@ -49,7 +49,7 @@ describe('extractTenantSlug', () => {
   it('returns null for reserved subdomains like www, api, admin, platform', () => {
     for (const reserved of Array.from(RESERVED_SUBDOMAINS)) {
       expect(extractTenantSlug(`${reserved}.nexify.sk`)).toBeNull();
-      expect(extractTenantSlug(`${reserved}.localhost:3000`)).toBeNull();
+      expect(extractTenantSlug(`${reserved}.localhost:3009`)).toBeNull();
     }
   });
 

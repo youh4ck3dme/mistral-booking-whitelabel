@@ -30,7 +30,7 @@ describe('process-outbox cron endpoint', () => {
     delete process.env.CRON_SECRET;
     delete process.env.NOTIFICATION_CRON_SECRET;
 
-    const request = new Request('http://localhost:3000/api/cron/process-outbox', {
+    const request = new Request('http://localhost:3009/api/cron/process-outbox', {
       method: 'POST',
       headers: { authorization: 'Bearer test-cron-secret-12345' },
     });
@@ -42,7 +42,7 @@ describe('process-outbox cron endpoint', () => {
   });
 
   it('rejects unauthorized requests with wrong secret', async () => {
-    const request = new Request('http://localhost:3000/api/cron/process-outbox', {
+    const request = new Request('http://localhost:3009/api/cron/process-outbox', {
       method: 'POST',
       headers: { authorization: 'Bearer wrong-secret' },
     });
@@ -52,7 +52,7 @@ describe('process-outbox cron endpoint', () => {
   });
 
   it('successfully executes outbox delivery with valid bearer secret', async () => {
-    const request = new Request('http://localhost:3000/api/cron/process-outbox', {
+    const request = new Request('http://localhost:3009/api/cron/process-outbox', {
       method: 'POST',
       headers: { authorization: 'Bearer test-cron-secret-12345' },
     });
@@ -66,7 +66,7 @@ describe('process-outbox cron endpoint', () => {
   });
 
   it('handles GET requests (Vercel Cron default)', async () => {
-    const request = new Request('http://localhost:3000/api/cron/process-outbox', {
+    const request = new Request('http://localhost:3009/api/cron/process-outbox', {
       method: 'GET',
       headers: { authorization: 'Bearer test-cron-secret-12345' },
     });
