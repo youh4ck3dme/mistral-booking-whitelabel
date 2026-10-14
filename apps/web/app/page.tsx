@@ -34,7 +34,7 @@ export default function HomePage() {
       <header className="navbar navbar-expand-lg fixed-top">
         <div className="container justify-content-md-between justify-content-end px-2">
           <a className="navbar-brand me-auto">
-            <Image id="logo" src="/images/logo.png" alt="Bookio Logo" width={120} height={40} />
+            <Image id="logo" src="/images/logo.svg" alt="Bookio Logo" width={120} height={40} />
           </a>
           
           <a id="loginbtn" className="btn btn-outline-primary bg-light btn-sm d-none d-md-inline-block">
@@ -133,20 +133,20 @@ export default function HomePage() {
               </div>
             </div>
             <div className="bg">
-              <Image src="/images/hero-bg-1.jpg" alt="Hero background" fill className="img-fill" />
+              <Image src="/images/hero-bg-1.svg" alt="Hero background" fill className="img-fill" />
             </div>
             <div className="bg-m">
-              <Image src="/images/hero-bg-2.jpg" alt="Hero background mobile" fill className="img-fill" />
+              <Image src="/images/hero-bg-2.svg" alt="Hero background mobile" fill className="img-fill" />
             </div>
           </div>
 
           <div className="bento reduce">
             <div className="overlay"></div>
             <div className="bg welcome">
-              <Image src="/images/welcome.jpg" alt="Welcome" fill className="img-fill" />
+              <Image src="/images/welcome.svg" alt="Welcome" fill className="img-fill" />
             </div>
             <div className="bg-m">
-              <Image src="/images/welcome-mobile.jpg" alt="Welcome mobile" fill className="img-fill" />
+              <Image src="/images/welcome-mobile.svg" alt="Welcome mobile" fill className="img-fill" />
             </div>
           </div>
         </div>
@@ -156,12 +156,12 @@ export default function HomePage() {
       <section className="px-2 pt-2 my-5 brands">
         <div className="container text-center">
           <div className="brands-grid">
-            <Image src="/images/brands/brand1.png" alt="Brand 1" width={120} height={40} className="brand-logo" />
-            <Image src="/images/brands/brand2.png" alt="Brand 2" width={120} height={40} className="brand-logo" />
-            <Image src="/images/brands/brand3.png" alt="Brand 3" width={120} height={40} className="brand-logo" />
-            <Image src="/images/brands/brand4.png" alt="Brand 4" width={120} height={40} className="brand-logo" />
-            <Image src="/images/brands/brand5.png" alt="Brand 5" width={120} height={40} className="brand-logo" />
-            <Image src="/images/brands/brand6.png" alt="Brand 6" width={120} height={40} className="brand-logo" />
+            <Image src="/images/brands/brand1.svg" alt="Brand 1" width={120} height={40} className="brand-logo" />
+            <Image src="/images/brands/brand2.svg" alt="Brand 2" width={120} height={40} className="brand-logo" />
+            <Image src="/images/brands/brand3.svg" alt="Brand 3" width={120} height={40} className="brand-logo" />
+            <Image src="/images/brands/brand4.svg" alt="Brand 4" width={120} height={40} className="brand-logo" />
+            <Image src="/images/brands/brand5.svg" alt="Brand 5" width={120} height={40} className="brand-logo" />
+            <Image src="/images/brands/brand6.svg" alt="Brand 6" width={120} height={40} className="brand-logo" />
           </div>
         </div>
       </section>
@@ -286,7 +286,7 @@ export default function HomePage() {
             </div>
 
             <div className="col-md-6 col-xl-5 offset-xl-1 order-3">
-              <Image src="/images/features-screenshot.png" alt="Features Screenshot" width={600} height={400} className="img-fluid rounded shadow-lg" />
+              <Image src="/images/features-screenshot.svg" alt="Features Screenshot" width={600} height={400} className="img-fluid rounded shadow-lg" />
             </div>
 
             <div className="col-md-6 order-md-1">
@@ -324,39 +324,39 @@ export default function HomePage() {
           
           <div className="segments-grid">
             <div className="segment-card text-center p-4">
-              <Image src="/images/segments/beauty.jpg" alt="Krasa a Wellness" width={300} height={200} className="img-fluid rounded mb-3" />
+              <Image src="/images/segments/beauty.svg" alt="Krasa a Wellness" width={300} height={200} className="img-fluid rounded mb-3" />
               <h3>Krasa a Wellness</h3>
             </div>
             <div className="segment-card text-center p-4">
-              <Image src="/images/segments/medicine.jpg" alt="Medicina a Zdravie" width={300} height={200} className="img-fluid rounded mb-3" />
+              <Image src="/images/segments/medicine.svg" alt="Medicina a Zdravie" width={300} height={200} className="img-fluid rounded mb-3" />
               <h3>Medicina a Zdravie</h3>
             </div>
             <div className="segment-card text-center p-4">
-              <Image src="/images/segments/restaurant.jpg" alt="Restauracie a Gastro" width={300} height={200} className="img-fluid rounded mb-3" />
+              <Image src="/images/segments/restaurant.svg" alt="Restauracie a Gastro" width={300} height={200} className="img-fluid rounded mb-3" />
               <h3>Restauracie a Gastro</h3>
             </div>
             <div className="segment-card text-center p-4">
-              <Image src="/images/segments/sport.jpg" alt="Sport a Fitness" width={300} height={200} className="img-fluid rounded mb-3" />
+              <Image src="/images/segments/sport.svg" alt="Sport a Fitness" width={300} height={200} className="img-fluid rounded mb-3" />
               <h3>Sport a Fitness</h3>
             </div>
             <div className="segment-card text-center p-4">
-              <Image src="/images/segments/car.jpg" alt="Auto-moto" width={300} height={200} className="img-fluid rounded mb-3" />
+              <Image src="/images/segments/car.svg" alt="Auto-moto" width={300} height={200} className="img-fluid rounded mb-3" />
               <h3>Auto-moto</h3>
             </div>
             <div className="segment-card text-center p-4">
-              <Image src="/images/segments/entertainment.jpg" alt="Atrakcie a Zabava" width={300} height={200} className="img-fluid rounded mb-3" />
+              <Image src="/images/segments/entertainment.svg" alt="Atrakcie a Zabava" width={300} height={200} className="img-fluid rounded mb-3" />
               <h3>Atrakcie a Zabava</h3>
             </div>
             <div className="segment-card text-center p-4">
-              <Image src="/images/segments/services.jpg" alt="Sluzby a Poradenstvo" width={300} height={200} className="img-fluid rounded mb-3" />
+              <Image src="/images/segments/services.svg" alt="Sluzby a Poradenstvo" width={300} height={200} className="img-fluid rounded mb-3" />
               <h3>Sluzby a Poradenstvo</h3>
             </div>
             <div className="segment-card text-center p-4">
-              <Image src="/images/segments/education.jpg" alt="Vzdelavanie" width={300} height={200} className="img-fluid rounded mb-3" />
+              <Image src="/images/segments/education.svg" alt="Vzdelavanie" width={300} height={200} className="img-fluid rounded mb-3" />
               <h3>Vzdelavanie</h3>
             </div>
             <div className="segment-card text-center p-4">
-              <Image src="/images/segments/offices.jpg" alt="Firmy a Kancelarie" width={300} height={200} className="img-fluid rounded mb-3" />
+              <Image src="/images/segments/offices.svg" alt="Firmy a Kancelarie" width={300} height={200} className="img-fluid rounded mb-3" />
               <h3>Firmy a Kancelarie</h3>
             </div>
           </div>
@@ -461,17 +461,17 @@ export default function HomePage() {
                 <p>Za Bookiom stoja technologie. Aj ludia. Aplikacia, ktora setri cas. Tim, ktory riesi vas problem.</p>
               </div>
               <div className="bg">
-                <Image src="/images/team-bg-1.jpg" alt="Team background" fill className="img-fill" />
+                <Image src="/images/team-bg-1.svg" alt="Team background" fill className="img-fill" />
               </div>
               <div className="bg-m">
-                <Image src="/images/team-bg-2.jpg" alt="Team background mobile" fill className="img-fill" />
+                <Image src="/images/team-bg-2.svg" alt="Team background mobile" fill className="img-fill" />
               </div>
             </div>
 
             <div className="bento reduce-small">
               <div className="overlay"></div>
               <div className="bg">
-                <Image src="/images/technology-bg.jpg" alt="Technology" fill className="img-fill" />
+                <Image src="/images/technology-bg.svg" alt="Technology" fill className="img-fill" />
               </div>
               <div className="bg-m"></div>
             </div>
@@ -484,7 +484,7 @@ export default function HomePage() {
         <div className="container position-relative zindex-2 pt-sm-2">
           <div className="row align-items-center">
             <div className="col-lg-6 mb-5 mb-lg-0">
-              <Image src="/images/consultation.jpg" alt="Consultation" width={600} height={400} className="consult-bento img-fluid rounded" />
+              <Image src="/images/consultation.svg" alt="Consultation" width={600} height={400} className="consult-bento img-fluid rounded" />
             </div>
             
             <div className="col-lg-6 consult-content">
