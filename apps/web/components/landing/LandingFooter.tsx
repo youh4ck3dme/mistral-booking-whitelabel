@@ -18,8 +18,7 @@ export function LandingFooter() {
             </p>
 
             <div className="flex items-center gap-2 text-[11px] text-white/40 font-mono">
-              <span className="w-2 h-2 rounded-full bg-emerald-400" />
-              <span>Všetky systémy v prevádzke (99.99 % SLA)</span>
+              <span>0 % provízia z tržieb</span>
             </div>
           </div>
 

@@ -40,7 +40,7 @@ export function PricingWithRoiCalculator() {
       annualPrice: 24,
       features: [
         '1 pracovník / kalendár',
-        'Až 300 rezervácií mesačne',
+        'Rezervácie pre jedno pracovisko',
         'White-label klientsky odkaz',
         'E-mailové notifikácie z outboxu',
         'Samoobslužná správa termínu klienta',
@@ -62,12 +62,12 @@ export function PricingWithRoiCalculator() {
         'Neobmedzený počet rezervácií',
         'Mistral AI inteligentný asistent',
         'Vlastná subdoména & branding farby',
-        'SMS & transakčné pripomienky',
+        'E-mailové pripomienky z outboxu',
         'Denný prehľad tržieb & No-show tracking',
         'Ochrana Active Staff Guard & buffery',
         '0 % provízia z tržieb',
       ],
-      ctaText: 'Vyskúšať Pro na 14 dní zadarmo',
+      ctaText: 'Začať s balíkom Pro',
       ctaHref: '/signup?plan=pro',
       highlighted: true,
     },
@@ -81,8 +81,8 @@ export function PricingWithRoiCalculator() {
       features: [
         'Neobmedzený počet pracovníkov & pobočiek',
         'Vlastná doména (napr. rezervacie.vasafirma.sk)',
-        'Dedikovaný account manažér & onboarding',
-        'Prioritná SLA podpora 24/7',
+        'Onboarding pri nasadení',
+        'Podpora pri nasadení',
         'Webhooky & vlastné API integrácie',
         '0 % provízia z tržieb',
       ],
@@ -91,6 +91,16 @@ export function PricingWithRoiCalculator() {
       highlighted: false,
     },
   ];
+
+  const annualDiscounts = plans.map((plan) =>
+    Math.round((1 - plan.annualPrice / plan.monthlyPrice) * 100)
+  );
+  const minAnnualDiscount = Math.min(...annualDiscounts);
+  const maxAnnualDiscount = Math.max(...annualDiscounts);
+  const annualDiscountLabel =
+    minAnnualDiscount === maxAnnualDiscount
+      ? `−${minAnnualDiscount} %`
+      : `−${minAnnualDiscount} % až −${maxAnnualDiscount} %`;
 
   return (
     <section id="pricing" className="py-20 md:py-28 relative">
@@ -107,6 +117,11 @@ export function PricingWithRoiCalculator() {
           <p className="premium-lead max-w-2xl mx-auto">
             Spočítajte si, koľko peňazí odovzdáte cudzím rezervačným portálom a koľko ušetríte
             s fixným modelom NEXIFY.
+          </p>
+          <p className="text-xs text-white/45 max-w-2xl mx-auto">
+            Ilustračný príklad, nie meranie konkrétnej konkurencie. Kalkulačka predvolene
+            počíta s typickou marketplace províziou 15&nbsp;% (bežne sa uvádza približne
+            10&nbsp;% až 25&nbsp;%; overte si ju u svojho poskytovateľa).
           </p>
         </div>
 
@@ -231,7 +246,7 @@ export function PricingWithRoiCalculator() {
               type="button"
               role="switch"
               aria-checked={isAnnual}
-              aria-label="Prepnúť ročnú platbu so zľavou 20 percent"
+              aria-label={`Prepnúť ročnú platbu so zľavou ${annualDiscountLabel}`}
               onClick={() => setIsAnnual(!isAnnual)}
               className="relative inline-flex h-7 w-14 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-white/10 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-white/20"
             >
@@ -251,7 +266,7 @@ export function PricingWithRoiCalculator() {
                 Ročná platba
               </span>
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white/10 text-white border border-white/20 font-mono">
-                -20 % (2 mesiace zadarmo)
+                {annualDiscountLabel}
               </span>
             </div>
           </div>
@@ -293,7 +308,9 @@ export function PricingWithRoiCalculator() {
                         <span className="text-sm font-medium text-white/50">/ mesiac</span>
                       </div>
                       <div className="text-xs text-white/40 mt-1 font-mono">
-                        {isAnnual ? 'Účtované ročne (ušetríte 2 mesiace)' : 'Účtované mesačne, bez viazanosti'}
+                        {isAnnual
+                          ? `Účtované ročne (−${Math.round((1 - plan.annualPrice / plan.monthlyPrice) * 100)} % oproti mesačnej sadzbe)`
+                          : 'Účtované mesačne, bez viazanosti'}
                       </div>
                     </div>
 
