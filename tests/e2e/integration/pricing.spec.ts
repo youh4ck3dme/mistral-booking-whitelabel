@@ -18,5 +18,7 @@ test.describe('pricing page', () => {
       await expect(page.getByText(plan, { exact: true })).toBeVisible();
     }
     await expect(page.locator('a[href="/signup?plan=pro"]')).toBeVisible();
+    await expect(page.getByText('Cena na vyžiadanie')).toHaveCount(4);
+    await expect(page.locator('body')).not.toContainText(/\b(24|29|55|69|119|149)\s*€/);
   });
 });
