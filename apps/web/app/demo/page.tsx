@@ -25,6 +25,7 @@ export default function DemoPage() {
             <span className="premium-brand-word">NEXIFY</span>
           </Link>
           <div className="premium-inline-actions">
+            {/* /pricing is added in PR #8 (feat/b3-pricing); this CTA 404s until that PR is merged. */}
             <Link href="/pricing" className="premium-button-secondary">
               Cenník
             </Link>
