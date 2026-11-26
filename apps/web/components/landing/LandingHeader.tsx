@@ -24,8 +24,10 @@ export function LandingHeader() {
             <span className="premium-brand-mark">Booking</span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex premium-nav" aria-label="Landing navigation">
+          {/* Desktop Navigation.
+              !hidden / md:!flex beats .premium-nav { display:flex } in globals.css,
+              which would otherwise show the desktop menu at 390px. */}
+          <nav className="premium-nav !hidden md:!flex" aria-label="Landing navigation">
             {navLinks.map((link) => (
               <a
                 key={link.href}
@@ -38,7 +40,7 @@ export function LandingHeader() {
           </nav>
 
           {/* Desktop CTAs */}
-          <div className="hidden sm:flex premium-nav-actions items-center gap-3">
+          <div className="premium-nav-actions !hidden sm:!flex items-center gap-3">
             <Link
               href="/login"
               className="premium-nav-link text-sm font-semibold"

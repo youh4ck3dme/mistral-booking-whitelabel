@@ -11,7 +11,15 @@
 
 Base: `origin/feat/whitelabel-nextjs-platform` @ `06bc965`. Generated with a case-sensitive scan of tracked files (`Bookio|bookio|BOOKIO`, `NEXIFY|Nexify|nexify`, `BOOking`), excluding `pnpm-lock.yaml` and binaries.
 
+## Follow-up (Erik, 2026-11-27, Europe/Bratislava)
+
+**Source:** Erik confirmed in the Booking Systémy chat on 2026-11-27 at 00:23 (UTC+1 / Europe/Bratislava): „Ceny zatiaľ skryť a napísať „Cena na vyžiadanie“.“
+
+- Concrete plan prices (29/69/149 € monthly, 24/55/119 € annual) and the annual-discount percentage are removed from `PricingWithRoiCalculator`.
+- Each plan and the NEXIFY side of the marketplace calculator now show **Cena na vyžiadanie**. The calculator no longer subtracts a NEXIFY plan cost from marketplace commission.
+
 ## Summary
+
 
 | Brand | Category | Lines |
 |---|---|---|
@@ -133,14 +141,9 @@ The inventory below is the scan of the pre-decision tree at `06bc965` (plus the 
 | `apps/web/components/landing/LandingFooter.tsx:11` | <span className="premium-brand-word text-xl">NEXIFY</span> |
 | `apps/web/components/landing/LandingFooter.tsx:120` | © {new Date().getFullYear()} NEXIFY TECH CENTER. Všetky práva vyhradené. |
 | `apps/web/components/landing/LandingHeader.tsx:23` | <span className="premium-brand-word">NEXIFY</span> |
-| `apps/web/components/landing/PricingWithRoiCalculator.tsx:26` | // NEXIFY Pro tier is the standard SaaS cost (55 €/month annual or 69 €/month monthly) |
-| `apps/web/components/landing/PricingWithRoiCalculator.tsx:27` | const nexifyMonthlyCost = isAnnual ? 55 : 69; |
-| `apps/web/components/landing/PricingWithRoiCalculator.tsx:28` | const nexifyAnnualCost = nexifyMonthlyCost * 12; |
-| `apps/web/components/landing/PricingWithRoiCalculator.tsx:31` | const annualSavings = Math.max(0, marketplaceAnnualFee - nexifyAnnualCost); |
-| `apps/web/components/landing/PricingWithRoiCalculator.tsx:109` | s fixným modelom NEXIFY. |
-| `apps/web/components/landing/PricingWithRoiCalculator.tsx:178` | {/* Box 2: NEXIFY Fix Cost */} |
-| `apps/web/components/landing/PricingWithRoiCalculator.tsx:181` | <span>NEXIFY (0 % provízia)</span> |
-| `apps/web/components/landing/PricingWithRoiCalculator.tsx:185` | {nexifyMonthlyCost} € |
+| `apps/web/components/landing/PricingWithRoiCalculator.tsx:90` | Spočítajte si, koľko peňazí odovzdáte cudzím rezervačným portálom. Cena NEXIFY je |
+| `apps/web/components/landing/PricingWithRoiCalculator.tsx:97` | predplatného NEXIFY, tá je na vyžiadanie. |
+| `apps/web/components/landing/PricingWithRoiCalculator.tsx:167` | <span>NEXIFY (0 % provízia)</span> |
 | `apps/web/components/landing/ProblemSolution.tsx:8` | goodLabel: 'NEXIFY riešenie (100% White-Label)', |
 | `apps/web/components/landing/ProblemSolution.tsx:17` | goodLabel: 'NEXIFY riešenie (Databázové zámky)', |
 | `apps/web/components/landing/ProblemSolution.tsx:26` | goodLabel: 'NEXIFY riešenie (Samoobslužný odkaz)', |

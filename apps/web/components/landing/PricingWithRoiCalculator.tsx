@@ -3,11 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import {
-  TrendingUp,
   Check,
-  Zap,
-  Sparkles,
-  ShieldCheck,
   Percent,
   ArrowRight,
   Calculator,
@@ -16,19 +12,11 @@ import {
 export function PricingWithRoiCalculator() {
   // Monthly turnover slider: 2,000 € to 25,000 €, default 8,000 €
   const [turnover, setTurnover] = useState<number>(8000);
-  const [isAnnual, setIsAnnual] = useState<boolean>(true);
 
   // Commission calculations: marketplace takes ~15% (between 10% and 20%)
   const MARKETPLACE_RATE = 0.15;
   const marketplaceMonthlyFee = Math.round(turnover * MARKETPLACE_RATE);
   const marketplaceAnnualFee = marketplaceMonthlyFee * 12;
-
-  // NEXIFY Pro tier is the standard SaaS cost (55 €/month annual or 69 €/month monthly)
-  const nexifyMonthlyCost = isAnnual ? 55 : 69;
-  const nexifyAnnualCost = nexifyMonthlyCost * 12;
-
-  // Annual savings kept by the salon owner
-  const annualSavings = Math.max(0, marketplaceAnnualFee - nexifyAnnualCost);
 
   const plans = [
     {
@@ -36,8 +24,6 @@ export function PricingWithRoiCalculator() {
       name: 'Solo / Štartér',
       badge: null,
       description: 'Pre samostatných špecialistov a štúdiá s jedným pracoviskom.',
-      monthlyPrice: 29,
-      annualPrice: 24,
       features: [
         '1 pracovník / kalendár',
         'Rezervácie pre jedno pracovisko',
@@ -55,8 +41,6 @@ export function PricingWithRoiCalculator() {
       name: 'Pro / Salón',
       badge: 'NAJPOPULÁRNEJŠIE',
       description: 'Pre rastúce salóny, kliniky a štúdiá s tímom profesionálov.',
-      monthlyPrice: 69,
-      annualPrice: 55,
       features: [
         'Až 5 pracovníkov s vlastnými rozvrhmi',
         'Neobmedzený počet rezervácií',
@@ -76,8 +60,6 @@ export function PricingWithRoiCalculator() {
       name: 'Multi-pobočka',
       badge: 'PRE SIETE A KLINIKY',
       description: 'Pre prevádzky s viacerými pobočkami, estetické kliniky a franšízy.',
-      monthlyPrice: 149,
-      annualPrice: 119,
       features: [
         'Neobmedzený počet pracovníkov & pobočiek',
         'Vlastná doména (napr. rezervacie.vasafirma.sk)',
@@ -92,16 +74,6 @@ export function PricingWithRoiCalculator() {
     },
   ];
 
-  const annualDiscounts = plans.map((plan) =>
-    Math.round((1 - plan.annualPrice / plan.monthlyPrice) * 100)
-  );
-  const minAnnualDiscount = Math.min(...annualDiscounts);
-  const maxAnnualDiscount = Math.max(...annualDiscounts);
-  const annualDiscountLabel =
-    minAnnualDiscount === maxAnnualDiscount
-      ? `−${minAnnualDiscount} %`
-      : `−${minAnnualDiscount} % až −${maxAnnualDiscount} %`;
-
   return (
     <section id="pricing" className="py-20 md:py-28 relative">
       <div className="premium-container space-y-16">
@@ -115,18 +87,19 @@ export function PricingWithRoiCalculator() {
             Prečo platiť marketplace provízie, keď tržby patria vám?
           </h2>
           <p className="premium-lead max-w-2xl mx-auto">
-            Spočítajte si, koľko peňazí odovzdáte cudzím rezervačným portálom a koľko ušetríte
-            s fixným modelom NEXIFY.
+            Spočítajte si, koľko peňazí odovzdáte cudzím rezervačným portálom. Cena NEXIFY je
+            na vyžiadanie — neúčtujeme províziu z tržieb.
           </p>
           <p className="text-xs text-white/45 max-w-2xl mx-auto">
             Ilustračný príklad, nie meranie konkrétnej konkurencie. Kalkulačka predvolene
             počíta s typickou marketplace províziou 15&nbsp;% (bežne sa uvádza približne
-            10&nbsp;% až 25&nbsp;%; overte si ju u svojho poskytovateľa).
+            10&nbsp;% až 25&nbsp;%; overte si ju u svojho poskytovateľa). Neodpočítava cenu
+            predplatného NEXIFY, tá je na vyžiadanie.
           </p>
         </div>
 
         {/* ========================================================= */}
-        {/* ROI CALCULATOR CARD (THE COMMISSION KILLER)               */}
+        {/* MARKETPLACE COMMISSION CALCULATOR                         */}
         {/* ========================================================= */}
         <div className="premium-card p-6 sm:p-10 lg:p-12 relative overflow-hidden">
           <div className="relative space-y-8">
@@ -136,7 +109,7 @@ export function PricingWithRoiCalculator() {
                   <Calculator className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Interaktívna ROI kalkulačka</h3>
+                  <h3 className="text-lg font-bold text-white">Kalkulačka marketplace provízie</h3>
                   <p className="text-xs text-white/60">Nastavte priemerný mesačný obrat vašej prevádzky</p>
                 </div>
               </div>
@@ -173,9 +146,8 @@ export function PricingWithRoiCalculator() {
               />
             </div>
 
-            {/* Comparison Metrics Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
-              {/* Box 1: Marketplace Cost */}
+            {/* Comparison Metrics Grid — no NEXIFY plan price, no savings that subtract it */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
               <div className="p-5 rounded-2xl border border-red-500/20 bg-red-500/[0.04] space-y-2">
                 <div className="text-xs font-semibold text-red-400 flex items-center justify-between">
                   <span>Marketplace (15 % provízia)</span>
@@ -190,38 +162,17 @@ export function PricingWithRoiCalculator() {
                 </p>
               </div>
 
-              {/* Box 2: NEXIFY Fix Cost */}
               <div className="p-5 rounded-2xl border border-white/10 bg-white/[0.03] space-y-2">
                 <div className="text-xs font-semibold text-white/80 flex items-center justify-between">
                   <span>NEXIFY (0 % provízia)</span>
                   <span className="text-[10px] uppercase font-mono text-emerald-400">Fixné</span>
                 </div>
-                <div className="text-2xl sm:text-3xl font-extrabold text-white font-mono">
-                  {nexifyMonthlyCost} €
-                  <span className="text-xs text-white/50 font-normal"> / mesiac</span>
+                <div className="text-2xl sm:text-3xl font-extrabold text-white">
+                  Cena na vyžiadanie
                 </div>
                 <p className="text-[11px] text-white/60 leading-relaxed">
-                  Fixné predplatné balíka Pro bez akýchkoľvek skrytých poplatkov z klientov.
-                </p>
-              </div>
-
-              {/* Box 3: Total Annual Savings Highlight */}
-              <div className="p-5 rounded-2xl border border-emerald-500/40 bg-emerald-500/[0.06] space-y-2">
-                <div className="text-xs font-semibold text-emerald-400 flex items-center justify-between">
-                  <span className="flex items-center gap-1">
-                    <TrendingUp className="w-3.5 h-3.5" />
-                    Čistá úspora majiteľa
-                  </span>
-                  <span className="text-[10px] uppercase font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full">
-                    Vo vašom vrecku
-                  </span>
-                </div>
-                <div className="text-3xl sm:text-4xl font-extrabold text-emerald-400 font-mono">
-                  +{annualSavings.toLocaleString('sk-SK')} €
-                  <span className="text-xs text-emerald-300/80 font-normal"> / rok</span>
-                </div>
-                <p className="text-[11px] text-white/80 leading-relaxed">
-                  Peniaze, ktoré môžete investovať do vybavenia, personálu alebo rozvoja salónu.
+                  Fixné predplatné bez provízie z klientov. Cenu vám pripravíme na mieru — kalkulačka
+                  ju do úspory nezarátava.
                 </p>
               </div>
             </div>
@@ -229,54 +180,11 @@ export function PricingWithRoiCalculator() {
         </div>
 
         {/* ========================================================= */}
-        {/* PRICING PLANS & BILLING TOGGLE                            */}
+        {/* PRICING PLANS                                             */}
         {/* ========================================================= */}
         <div className="space-y-10 pt-8">
-          {/* Billing Switcher (Monthly vs Annual) */}
-          <div className="flex items-center justify-center gap-4">
-            <span
-              className={`text-sm font-medium transition-colors ${
-                !isAnnual ? 'text-white font-semibold' : 'text-white/50'
-              }`}
-            >
-              Mesačná platba
-            </span>
-
-            <button
-              type="button"
-              role="switch"
-              aria-checked={isAnnual}
-              aria-label={`Prepnúť ročnú platbu so zľavou ${annualDiscountLabel}`}
-              onClick={() => setIsAnnual(!isAnnual)}
-              className="relative inline-flex h-7 w-14 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-white/10 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-white/20"
-            >
-              <span
-                className={`pointer-events-none inline-block h-6 w-6 transform rounded-full shadow-md ring-0 transition duration-200 ease-in-out ${
-                  isAnnual ? 'translate-x-7 bg-white' : 'translate-x-0 bg-white/40'
-                }`}
-              />
-            </button>
-
-            <div className="flex items-center gap-2">
-              <span
-                className={`text-sm font-medium transition-colors ${
-                  isAnnual ? 'text-white font-semibold' : 'text-white/50'
-                }`}
-              >
-                Ročná platba
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white/10 text-white border border-white/20 font-mono">
-                {annualDiscountLabel}
-              </span>
-            </div>
-          </div>
-
-          {/* Pricing Cards Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
-            {plans.map((plan) => {
-              const price = isAnnual ? plan.annualPrice : plan.monthlyPrice;
-
-              return (
+            {plans.map((plan) => (
                 <div
                   key={plan.id}
                   className={`premium-card p-8 sm:p-10 flex flex-col justify-between transition-all relative ${
@@ -301,20 +209,15 @@ export function PricingWithRoiCalculator() {
                       </p>
                     </div>
 
-                    {/* Price display */}
                     <div className="pt-2 pb-4 border-b border-white/10">
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-4xl sm:text-5xl font-extrabold text-white font-mono">{price} €</span>
-                        <span className="text-sm font-medium text-white/50">/ mesiac</span>
+                      <div className="text-3xl sm:text-4xl font-extrabold text-white leading-tight">
+                        Cena na vyžiadanie
                       </div>
-                      <div className="text-xs text-white/40 mt-1 font-mono">
-                        {isAnnual
-                          ? `Účtované ročne (−${Math.round((1 - plan.annualPrice / plan.monthlyPrice) * 100)} % oproti mesačnej sadzbe)`
-                          : 'Účtované mesačne, bez viazanosti'}
+                      <div className="text-xs text-white/40 mt-1">
+                        Fixné predplatné, bez provízie z tržieb. Cenu vám pripravíme na mieru.
                       </div>
                     </div>
 
-                    {/* Features list */}
                     <div className="space-y-3">
                       <div className="text-xs font-semibold text-white/80 uppercase tracking-wider font-mono">
                         V cene balíka:
@@ -330,7 +233,6 @@ export function PricingWithRoiCalculator() {
                     </div>
                   </div>
 
-                  {/* Card CTA */}
                   <div className="pt-8 mt-6 border-t border-white/10">
                     <Link
                       href={plan.ctaHref}
@@ -341,8 +243,7 @@ export function PricingWithRoiCalculator() {
                     </Link>
                   </div>
                 </div>
-              );
-            })}
+            ))}
           </div>
         </div>
       </div>
