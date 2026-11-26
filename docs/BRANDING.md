@@ -1,6 +1,11 @@
-# B1 · Branding inventory and name proposal
+# B1 · Branding inventory and name decision
 
-Status: návrh. **Finálne rozhodnutie o názve patrí vlastníkovi (Erik).** Kým nerozhodne, platí NEXIFY.
+## Decision (Erik, 2026-11-26, Europe/Bratislava)
+
+- **Final name: NEXIFY.** Wordmark and product: NEXIFY (with the descriptive suffix "Booking" in page titles, e.g. "NEXIFY Booking"). Legal/operator name stays **NEXIFY TECH CENTER** on terms, privacy and the footer.
+- **Option A implemented:** the Bookio home page in `apps/web/app/page.tsx` is restored to the NEXIFY landing from `57f0e2e` (existing `components/landing/*`). `www.bookio.com` is removed from `apps/web/next.config.js` `images.remotePatterns`.
+- After this change, `git grep -i bookio -- apps/web` is empty. Remaining mentions of Bookio outside the app are historical (`INTEGRITY_TEST_REPORT.md` commit notes) and competitive research (`docs/MARKET_RESEARCH.md:53,65`, where Bookio is listed as a SK competitor). Those stay.
+
 
 Base: `origin/feat/whitelabel-nextjs-platform` @ `06bc965`. Generated with a case-sensitive scan of tracked files (`Bookio|bookio|BOOKIO`, `NEXIFY|Nexify|nexify`, `BOOking`), excluding `pnpm-lock.yaml` and binaries.
 
@@ -21,11 +26,11 @@ Key facts:
 
 - **Bookio appears in exactly one user-facing file, `apps/web/app/page.tsx` (the `/` home page, 31 lines), plus one image host in `apps/web/next.config.js:65`.** It was introduced by `b81892c` and `06bc965` (2026-10-14/15) and replaced the earlier NEXIFY landing (`57f0e2e`).
 - That page hotlinks the logo and images from `www.bookio.com`, links "Prihlásiť sa" to `services.bookio.com`, and shows four testimonials that name Bookio. Bookio is listed as a local competitor in `docs/MARKET_RESEARCH.md:53,65`.
-- Side finding (measured with `next start`, `GET /` → 200): the Bookio home page is a client component with an artificial 1.5 s loading state, so the server HTML of `/` contains only "Loading..." and no product text (SEO and no-JS users see nothing). Option A below also fixes this.
+- Side finding (measured with `next start`, `GET /` → 200): the Bookio home page is a client component with an artificial 1.5 s loading state, so the server HTML of `/` contains only "Loading..." and no product text (SEO and no-JS users see nothing). Option A (implemented below) also fixes this.
 - Every other user-facing surface (app shell metadata, PWA manifest, auth layout, 404, privacy, terms, platform admin, tenant pages, ICS export, landing components) already says NEXIFY.
 - Inside NEXIFY there are three variants: `NEXIFY` (wordmark), `NEXIFY TECH CENTER` (company/legal and `<title>`), `NEXIFY Booking` (product title in the pre-Bookio landing). `docs/SOURCE_OF_TRUTH.md` is titled "Mistral | BOOking (NEXIFY TECH CENTER)".
 
-## Proposal: one name = **NEXIFY**
+## Proposal (accepted): one name = **NEXIFY**
 
 - Wordmark and product: **NEXIFY** (descriptive suffix "Booking" where context needs it, e.g. page titles: "NEXIFY Booking").
 - Legal/operator name stays **NEXIFY TECH CENTER** on terms/privacy/footer (company, not a second brand).
@@ -36,17 +41,13 @@ Reasoning:
 2. "Bookio" is the trademark of an existing SK competitor (bookio.com). Using its name, logo, hotlinked assets and its customers' testimonials on our production home page is a trademark/unfair-competition and copyright risk, not a style choice. This should be removed regardless of the final name.
 3. A white-label product needs a neutral platform brand that tenants' customers rarely see; NEXIFY already fills that role.
 
-## Why B1 does not change code in this PR
+## Implementation
 
-A "safe text change" (replace the word Bookio with NEXIFY) is **not** safe here: the page would keep the competitor's hotlinked logo/images, its login URL and testimonials written about Bookio, now attributed to NEXIFY. Fixing it means replacing or reverting the whole home page, which is a product/design decision (SoT §7 terminology is the owner's call).
+Option A is in this PR (second commit, after the inventory). A plain text swap Bookio → NEXIFY was rejected because the old page hotlinked the competitor's logo, images, login URL and testimonials.
 
-Options for Erik (pick one, then a follow-up PR implements it):
+The inventory below is the scan of the pre-decision tree at `06bc965` (plus the first commit of this branch, which only added this document). The `apps/web/app/page.tsx` and `apps/web/next.config.js` rows no longer exist in the current tree.
 
-- **A (recommended):** restore the NEXIFY landing composition from `57f0e2e` (`apps/web/app/page.tsx` uses the existing `components/landing/*`) and drop `www.bookio.com` from `next.config.js` `images.remotePatterns`. Patch prepared: `evidence/b1-optionA-restore-nexify-landing.patch` (outside the repo).
-- **B:** keep the new dark design, but replace logo/images with own assets, remove Bookio testimonials and `services.bookio.com` links, and rename text to NEXIFY.
-- **C:** another name — then all NEXIFY occurrences below need a rename plan.
-
-## Inventory: Bookio (all occurrences)
+## Inventory: Bookio (all occurrences at 06bc965, before option A)
 
 | Category | file:line | Text |
 |---|---|---|

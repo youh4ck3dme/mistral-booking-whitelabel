@@ -62,10 +62,6 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'www.bookio.com',
-      },
-      {
-        protocol: 'https',
         hostname: 'flagcdn.com',
       },
     ],
