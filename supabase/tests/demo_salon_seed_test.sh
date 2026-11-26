@@ -3,12 +3,27 @@
 # scripts/ci_test_bootstrap.sql and all migrations applied.
 # Checks: opt-in guard, idempotency (two runs), tenant isolation (other
 # tenants' rows unchanged), and the expected demo data shape.
-# Uses the standard PG* env vars. Never point this at a hosted database.
+# Uses the standard PG* env vars. Refuses any non-local PGHOST and any
+# connection string that looks hosted. Never point this at a hosted database.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SEED="$ROOT_DIR/supabase/seed/002_demo_salon.sql"
 DEMO_TENANT_ID='de000000-0000-4000-8000-000000000001'
+SEED_PGOPTIONS='-c nexify.allow_demo_seed=on -c nexify.allow_demo_seed_docker=on'
+
+case "${PGHOST:-}" in
+  ''|localhost|127.0.0.1|::1|/*) ;;
+  *)
+    echo "REFUSE: PGHOST=${PGHOST} is not local (localhost, 127.0.0.1, unix socket)"
+    exit 2
+    ;;
+esac
+
+if printf '%s' "${PGHOST:-} ${SUPABASE_DB_URL:-} ${DATABASE_URL:-}" | grep -qiE 'supabase\.co|supabase\.in|pooler\.supabase'; then
+  echo "REFUSE: connection target looks like a hosted Supabase project"
+  exit 2
+fi
 
 psql_q() { psql -X -v ON_ERROR_STOP=1 -At "$@"; }
 
@@ -27,20 +42,35 @@ other_tenants_fingerprint() {
 }
 
 echo "==> 1. Seed without opt-in must fail (prod guard)"
+BEFORE_GUARD="$(psql_q -c "SELECT count(*) FROM public.tenants WHERE id = '$DEMO_TENANT_ID'")"
 if PGOPTIONS='' psql -X -v ON_ERROR_STOP=1 -q -f "$SEED" >/tmp/demo_seed_guard.log 2>&1; then
   echo "FAIL: seed ran without nexify.allow_demo_seed=on"; exit 1
 fi
 grep -q 'nexify.allow_demo_seed' /tmp/demo_seed_guard.log || { echo "FAIL: guard error text missing"; cat /tmp/demo_seed_guard.log; exit 1; }
-[ "$(psql_q -c "SELECT count(*) FROM public.tenants WHERE id = '$DEMO_TENANT_ID'")" = "0" ] || { echo "FAIL: guard left rows behind"; exit 1; }
+AFTER_GUARD="$(psql_q -c "SELECT count(*) FROM public.tenants WHERE id = '$DEMO_TENANT_ID'")"
+[ "$BEFORE_GUARD" = "$AFTER_GUARD" ] || { echo "FAIL: guard changed demo tenant rows ($BEFORE_GUARD -> $AFTER_GUARD)"; exit 1; }
 echo "    guard OK"
+
+echo "==> 1b. Opt-in without docker GUC must fail when postgres is not on loopback"
+SERVER_ADDR="$(psql_q -c "SELECT coalesce(host(inet_server_addr()), 'unix')")"
+if [ "$SERVER_ADDR" != "unix" ] && [ "$SERVER_ADDR" != "127.0.0.1" ] && [ "$SERVER_ADDR" != "::1" ]; then
+  if PGOPTIONS='-c nexify.allow_demo_seed=on' psql -X -v ON_ERROR_STOP=1 -q -f "$SEED" >/tmp/demo_seed_addr.log 2>&1; then
+    echo "FAIL: seed ran against non-loopback ${SERVER_ADDR} without nexify.allow_demo_seed_docker=on"
+    exit 1
+  fi
+  grep -q 'not loopback' /tmp/demo_seed_addr.log || { echo "FAIL: address-guard error text missing"; cat /tmp/demo_seed_addr.log; exit 1; }
+  echo "    non-loopback ${SERVER_ADDR} correctly refused without docker GUC"
+else
+  echo "    server is ${SERVER_ADDR}; docker-GUC check skipped"
+fi
 
 echo "==> 2. Fingerprint of all non-demo tenant rows"
 BEFORE="$(other_tenants_fingerprint)"
 
 echo "==> 3. Run seed twice with opt-in (idempotency)"
-PGOPTIONS='-c nexify.allow_demo_seed=on' psql -X -v ON_ERROR_STOP=1 -q -f "$SEED"
+PGOPTIONS="$SEED_PGOPTIONS" psql -X -v ON_ERROR_STOP=1 -q -f "$SEED"
 FIRST="$(psql_q -c "SELECT (SELECT count(*) FROM public.services WHERE tenant_id='$DEMO_TENANT_ID') || '/' || (SELECT count(*) FROM public.staff WHERE tenant_id='$DEMO_TENANT_ID') || '/' || (SELECT count(*) FROM public.service_staff WHERE tenant_id='$DEMO_TENANT_ID') || '/' || (SELECT count(*) FROM public.staff_working_hours WHERE tenant_id='$DEMO_TENANT_ID')")"
-PGOPTIONS='-c nexify.allow_demo_seed=on' psql -X -v ON_ERROR_STOP=1 -q -f "$SEED"
+PGOPTIONS="$SEED_PGOPTIONS" psql -X -v ON_ERROR_STOP=1 -q -f "$SEED"
 SECOND="$(psql_q -c "SELECT (SELECT count(*) FROM public.services WHERE tenant_id='$DEMO_TENANT_ID') || '/' || (SELECT count(*) FROM public.staff WHERE tenant_id='$DEMO_TENANT_ID') || '/' || (SELECT count(*) FROM public.service_staff WHERE tenant_id='$DEMO_TENANT_ID') || '/' || (SELECT count(*) FROM public.staff_working_hours WHERE tenant_id='$DEMO_TENANT_ID')")"
 [ "$FIRST" = "$SECOND" ] || { echo "FAIL: not idempotent ($FIRST vs $SECOND)"; exit 1; }
 echo "    counts services/staff/service_staff/hours after run 1 = $FIRST, after run 2 = $SECOND"

@@ -3,9 +3,16 @@
 -- LOCAL AND PREVIEW DATABASES ONLY. This is a seed, not a migration:
 -- it lives outside supabase/migrations so `supabase db push` never applies it.
 --
+-- IDs and slug must stay in sync with apps/web/src/lib/demo/demo-tenant-ids.ts
+-- (PR #9 / /demo fixture). SQL cannot import that module.
+--
 -- Safety:
---   * Refuses to run unless the session opts in with nexify.allow_demo_seed=on:
---       PGOPTIONS='-c nexify.allow_demo_seed=on' psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -f supabase/seed/002_demo_salon.sql
+--   * Refuses to run unless nexify.allow_demo_seed=on AND the server address is
+--     a unix socket, loopback, or (for local Docker) an RFC1918 address with
+--     nexify.allow_demo_seed_docker=on. Never point this at a hosted database
+--     (no SUPABASE_DB_URL, no *.supabase.co). Local Docker example:
+--       PGHOST=127.0.0.1 PGOPTIONS='-c nexify.allow_demo_seed=on -c nexify.allow_demo_seed_docker=on' \
+--         psql -v ON_ERROR_STOP=1 -f supabase/seed/002_demo_salon.sql
 --   * Idempotent: fixed UUIDs + ON CONFLICT upserts; re-running converges to the same state.
 --   * Tenant-isolated: every write is keyed to the demo tenant id below; the only
 --     UPDATE/DELETE statements are filtered by that tenant id.
@@ -16,9 +23,30 @@
 BEGIN;
 
 DO $$
+DECLARE
+  server_addr inet := inet_server_addr();
+  allow_docker boolean := coalesce(current_setting('nexify.allow_demo_seed_docker', true), '') = 'on';
 BEGIN
   IF coalesce(current_setting('nexify.allow_demo_seed', true), '') <> 'on' THEN
     RAISE EXCEPTION 'Demo seed refused: set nexify.allow_demo_seed=on (local/preview databases only)';
+  END IF;
+
+  -- Unix socket (NULL) or loopback is treated as local. Any other listen address
+  -- is refused unless it is RFC1918 and nexify.allow_demo_seed_docker=on
+  -- (local Docker/compose published ports show a bridge IP, not 127.0.0.1).
+  -- Never set that GUC against a hosted database.
+  IF server_addr IS NOT NULL
+     AND server_addr <> inet '127.0.0.1'
+     AND server_addr <> inet '::1' THEN
+    IF allow_docker AND (
+         server_addr << inet '10.0.0.0/8'
+      OR server_addr << inet '172.16.0.0/12'
+      OR server_addr << inet '192.168.0.0/16'
+    ) THEN
+      NULL;
+    ELSE
+      RAISE EXCEPTION 'Demo seed refused: postgres is listening on %, not loopback. Use a unix socket or 127.0.0.1. For a local Docker Postgres (bridge IP) also set nexify.allow_demo_seed_docker=on. Never run this against a hosted database.', server_addr;
+    END IF;
   END IF;
 END
 $$;
