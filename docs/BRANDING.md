@@ -2,6 +2,8 @@
 
 ## Decision (Erik, 2026-11-26, Europe/Bratislava)
 
+**Source:** Erik confirmed this in the Booking Systémy chat on 2026-11-26 at 23:10 (UTC+1 / Europe/Bratislava) with the message `VRAT NEXIFY`, after being asked whether the final name should be NEXIFY and whether to restore the original NEXIFY home page (option A). That is the owner decision recorded here.
+
 - **Final name: NEXIFY.** Wordmark and product: NEXIFY (with the descriptive suffix "Booking" in page titles, e.g. "NEXIFY Booking"). Legal/operator name stays **NEXIFY TECH CENTER** on terms, privacy and the footer.
 - **Option A implemented:** the Bookio home page in `apps/web/app/page.tsx` is restored to the NEXIFY landing from `57f0e2e` (existing `components/landing/*`). `www.bookio.com` is removed from `apps/web/next.config.js` `images.remotePatterns`.
 - After this change, `git grep -i bookio -- apps/web` is empty. Remaining mentions of Bookio outside the app are historical (`INTEGRITY_TEST_REPORT.md` commit notes) and competitive research (`docs/MARKET_RESEARCH.md:53,65`, where Bookio is listed as a SK competitor). Those stay.
