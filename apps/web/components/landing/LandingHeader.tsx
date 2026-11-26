@@ -49,7 +49,7 @@ export function LandingHeader() {
               href="/signup"
               className="premium-button text-sm"
             >
-              Vyskúšať zadarmo
+              Vytvoriť účet
             </Link>
             <ThemeToggle />
           </div>
@@ -104,7 +104,7 @@ export function LandingHeader() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full text-center py-2.5 rounded-full text-xs font-semibold premium-button"
               >
-                Vyskúšať zadarmo
+                Vytvoriť účet
               </Link>
             </div>
           </div>

@@ -22,7 +22,7 @@ export function FaqSection() {
       id: 'faq-2',
       question: 'Skutočne si neúčtujete žiadne percentá ani provízie z mojich tržieb?',
       answer:
-        'Áno, presne tak. Na rozdiel od marketplace platforiem, ktoré si berú 10 % až 25 % z každej rezervácie, NEXIFY funguje na princípe čistého B2B SaaS predplatného. Platíte iba fixný mesačný alebo ročný poplatok za softvér. Celých 100 % tržieb od vašich klientov zostáva na vašom účte.',
+        'Áno. Na rozdiel od marketplace platforiem, ktoré si z rezervácie často účtujú províziu (ilustračne sa uvádza približne 10 % až 25 %; overte si ju u svojho poskytovateľa), NEXIFY funguje na princípe čistého B2B SaaS predplatného. Platíte iba fixný mesačný alebo ročný poplatok za softvér. Celých 100 % tržieb od vašich klientov zostáva na vašom účte.',
     },
     {
       id: 'faq-3',

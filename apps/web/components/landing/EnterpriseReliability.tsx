@@ -2,7 +2,7 @@ export function EnterpriseReliability() {
   const pillars = [
     {
       title: 'Transakčný Outbox Pattern',
-      badge: '100% DORUČENIE',
+      badge: 'OUTBOX',
       badgeColor: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
       description:
         'Notifikácie a potvrdzujúce e-maily sa zapisujú do databázy v tej istej transakcii ako rezervácia. Aj pri výpadku externej e-mailovej brány sa žiadna správa nestratí a po obnove sa automaticky doručí.',
@@ -132,7 +132,7 @@ export function EnterpriseReliability() {
             </span>
           </div>
           <div className="font-mono text-white/40 whitespace-nowrap">
-            Latency &lt; 90ms • 99.99% SLA
+            EXCLUDE lock • RLS izolácia
           </div>
         </div>
       </div>

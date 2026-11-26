@@ -10,9 +10,9 @@ export function SocialProofStrip() {
 
   const metrics = [
     {
-      value: '99.99 %',
-      label: 'Spoľahlivosť bez výpadkov',
-      description: 'Databázové zámky garantujú presne 0 kolízií a double-bookingov',
+      value: '0',
+      label: 'Dvojité rezervácie v databáze',
+      description: 'PostgreSQL EXCLUDE zámky odmietnu konfliktný termín ešte pred zápisom',
     },
     {
       value: '0 %',
