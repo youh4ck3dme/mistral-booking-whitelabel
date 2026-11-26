@@ -3,7 +3,8 @@
 # scripts/ci_test_bootstrap.sql and all migrations applied.
 # Checks: opt-in guard, idempotency (two runs), tenant isolation (other
 # tenants' rows unchanged), and the expected demo data shape.
-# Uses the standard PG* env vars. Refuses any non-local PGHOST and any
+# Uses the standard PG* env vars. Refuses any non-local PGHOST, a non-loopback
+# PGHOSTADDR, PGSERVICE/PGSERVICEFILE, conninfo in PGDATABASE, and any
 # connection string that looks hosted. Never point this at a hosted database.
 set -euo pipefail
 
@@ -22,6 +23,29 @@ esac
 
 if printf '%s' "${PGHOST:-} ${SUPABASE_DB_URL:-} ${DATABASE_URL:-}" | grep -qiE 'supabase\.co|supabase\.in|pooler\.supabase'; then
   echo "REFUSE: connection target looks like a hosted Supabase project"
+  exit 2
+fi
+
+# PGHOSTADDR bypasses PGHOST name resolution in libpq.
+if [ -n "${PGHOSTADDR:-}" ]; then
+  case "${PGHOSTADDR}" in
+    127.0.0.1|::1) ;;
+    *)
+      echo "REFUSE: PGHOSTADDR=${PGHOSTADDR} is not loopback (127.0.0.1 or ::1)"
+      exit 2
+      ;;
+  esac
+fi
+
+# A service file can point at any host; refuse implicit routing.
+if [ -n "${PGSERVICE:-}" ] || [ -n "${PGSERVICEFILE:-}" ]; then
+  echo "REFUSE: PGSERVICE/PGSERVICEFILE is set; refuse implicit service-file hosts"
+  exit 2
+fi
+
+# libpq treats PGDATABASE as a conninfo string when it contains '='
+if printf '%s' "${PGDATABASE:-}" | grep -q '='; then
+  echo "REFUSE: PGDATABASE looks like a libpq conninfo string"
   exit 2
 fi
 
