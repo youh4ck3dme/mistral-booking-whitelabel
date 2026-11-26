@@ -85,6 +85,7 @@ async function lookupTenant(slug: string): Promise<CachedTenant> {
 const AUTH_ROUTES = new Set(['/login', '/signup', '/forgot-password', '/reset-password']);
 const PUBLIC_MARKETING_ROUTES = new Set([
   '/',
+  '/demo',
   '/404',
   '/500',
   '/login',
