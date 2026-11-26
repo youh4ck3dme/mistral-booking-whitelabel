@@ -92,6 +92,7 @@ const PUBLIC_MARKETING_ROUTES = new Set([
   '/forgot-password',
   '/reset-password',
   '/privacy',
+  '/pricing',
   '/terms',
 ]);
 
