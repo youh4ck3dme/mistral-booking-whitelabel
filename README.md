@@ -13,7 +13,7 @@ Verified on 2026-11-26 from a fresh clone (Linux, Node.js 24.22.1, pnpm 9.15.9).
 
 ### Prerequisites
 
-- Node.js 20 or newer (`node --version`; CI uses 20)
+- Node.js 22 or newer (`node --version`). The quick start was verified on **24.22.1**. GitHub Actions currently uses Node 20, where `pnpm test` fails one test (`theme.test.ts`, missing native WebSocket: 259/260). That is a pre-existing base issue, not fixed here. Use 22 or 24 until CI/the test is updated.
 - pnpm 9 (`npm install --global pnpm@9`, then `pnpm --version`)
 - Git
 
@@ -66,6 +66,7 @@ Pass the arguments without a separate `--` (`pnpm --filter @repo/web start -- --
 
 1. Copy `apps/web/.env.example` to `apps/web/.env.local` and fill in `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` of **your own development project**. Never commit `.env.local`.
 2. Apply `supabase/migrations` and `supabase/seed/001_initial_data.sql` only to that development database. `pnpm db:push` / `pnpm db:seed` write to whatever `SUPABASE_DB_URL` points at; never point it at production. Changes to the hosted production database need the owner's approval (see `AGENTS.md`).
+   **Known break:** applying the full `supabase/migrations` folder on a clean database fails at `20261014150000_autoops_tables.sql` line 14 (`column "tenant_id" does not exist`) after `020_guest_booking_and_autoops.sql`. Do not apply that timestamped file until it is fixed separately. Migrations `001`–`020` apply cleanly. This is a pre-existing base issue, not fixed here.
 3. Restart the app so it reads the new variables. (This optional part was not re-verified in the 2026-11-26 run.)
 
 ---
