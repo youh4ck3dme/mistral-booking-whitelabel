@@ -7,7 +7,7 @@ export function FinalCtaSection() {
         <div className="premium-card p-8 sm:p-14 lg:p-16 text-center space-y-8 shadow-2xl backdrop-blur-2xl">
           {/* Eyebrow badge */}
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/10 bg-white/[0.03]">
-            <span className="premium-eyebrow">Vyskúšajte bez rizika na 14 dní</span>
+            <span className="premium-eyebrow">Pripravení začať s NEXIFY</span>
           </div>
 
           {/* Heading */}
@@ -51,7 +51,7 @@ export function FinalCtaSection() {
               <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
               </svg>
-              <span>14-dňový skúšobný prístup zadarmo</span>
+              <span>0 % provízia z tržieb</span>
             </div>
             <div className="flex items-center gap-2">
               <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
