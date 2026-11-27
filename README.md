@@ -7,44 +7,67 @@
 
 ## 🚀 Quick Start
 
+Runs the web app locally **without a database and without any `.env` file**: the marketing pages, auth screens and the full unit test suite work out of the box. Tenant pages (`/<tenant-slug>`) need a Supabase project, see [Connect a Supabase project](#connect-a-supabase-project-optional).
+
+Verified on 2026-11-26 from a fresh clone (Linux, Node.js 24.22.1, pnpm 9.15.9).
+
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) >= 18.0.0
-- [pnpm](https://pnpm.io/) (recommended)
-- [Supabase CLI](https://supabase.com/docs/guides/cli)
-- [Vercel CLI](https://vercel.com/docs/cli) (for deployment)
+- Node.js 22 or newer (`node --version`). The quick start was verified on **24.22.1**. GitHub Actions currently uses Node 20, where `pnpm test` fails one test (`theme.test.ts`, missing native WebSocket: 259/260). That is a pre-existing base issue, not fixed here. Use 22 or 24 until CI/the test is updated.
+- pnpm 9 (`npm install --global pnpm@9`, then `pnpm --version`)
+- Git
 
-### 1. Clone & Install
+### 1. Clone and install
 
 ```bash
-# Clone the repository
 git clone https://github.com/youh4ck3dme/mistral-booking-whitelabel.git
 cd mistral-booking-whitelabel
-
-# Install dependencies
-pnpm install
-
-# Initialize Supabase (if not already set up)
-pnpm run db:push
-pnpm run db:seed
+pnpm install --frozen-lockfile
 ```
 
-### 2. Environment Variables
+The default branch is `feat/whitelabel-nextjs-platform`; `git clone` checks it out.
 
-Create a `.env.local` file in `apps/web`:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=YOUR_SUPABASE_PROJECT_URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
-```
-
-### 3. Run Development Server
+### 2. Check that everything is green
 
 ```bash
-pnpm dev
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
 ```
 
-Open [http://localhost:3009](http://localhost:3009) in your browser.
+Expected: all four exit with code 0; `pnpm test` reports `@repo/web` 260 passed and `@repo/ai` 22 passed.
+
+### 3. Run the app
+
+Production build (after `pnpm build`):
+
+```bash
+pnpm --filter @repo/web start --hostname 127.0.0.1 --port 3009
+```
+
+or the dev server with hot reload:
+
+```bash
+pnpm --filter @repo/web dev --hostname 127.0.0.1 --port 3009
+```
+
+In a second terminal:
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3009/
+```
+
+Expected: `200`. Open http://127.0.0.1:3009 in the browser. `/login`, `/privacy`, `/terms` and `/manifest.webmanifest` also return 200 without a database.
+
+Pass the arguments without a separate `--` (`pnpm --filter @repo/web start -- --port 3009` makes Next.js treat `--hostname` as a directory and fails). Plain `pnpm dev` from the root runs `next dev` on its default port 3000.
+
+### Connect a Supabase project (optional)
+
+1. Copy `apps/web/.env.example` to `apps/web/.env.local` and fill in `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` of **your own development project**. Never commit `.env.local`.
+2. Apply `supabase/migrations` and `supabase/seed/001_initial_data.sql` only to that development database. `pnpm db:push` / `pnpm db:seed` write to whatever `SUPABASE_DB_URL` points at; never point it at production. Changes to the hosted production database need the owner's approval (see `AGENTS.md`).
+   **Known break:** applying the full `supabase/migrations` folder on a clean database fails at `20261014150000_autoops_tables.sql` line 14 (`column "tenant_id" does not exist`) after `020_guest_booking_and_autoops.sql`. Do not apply that timestamped file until it is fixed separately. Migrations `001`–`020` apply cleanly. This is a pre-existing base issue, not fixed here.
+3. Restart the app so it reads the new variables. (This optional part was not re-verified in the 2026-11-26 run.)
 
 ---
 
