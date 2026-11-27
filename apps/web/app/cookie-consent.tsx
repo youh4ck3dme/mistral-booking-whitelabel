@@ -44,11 +44,11 @@ export default function CookieConsent() {
         <div className="cookie-banner__copy">
           <strong>🍪 Táto stránka používa cookies</strong>
           <p>
-            Používame nevyhnutné cookies pre autentifikáciu a zabezpečenie funkčnosti.{' '}
-            <Link href="/privacy" className="cookie-banner__link">
-              Zistiť viac
-            </Link>
+            Používame nevyhnutné cookies pre autentifikáciu a zabezpečenie funkčnosti.
           </p>
+          <Link href="/privacy" className="cookie-banner__link">
+            Zistiť viac
+          </Link>
         </div>
         <div className="cookie-banner__actions">
           <button
