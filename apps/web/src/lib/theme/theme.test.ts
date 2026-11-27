@@ -1,6 +1,16 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+// The booking barrel re-exports booking.service, which imports the
+// @repo/supabase singleton. That module calls createClient() at load time,
+// and @supabase/realtime-js 2.108.2 throws on Node 20 (no native WebSocket).
+// This test only reads static CSS style strings, so mock the client module.
+vi.mock('@repo/supabase', () => ({
+  supabase: {},
+  createServerClient: vi.fn(),
+  createBrowserClient: vi.fn(),
+}));
 
 describe('Theme and Design System Contracts', () => {
   const globalsCssPath = path.resolve(__dirname, '../../../app/globals.css');
