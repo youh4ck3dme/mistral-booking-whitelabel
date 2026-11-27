@@ -25,8 +25,9 @@ export function LandingHeader() {
           </Link>
 
           {/* Desktop Navigation.
-              !hidden / md:!flex beats .premium-nav { display:flex } in globals.css,
-              which would otherwise show the desktop menu at 390px. */}
+              One shared breakpoint (md = 768px): desktop nav + CTAs at md and up,
+              hamburger + dropdown below md. !hidden / md:!flex beats
+              .premium-nav { display:flex } in globals.css. */}
           <nav className="premium-nav !hidden md:!flex" aria-label="Landing navigation">
             {navLinks.map((link) => (
               <a
@@ -40,7 +41,7 @@ export function LandingHeader() {
           </nav>
 
           {/* Desktop CTAs */}
-          <div className="premium-nav-actions !hidden sm:!flex items-center gap-3">
+          <div className="premium-nav-actions !hidden md:!flex items-center gap-3">
             <Link
               href="/login"
               className="premium-nav-link text-sm font-semibold"
@@ -57,7 +58,7 @@ export function LandingHeader() {
           </div>
 
           {/* Mobile menu button & ThemeToggle */}
-          <div className="flex sm:hidden items-center gap-2">
+          <div className="flex md:hidden items-center gap-2">
             <ThemeToggle />
             <button
               type="button"
@@ -79,7 +80,7 @@ export function LandingHeader() {
 
         {/* Mobile dropdown */}
         {mobileMenuOpen && (
-          <div className="sm:hidden mt-2 p-5 rounded-3xl border border-white/10 bg-zinc-950/95 backdrop-blur-2xl shadow-2xl space-y-4">
+          <div className="md:hidden mt-2 p-5 rounded-3xl border border-white/10 bg-zinc-950/95 backdrop-blur-2xl shadow-2xl space-y-4">
             <nav className="flex flex-col space-y-2 text-sm font-medium">
               {navLinks.map((link) => (
                 <a
@@ -97,7 +98,7 @@ export function LandingHeader() {
               <Link
                 href="/login"
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full text-center py-2.5 rounded-full text-xs font-semibold premium-button-secondary"
+                className="w-full text-center py-2.5 rounded-full text-sm font-semibold border border-white/25 bg-white/10 text-white hover:bg-white/20 hover:text-white"
               >
                 Prihlásenie
               </Link>
